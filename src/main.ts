@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 /**
  * mcpGraph - MCP server that runs a directed graph of MCP server calls
  */
