@@ -4,6 +4,10 @@
   "description": "MCP server that executes directed graphs of MCP server calls",
   "main": "dist/main.js",
   "type": "module",
+  "exports": {
+    ".": "./dist/api.js",
+    "./api": "./dist/api.js"
+  },
   "bin": {
     "mcpgraph": "./dist/main.js"
   },

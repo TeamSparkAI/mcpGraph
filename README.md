@@ -145,6 +145,30 @@ Or if not installed (run from npm):
 
 **Note:** Replace `/path/to/your/config.yaml` with the actual path to your YAML configuration file. The `-c` flag specifies the configuration file to use.
 
+### Programmatic API
+
+The `mcpgraph` package exports a programmatic API that can be used in your own applications (e.g., for building a UX server or other interfaces):
+
+```typescript
+import { McpGraphApi } from 'mcpgraph';
+
+// Create an API instance (loads and validates config)
+const api = new McpGraphApi('path/to/config.yaml');
+
+// List all available tools
+const tools = api.listTools();
+
+// Execute a tool
+const result = await api.executeTool('count_files', {
+  directory: './tests/files',
+});
+
+// Clean up resources
+await api.close();
+```
+
+See [`examples/api-usage.ts`](examples/api-usage.ts) for a complete example.
+
 ## Documentation
 
 - [Contributing Guide](CONTRIBUTING.md) - Setup, development, and contribution guidelines
