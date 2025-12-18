@@ -37,8 +37,8 @@ const exitNodeSchema = baseNodeSchema.extend({
   type: z.literal("exit"),
 });
 
-const mcpToolNodeSchema = baseNodeSchema.extend({
-  type: z.literal("mcp_tool"),
+const mcpNodeSchema = baseNodeSchema.extend({
+  type: z.literal("mcp"),
   server: z.string(),
   tool: z.string(),
   args: z.record(z.unknown()),
@@ -66,7 +66,7 @@ const switchNodeSchema = baseNodeSchema.extend({
 const nodeSchema = z.discriminatedUnion("type", [
   entryNodeSchema,
   exitNodeSchema,
-  mcpToolNodeSchema,
+  mcpNodeSchema,
   transformNodeSchema,
   switchNodeSchema,
 ]);

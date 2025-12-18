@@ -36,7 +36,7 @@ nodes:
   
   # List directory contents
   - id: "list_directory_node"
-    type: "mcp_tool"
+    type: "mcp"
     server: "filesystem"
     tool: "list_directory"
     args:

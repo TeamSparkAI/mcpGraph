@@ -121,7 +121,7 @@ The YAML configuration centers around MCP server and tool definitions:
    - `exitNode`: The exit node ID that returns the final result
 3. **Nodes**: The directed graph of nodes that execute when tools are called. Node types include:
    - **`entry`**: Entry point for a tool's graph execution. Receives tool arguments and initializes execution context.
-   - **`mcp_tool`**: Calls an MCP tool on an internal or external MCP server using `callTool`
+   - **`mcp`**: Calls an MCP tool on an internal or external MCP server using `callTool`
    - **`transform`**: Applies JSONata expressions to transform data between nodes
    - **`switch`**: Uses JSON Logic to conditionally route to different nodes based on data
    - **`exit`**: Exit point for a tool's graph execution. Extracts and returns the final result to the MCP tool caller
@@ -169,7 +169,7 @@ nodes:
   
   # List directory contents
   - id: "list_directory_node"
-    type: "mcp_tool"
+    type: "mcp"
     server: "filesystem"
     tool: "list_directory"
     args:

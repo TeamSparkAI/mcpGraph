@@ -2,14 +2,14 @@
  * MCP tool node executor
  */
 
-import type { McpToolNode } from "../../types/config.js";
+import type { McpNode } from "../../types/config.js";
 import type { ExecutionContext } from "../context.js";
 import { evaluateJsonata } from "../../expressions/jsonata.js";
 import type { McpClientManager } from "../../mcp/client-manager.js";
 import { logger } from "../../logger.js";
 
 export async function executeMcpToolNode(
-  node: McpToolNode,
+  node: McpNode,
   context: ExecutionContext,
   clientManager: McpClientManager
 ): Promise<{ output: unknown; nextNode: string }> {

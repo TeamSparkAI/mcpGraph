@@ -39,7 +39,7 @@ export interface JsonSchemaProperty {
 export type NodeDefinition =
   | EntryNode
   | ExitNode
-  | McpToolNode
+  | McpNode
   | TransformNode
   | SwitchNode;
 
@@ -59,12 +59,12 @@ export interface ExitNode extends BaseNode {
   // No next - this is the exit point
 }
 
-export interface McpToolNode extends BaseNode {
-  type: "mcp_tool";
+export interface McpNode extends BaseNode {
+  type: "mcp";
   server: string;
   tool: string;
   args: Record<string, unknown>;
-  next: string; // Required for mcp_tool nodes
+  next: string; // Required for mcp nodes
 }
 
 export interface TransformNode extends BaseNode {

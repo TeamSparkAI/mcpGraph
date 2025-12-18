@@ -51,7 +51,7 @@ nodes:
     next: "list_directory_node"
   
   - id: "list_directory_node"
-    type: "mcp_tool"
+    type: "mcp"
     server: "filesystem"
     tool: "list_directory"
     args:
@@ -78,7 +78,7 @@ This graph:
 ## Node Types
 
 - **`entry`**: Entry point for a tool's graph execution. Receives tool arguments.
-- **`mcp_tool`**: Calls an MCP tool on an internal or external MCP server.
+- **`mcp`**: Calls an MCP tool on an internal or external MCP server.
 - **`transform`**: Applies [JSONata](https://jsonata.org/) expressions to transform data between nodes.
 - **`switch`**: Uses [JSON Logic](https://jsonlogic.com/) to conditionally route to different nodes.
 - **`exit`**: Exit point that returns the final result to the MCP tool caller.
@@ -125,7 +125,7 @@ Add `mcpgraph` to your Claude Desktop MCP configuration (typically located at `~
 }
 ```
 
-Or if installed locally in a project:
+Or if not installed (run from npm):
 
 ```json
 {
@@ -144,22 +144,6 @@ Or if installed locally in a project:
 ```
 
 **Note:** Replace `/path/to/your/config.yaml` with the actual path to your YAML configuration file. The `-c` flag specifies the configuration file to use.
-
-## Usage
-
-After installation, `mcpgraph` is available as a command-line executable. However, it's typically used as an MCP server by configuring it in your MCP client (see Configuration section above).
-
-If you need to run it directly for testing:
-
-```bash
-mcpgraph -c path/to/config.yaml
-```
-
-Or using the long form:
-
-```bash
-mcpgraph --config path/to/config.yaml
-```
 
 ## Documentation
 

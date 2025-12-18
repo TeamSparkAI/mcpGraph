@@ -59,7 +59,7 @@ export class GraphExecutor {
         case "transform":
           result = await executeTransformNode(node, context);
           break;
-        case "mcp_tool":
+        case "mcp":
           result = await executeMcpToolNode(node, context, this.clientManager);
           break;
         case "switch":

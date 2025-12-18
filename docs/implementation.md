@@ -37,7 +37,7 @@ All TypeScript interfaces defined:
 - `NodeDefinition` - Base node interface
 - `EntryNode` - Entry point node that receives tool arguments
 - `ExitNode` - Exit point node that returns final result
-- `McpToolNode` - MCP tool call node
+- `McpNode` - MCP tool call node
 - `TransformNode` - JSONata transformation node
 - `SwitchNode` - JSON Logic routing node
 
