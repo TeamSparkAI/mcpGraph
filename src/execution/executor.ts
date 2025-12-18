@@ -9,6 +9,7 @@ import { executeEntryNode } from "./nodes/entry-executor.js";
 import { executeExitNode } from "./nodes/exit-executor.js";
 import { executeTransformNode } from "./nodes/transform-executor.js";
 import { executeMcpToolNode } from "./nodes/mcp-tool-executor.js";
+import { executeSwitchNode } from "./nodes/switch-executor.js";
 import type { McpClientManager } from "../mcp/client-manager.js";
 import { logger } from "../logger.js";
 
@@ -62,8 +63,8 @@ export class GraphExecutor {
           result = await executeMcpToolNode(node, context, this.clientManager);
           break;
         case "switch":
-          // TODO: Implement switch node
-          throw new Error("Switch nodes not yet implemented");
+          result = await executeSwitchNode(node, context);
+          break;
         default:
           throw new Error(`Unknown node type: ${(node as { type: string }).type}`);
       }

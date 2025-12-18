@@ -83,46 +83,107 @@ This graph:
 - **`switch`**: Uses [JSON Logic](https://jsonlogic.com/) to conditionally route to different nodes.
 - **`exit`**: Exit point that returns the final result to the MCP tool caller.
 
-## Setup
+## For Developers
 
-1. Install dependencies:
-```bash
-npm install
-```
+If you're interested in contributing to mcpGraph or working with the source code, see [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions, development guidelines, and project structure.
 
-2. Build the project:
-```bash
-npm run build
-```
+## Installation
 
-3. Run the project:
-```bash
-npm start
-```
-
-Or run in development mode (with hot reload):
-```bash
-npm run dev
-```
-
-## Running Tests
+Install mcpGraph from npm:
 
 ```bash
-npm test
+npm install -g mcpgraph
 ```
 
-See [docs/test-setup.md](docs/test-setup.md) for information on setting up the testing environment, including the filesystem MCP server configuration.
+Or install locally in your project:
 
-## Development
+```bash
+npm install mcpgraph
+```
 
-- Source code is in `src/`
-- Build output goes to `dist/`
-- TypeScript configuration is in `tsconfig.json`
-- Example configurations are in `examples/`
-- Tests are in `tests/`
+## Configuration
+
+### As an MCP Server
+
+To use `mcpgraph` as an MCP server in an MCP client (such as Claude Desktop), add it to your MCP client's configuration file.
+
+#### Claude Desktop Configuration
+
+Add `mcpgraph` to your Claude Desktop MCP configuration (typically located at `~/Library/Application Support/Claude/claude_desktop_config.json` on macOS, or `%APPDATA%\Claude\claude_desktop_config.json` on Windows):
+
+```json
+{
+  "mcpServers": {
+    "mcpgraph": {
+      "command": "node",
+      "args": [
+        "/path/to/node_modules/mcpgraph/dist/main.js",
+        "-c",
+        "/path/to/your/config.yaml"
+      ]
+    }
+  }
+}
+```
+
+Or if installed globally, you can use the global installation path:
+
+```json
+{
+  "mcpServers": {
+    "mcpgraph": {
+      "command": "node",
+      "args": [
+        "/usr/local/lib/node_modules/mcpgraph/dist/main.js",
+        "-c",
+        "/path/to/your/config.yaml"
+      ]
+    }
+  }
+}
+```
+
+**Note:** The exact path depends on your Node.js installation. You can find the global installation path by running `npm root -g` and appending `/mcpgraph/dist/main.js`.
+
+#### Using tsx for Development
+
+For development with TypeScript source files:
+
+```json
+{
+  "mcpServers": {
+    "mcpgraph": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "tsx",
+        "/path/to/mcpGraph/src/main.ts",
+        "-c",
+        "/path/to/your/config.yaml"
+      ]
+    }
+  }
+}
+```
+
+**Note:** Replace `/path/to/your/config.yaml` with the actual path to your YAML configuration file. The `-c` flag specifies the configuration file to use.
+
+## Usage
+
+After installation, you can use mcpGraph as an MCP server by providing a YAML configuration file:
+
+```bash
+mcpgraph -c path/to/config.yaml
+```
+
+Or using the long form:
+
+```bash
+mcpgraph --config path/to/config.yaml
+```
 
 ## Documentation
 
+- [Contributing Guide](CONTRIBUTING.md) - Setup, development, and contribution guidelines
 - [Design Document](docs/design.md) - Complete design and architecture
-- [Implementation Plan](docs/implementation-plan.md) - Implementation details and phases
-- [Test Setup](docs/test-setup.md) - Testing environment setup
+- [Implementation](docs/implementation.md) - Implementation details and architecture
