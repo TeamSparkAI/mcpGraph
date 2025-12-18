@@ -98,6 +98,19 @@ export function validateGraph(config: McpGraphConfig): ValidationError[] {
     }
   }
 
+  // Validate mcp nodes reference valid servers
+  for (const node of config.nodes) {
+    if (node.type === "mcp") {
+      const serverName = node.server;
+      if (!config.servers || !config.servers[serverName]) {
+        errors.push({
+          message: `MCP node "${node.id}" references non-existent server "${serverName}"`,
+          nodeId: node.id,
+        });
+      }
+    }
+  }
+
   // Validate exit nodes are reachable (basic check - can be enhanced)
   for (const tool of config.tools) {
     const entryNodes = config.nodes.filter(

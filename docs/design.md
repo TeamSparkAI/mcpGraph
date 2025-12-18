@@ -134,9 +134,9 @@ version: "1.0"
 
 # MCP Server Metadata
 server:
-  name: "mcpGraph"
+  name: "fileUtils"
   version: "1.0.0"
-  description: "MCP server that executes directed graphs of MCP tool calls"
+  description: "File utilities"
 
 # Tool Definitions
 tools:
@@ -157,6 +157,15 @@ tools:
           type: "number"
           description: "The number of files in the directory"
 
+# MCP Servers used by the graph
+servers:
+  filesystem:
+    command: "npx"
+    args:
+      - "-y"
+      - "@modelcontextprotocol/server-filesystem"
+      - "./tests/files"
+
 # Graph Nodes
 nodes:
   # Entry node: Receives tool arguments
@@ -171,7 +180,7 @@ nodes:
     server: "filesystem"
     tool: "list_directory"
     args:
-      path: "$.input.directory"  # JSONata reference to tool input
+      path: "$.input.directory"
     next: "count_files_node"
   
   # Transform and count files

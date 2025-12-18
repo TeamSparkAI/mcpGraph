@@ -2,9 +2,9 @@ version: "1.0"
 
 # MCP Server Metadata
 server:
-  name: "mcpGraph"
+  name: "fileUtils"
   version: "1.0.0"
-  description: "MCP server that executes directed graphs of MCP tool calls"
+  description: "File utilities"
 
 # Tool Definitions
 tools:
@@ -24,6 +24,24 @@ tools:
         count:
           type: "number"
           description: "The number of files in the directory"
+
+# MCP Servers used by the graph
+servers:
+  # Stdio server (type is optional, defaults to stdio)
+  filesystem:
+    command: "npx"
+    args:
+      - "-y"
+      - "@modelcontextprotocol/server-filesystem"
+      - "/Users/bob/Documents/GitHub/mcpGraph/tests/files"
+  
+  # Example: Streamable HTTP server (preferred for HTTP/SSE)
+  # httpServer:
+  #   type: "streamableHttp"
+  #   url: "https://api.example.com/mcp"
+  #   headers:
+  #     Authorization: "Bearer token"
+  #     X-Custom-Header: "value"
 
 # Graph Nodes
 nodes:

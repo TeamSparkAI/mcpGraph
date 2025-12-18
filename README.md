@@ -20,11 +20,13 @@ Here's a simple example that counts files in a directory:
 ```yaml
 version: "1.0"
 
+# MCP Server Metadata
 server:
-  name: "mcpGraph"
+  name: "fileUtils"
   version: "1.0.0"
-  description: "MCP server that executes directed graphs of MCP tool calls"
+  description: "File utilities"
 
+# Tool Definitions
 tools:
   - name: "count_files"
     description: "Counts the number of files in a directory"
@@ -43,12 +45,24 @@ tools:
           type: "number"
           description: "The number of files in the directory"
 
+# MCP Servers used by the graph
+servers:
+  filesystem:
+    command: "npx"
+    args:
+      - "-y"
+      - "@modelcontextprotocol/server-filesystem"
+      - "./tests/files"
+
+# Graph Nodes
 nodes:
+  # Entry node: Receives tool arguments
   - id: "entry_count_files"
     type: "entry"
     tool: "count_files"
     next: "list_directory_node"
   
+  # List directory contents
   - id: "list_directory_node"
     type: "mcp"
     server: "filesystem"
@@ -57,6 +71,7 @@ nodes:
       path: "$.input.directory"
     next: "count_files_node"
   
+  # Transform and count files
   - id: "count_files_node"
     type: "transform"
     transform:
@@ -64,6 +79,7 @@ nodes:
         { "count": $count($split(list_directory_node, "\n")) }
     next: "exit_count_files"
   
+  # Exit node: Returns the count
   - id: "exit_count_files"
     type: "exit"
     tool: "count_files"

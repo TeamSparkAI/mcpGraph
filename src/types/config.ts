@@ -5,6 +5,7 @@
 export interface McpGraphConfig {
   version: string;
   server: ServerMetadata;
+  servers?: Record<string, ServerConfig>;
   tools: ToolDefinition[];
   nodes: NodeDefinition[];
 }
@@ -13,6 +14,33 @@ export interface ServerMetadata {
   name: string;
   version: string;
   description: string;
+}
+
+export type ServerConfig =
+  | StdioServerConfig
+  | SseServerConfig
+  | StreamableHttpServerConfig;
+
+export interface StdioServerConfig {
+  type?: "stdio"; // Optional, defaults to stdio
+  command: string;
+  args: string[];
+  cwd?: string;
+}
+
+export interface SseServerConfig {
+  type: "sse";
+  url: string;
+  headers?: Record<string, string>;
+  eventSourceInit?: Record<string, unknown>;
+  requestInit?: Record<string, unknown>;
+}
+
+export interface StreamableHttpServerConfig {
+  type: "streamableHttp";
+  url: string;
+  headers?: Record<string, string>;
+  requestInit?: Record<string, unknown>;
 }
 
 export interface ToolDefinition {

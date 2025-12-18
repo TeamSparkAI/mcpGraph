@@ -2,7 +2,7 @@
  * MCP tool node executor
  */
 
-import type { McpNode } from "../../types/config.js";
+import type { McpNode, ServerConfig } from "../../types/config.js";
 import type { ExecutionContext } from "../context.js";
 import { evaluateJsonata } from "../../expressions/jsonata.js";
 import type { McpClientManager } from "../../mcp/client-manager.js";
@@ -11,7 +11,8 @@ import { logger } from "../../logger.js";
 export async function executeMcpToolNode(
   node: McpNode,
   context: ExecutionContext,
-  clientManager: McpClientManager
+  clientManager: McpClientManager,
+  serverConfig: ServerConfig
 ): Promise<{ output: unknown; nextNode: string }> {
   logger.debug(`Executing MCP tool node: ${node.id} (${node.server}.${node.tool})`);
 
@@ -33,18 +34,8 @@ export async function executeMcpToolNode(
   logger.debug(`MCP tool args: ${JSON.stringify(transformedArgs, null, 2)}`);
   logger.debug(`Expression context: ${JSON.stringify(exprContext, null, 2)}`);
 
-  // Get or create MCP client
-  // For now, we'll assume filesystem server uses npx
-  // In a real implementation, server config would come from somewhere
-  const command = "npx";
-  const args = [
-    "-y",
-    "@modelcontextprotocol/server-filesystem",
-    // This should come from config, but for now hardcode test directory
-    process.cwd() + "/tests/files",
-  ];
-
-  const client = await clientManager.getClient(node.server, command, args);
+  // Get or create MCP client using server configuration
+  const client = await clientManager.getClient(node.server, serverConfig);
 
   // Call the tool
   const result = await client.callTool({
@@ -78,7 +69,6 @@ export async function executeMcpToolNode(
 
   logger.debug(`MCP tool output: ${JSON.stringify(toolOutput, null, 2)}`);
 
-  // Post-transform could go here if needed
   const output = toolOutput;
 
   context.setNodeOutput(node.id, output);

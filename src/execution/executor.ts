@@ -2,7 +2,7 @@
  * Graph execution engine
  */
 
-import type { McpGraphConfig, ToolDefinition } from "../types/config.js";
+import type { McpGraphConfig, ToolDefinition, ServerConfig } from "../types/config.js";
 import { Graph } from "../graph/graph.js";
 import { ExecutionContext } from "./context.js";
 import { executeEntryNode } from "./nodes/entry-executor.js";
@@ -22,6 +22,13 @@ export class GraphExecutor {
     this.config = config;
     this.graph = new Graph(config.nodes);
     this.clientManager = clientManager;
+  }
+
+  private getServerConfig(serverName: string): ServerConfig {
+    if (!this.config.servers || !this.config.servers[serverName]) {
+      throw new Error(`Server configuration not found: ${serverName}`);
+    }
+    return this.config.servers[serverName];
   }
 
   async executeTool(
@@ -76,7 +83,8 @@ export class GraphExecutor {
           result = await executeTransformNode(node, context);
           break;
         case "mcp":
-          result = await executeMcpToolNode(node, context, this.clientManager);
+          const serverConfig = this.getServerConfig(node.server);
+          result = await executeMcpToolNode(node, context, this.clientManager, serverConfig);
           break;
         case "switch":
           result = await executeSwitchNode(node, context);

@@ -22,6 +22,38 @@ const serverMetadataSchema = z.object({
   description: z.string(),
 });
 
+const stdioServerConfigSchema = z.object({
+  type: z.literal("stdio").optional(),
+  command: z.string(),
+  args: z.array(z.string()),
+  cwd: z.string().optional(),
+});
+
+const sseServerConfigSchema = z.object({
+  type: z.literal("sse"),
+  url: z.string(),
+  headers: z.record(z.string()).optional(),
+  eventSourceInit: z.record(z.unknown()).optional(),
+  requestInit: z.record(z.unknown()).optional(),
+});
+
+const streamableHttpServerConfigSchema = z.object({
+  type: z.literal("streamableHttp"),
+  url: z.string(),
+  headers: z.record(z.string()).optional(),
+  requestInit: z.record(z.unknown()).optional(),
+});
+
+// Server config can be stdio (with or without type), sse, or streamableHttp
+const serverConfigSchema = z.union([
+  // Stdio config (type optional, defaults to stdio)
+  stdioServerConfigSchema,
+  // SSE config (type required)
+  sseServerConfigSchema,
+  // Streamable HTTP config (type required)
+  streamableHttpServerConfigSchema,
+]);
+
 const baseNodeSchema = z.object({
   id: z.string(),
   type: z.string(),
@@ -83,6 +115,7 @@ const toolDefinitionSchema = z.object({
 export const mcpGraphConfigSchema = z.object({
   version: z.string(),
   server: serverMetadataSchema,
+  servers: z.record(serverConfigSchema).optional(),
   tools: z.array(toolDefinitionSchema),
   nodes: z.array(nodeSchema),
 });
