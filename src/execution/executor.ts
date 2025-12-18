@@ -35,11 +35,27 @@ export class GraphExecutor {
 
     logger.info(`Executing tool: ${toolName}`);
 
+    // Find entry node for this tool
+    const entryNode = this.config.nodes.find(
+      (n) => n.type === "entry" && (n as { tool: string }).tool === toolName
+    );
+    if (!entryNode) {
+      throw new Error(`Entry node not found for tool: ${toolName}`);
+    }
+
+    // Find exit node for this tool
+    const exitNode = this.config.nodes.find(
+      (n) => n.type === "exit" && (n as { tool: string }).tool === toolName
+    );
+    if (!exitNode) {
+      throw new Error(`Exit node not found for tool: ${toolName}`);
+    }
+
     const context = new ExecutionContext(toolInput);
-    let currentNodeId = tool.entryNode;
+    let currentNodeId = entryNode.id;
 
     // Execute nodes until we reach the exit node
-    while (currentNodeId !== tool.exitNode) {
+    while (currentNodeId !== exitNode.id) {
       const node = this.graph.getNode(currentNodeId);
       if (!node) {
         throw new Error(`Node not found: ${currentNodeId}`);
@@ -77,13 +93,13 @@ export class GraphExecutor {
     }
 
     // Should not reach here, but handle exit node
-    const exitNode = this.graph.getNode(tool.exitNode);
-    if (exitNode && exitNode.type === "exit") {
-      const result = executeExitNode(exitNode, context);
+    const finalExitNode = this.graph.getNode(exitNode.id);
+    if (finalExitNode && finalExitNode.type === "exit") {
+      const result = executeExitNode(finalExitNode, context);
       return result.output;
     }
 
-    throw new Error(`Exit node ${tool.exitNode} not found or invalid`);
+    throw new Error(`Exit node ${exitNode.id} not found or invalid`);
   }
 }
 

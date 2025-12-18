@@ -20,8 +20,6 @@ export interface ToolDefinition {
   description: string;
   inputSchema: JsonSchema;
   outputSchema: JsonSchema;
-  entryNode: string;
-  exitNode: string;
 }
 
 export interface JsonSchema {
@@ -51,11 +49,13 @@ export interface BaseNode {
 
 export interface EntryNode extends BaseNode {
   type: "entry";
+  tool: string; // The tool this entry node belongs to
   next: string; // Required for entry nodes
 }
 
 export interface ExitNode extends BaseNode {
   type: "exit";
+  tool: string; // The tool this exit node belongs to
   // No next - this is the exit point
 }
 

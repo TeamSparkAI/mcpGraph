@@ -16,40 +16,62 @@ export function validateGraph(config: McpGraphConfig): ValidationError[] {
   const errors: ValidationError[] = [];
   const graph = new Graph(config.nodes);
 
-  // Validate all tools have valid entry and exit nodes
+  // Validate all tools have exactly one entry and one exit node
   for (const tool of config.tools) {
-    if (!graph.hasNode(tool.entryNode)) {
+    const entryNodes = config.nodes.filter(
+      (n) => n.type === "entry" && (n as { tool: string }).tool === tool.name
+    );
+    const exitNodes = config.nodes.filter(
+      (n) => n.type === "exit" && (n as { tool: string }).tool === tool.name
+    );
+
+    if (entryNodes.length === 0) {
       errors.push({
-        message: `Tool "${tool.name}" references non-existent entry node "${tool.entryNode}"`,
+        message: `Tool "${tool.name}" has no entry node`,
+        toolName: tool.name,
+      });
+    } else if (entryNodes.length > 1) {
+      errors.push({
+        message: `Tool "${tool.name}" has multiple entry nodes: ${entryNodes.map((n) => n.id).join(", ")}`,
         toolName: tool.name,
       });
     }
 
-    if (!graph.hasNode(tool.exitNode)) {
+    if (exitNodes.length === 0) {
       errors.push({
-        message: `Tool "${tool.name}" references non-existent exit node "${tool.exitNode}"`,
+        message: `Tool "${tool.name}" has no exit node`,
+        toolName: tool.name,
+      });
+    } else if (exitNodes.length > 1) {
+      errors.push({
+        message: `Tool "${tool.name}" has multiple exit nodes: ${exitNodes.map((n) => n.id).join(", ")}`,
         toolName: tool.name,
       });
     }
+  }
 
-    // Validate entry node is actually an entry node
-    const entryNode = graph.getNode(tool.entryNode);
-    if (entryNode && entryNode.type !== "entry") {
-      errors.push({
-        message: `Tool "${tool.name}" entry node "${tool.entryNode}" is not an entry node`,
-        toolName: tool.name,
-        nodeId: tool.entryNode,
-      });
+  // Validate entry and exit nodes reference valid tools
+  for (const node of config.nodes) {
+    if (node.type === "entry") {
+      const toolName = (node as { tool: string }).tool;
+      const tool = config.tools.find((t) => t.name === toolName);
+      if (!tool) {
+        errors.push({
+          message: `Entry node "${node.id}" references non-existent tool "${toolName}"`,
+          nodeId: node.id,
+        });
+      }
     }
 
-    // Validate exit node is actually an exit node
-    const exitNode = graph.getNode(tool.exitNode);
-    if (exitNode && exitNode.type !== "exit") {
-      errors.push({
-        message: `Tool "${tool.name}" exit node "${tool.exitNode}" is not an exit node`,
-        toolName: tool.name,
-        nodeId: tool.exitNode,
-      });
+    if (node.type === "exit") {
+      const toolName = (node as { tool: string }).tool;
+      const tool = config.tools.find((t) => t.name === toolName);
+      if (!tool) {
+        errors.push({
+          message: `Exit node "${node.id}" references non-existent tool "${toolName}"`,
+          nodeId: node.id,
+        });
+      }
     }
   }
 
@@ -78,11 +100,22 @@ export function validateGraph(config: McpGraphConfig): ValidationError[] {
 
   // Validate exit nodes are reachable (basic check - can be enhanced)
   for (const tool of config.tools) {
-    if (!isReachable(graph, tool.entryNode, tool.exitNode)) {
-      errors.push({
-        message: `Tool "${tool.name}" exit node "${tool.exitNode}" is not reachable from entry node "${tool.entryNode}"`,
-        toolName: tool.name,
-      });
+    const entryNodes = config.nodes.filter(
+      (n) => n.type === "entry" && (n as { tool: string }).tool === tool.name
+    );
+    const exitNodes = config.nodes.filter(
+      (n) => n.type === "exit" && (n as { tool: string }).tool === tool.name
+    );
+
+    if (entryNodes.length === 1 && exitNodes.length === 1) {
+      const entryNode = entryNodes[0];
+      const exitNode = exitNodes[0];
+      if (!isReachable(graph, entryNode.id, exitNode.id)) {
+        errors.push({
+          message: `Tool "${tool.name}" exit node "${exitNode.id}" is not reachable from entry node "${entryNode.id}"`,
+          toolName: tool.name,
+        });
+      }
     }
   }
 

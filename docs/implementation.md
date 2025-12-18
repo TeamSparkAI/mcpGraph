@@ -33,7 +33,7 @@ The implementation creates a working MCP server that can:
 All TypeScript interfaces defined:
 - `McpGraphConfig` - Root configuration structure
 - `ServerMetadata` - MCP server metadata
-- `ToolDefinition` - Tool definition with input/output schemas, entryNode, and exitNode
+- `ToolDefinition` - Tool definition with input/output schemas (entry/exit nodes are defined in nodes with `tool` field)
 - `NodeDefinition` - Base node interface
 - `EntryNode` - Entry point node that receives tool arguments
 - `ExitNode` - Exit point node that returns final result
@@ -74,7 +74,7 @@ Directed graph implementation from node definitions:
 
 **Note:** Not implemented as separate file - functionality integrated into `Graph` class and `validator.ts`:
 - Node ID to node definition mapping
-- Node reference validation (entryNode, exitNode, next, switch targets)
+- Node reference validation (tool references in entry/exit nodes, next, switch targets)
 - Orphaned node detection
 - Graph connectivity validation
 
@@ -84,7 +84,7 @@ Directed graph implementation from node definitions:
 
 Graph structure validation:
 - All referenced nodes exist
-- All tools have valid entryNode and exitNode
+- All tools have exactly one entry and one exit node
 - Entry nodes are only referenced as tool entry points
 - Exit nodes are only referenced as tool exit points
 - Exit nodes are reachable from entry nodes

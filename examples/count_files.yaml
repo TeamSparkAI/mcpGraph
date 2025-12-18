@@ -24,14 +24,13 @@ tools:
         count:
           type: "number"
           description: "The number of files in the directory"
-    entryNode: "entry_count_files"
-    exitNode: "exit_count_files"
 
 # Graph Nodes
 nodes:
   # Entry node: Receives tool arguments
   - id: "entry_count_files"
     type: "entry"
+    tool: "count_files"
     next: "list_directory_node"
   
   # List directory contents
@@ -54,4 +53,5 @@ nodes:
   # Exit node: Returns the count
   - id: "exit_count_files"
     type: "exit"
+    tool: "count_files"
 

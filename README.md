@@ -42,12 +42,11 @@ tools:
         count:
           type: "number"
           description: "The number of files in the directory"
-    entryNode: "entry_count_files"
-    exitNode: "exit_count_files"
 
 nodes:
   - id: "entry_count_files"
     type: "entry"
+    tool: "count_files"
     next: "list_directory_node"
   
   - id: "list_directory_node"
@@ -67,6 +66,7 @@ nodes:
   
   - id: "exit_count_files"
     type: "exit"
+    tool: "count_files"
 ```
 
 This graph:

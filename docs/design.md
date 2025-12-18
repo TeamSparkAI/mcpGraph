@@ -117,8 +117,7 @@ The YAML configuration centers around MCP server and tool definitions:
    - Standard MCP tool metadata (name, description)
    - Input parameters schema (MCP tool parameter definitions)
    - Output schema (what the tool returns)
-   - `entryNode`: The entry node ID where graph execution begins when this tool is called
-   - `exitNode`: The exit node ID that returns the final result
+   - Note: Entry and exit nodes are defined in the nodes section with a `tool` field indicating which tool they belong to
 3. **Nodes**: The directed graph of nodes that execute when tools are called. Node types include:
    - **`entry`**: Entry point for a tool's graph execution. Receives tool arguments and initializes execution context.
    - **`mcp`**: Calls an MCP tool on an internal or external MCP server using `callTool`
@@ -157,14 +156,13 @@ tools:
         count:
           type: "number"
           description: "The number of files in the directory"
-    entryNode: "entry_count_files"
-    exitNode: "exit_count_files"
 
 # Graph Nodes
 nodes:
   # Entry node: Receives tool arguments
   - id: "entry_count_files"
     type: "entry"
+    tool: "count_files"
     next: "list_directory_node"
   
   # List directory contents
@@ -187,6 +185,7 @@ nodes:
   # Exit node: Returns the count
   - id: "exit_count_files"
     type: "exit"
+    tool: "count_files"
 ```
 
 ## Key Design Principles

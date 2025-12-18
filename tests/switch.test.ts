@@ -49,14 +49,13 @@ describe("switch node", () => {
               result: { type: "string" },
             },
           },
-          entryNode: "entry",
-          exitNode: "exit",
         },
       ],
       nodes: [
         {
           id: "entry",
           type: "entry",
+          tool: "test_switch",
           next: "switch_node",
         },
         {
@@ -104,6 +103,7 @@ describe("switch node", () => {
         {
           id: "exit",
           type: "exit",
+          tool: "test_switch",
         },
       ],
     };

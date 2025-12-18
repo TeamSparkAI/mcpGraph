@@ -30,11 +30,13 @@ const baseNodeSchema = z.object({
 
 const entryNodeSchema = baseNodeSchema.extend({
   type: z.literal("entry"),
+  tool: z.string(),
   next: z.string(),
 });
 
 const exitNodeSchema = baseNodeSchema.extend({
   type: z.literal("exit"),
+  tool: z.string(),
 });
 
 const mcpNodeSchema = baseNodeSchema.extend({
@@ -76,8 +78,6 @@ const toolDefinitionSchema = z.object({
   description: z.string(),
   inputSchema: jsonSchemaSchema,
   outputSchema: jsonSchemaSchema,
-  entryNode: z.string(),
-  exitNode: z.string(),
 });
 
 export const mcpGraphConfigSchema = z.object({
