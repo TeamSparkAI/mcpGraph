@@ -9,10 +9,13 @@
 
 import { logger } from './logger.js';
 import { loadConfig } from './config/loader.js';
-import type { McpGraphConfig } from './types/config.js';
+import type { McpGraphConfig, NodeDefinition } from './types/config.js';
 import { validateGraph, type ValidationError } from './graph/validator.js';
 import { GraphExecutor } from './execution/executor.js';
 import { McpClientManager } from './mcp/client-manager.js';
+
+// Re-export types for consumers
+export type { NodeDefinition, McpGraphConfig } from './types/config.js';
 
 export interface ToolInfo {
   name: string;

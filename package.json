@@ -1,13 +1,15 @@
 {
   "name": "mcpgraph",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "MCP server that executes directed graphs of MCP server calls",
   "main": "dist/main.js",
   "type": "module",
   "exports": {
     ".": "./dist/api.js",
-    "./api": "./dist/api.js"
+    "./api": "./dist/api.js",
+    "./types": "./dist/types/config.js"
   },
+  "types": "./dist/api.d.ts",
   "bin": {
     "mcpgraph": "./dist/main.js"
   },
