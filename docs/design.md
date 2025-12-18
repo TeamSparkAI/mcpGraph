@@ -180,13 +180,13 @@ nodes:
   - id: "count_files_node"
     type: "transform"
     transform:
-      expr: "{ count: $count($.entries[type='file']) }"  # JSONata: count entries where type is 'file'
+      expr: |
+        { "count": $count($split(list_directory_node, "\n")) }
     next: "exit_count_files"
   
   # Exit node: Returns the count
   - id: "exit_count_files"
     type: "exit"
-    # Returns the transformed data from count_files_node
 ```
 
 ## Key Design Principles

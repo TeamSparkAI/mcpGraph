@@ -1,0 +1,4 @@
+This is the first test file.
+It contains some sample text for testing purposes.
+We can use this to test file counting and directory operations.
+

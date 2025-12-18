@@ -1,0 +1,10 @@
+# Test configuration file
+version: "1.0"
+settings:
+  debug: true
+  timeout: 30
+features:
+  - feature1
+  - feature2
+  - feature3
+

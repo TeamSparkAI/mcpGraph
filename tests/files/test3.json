@@ -1,0 +1,10 @@
+{
+  "name": "test3",
+  "type": "json",
+  "data": {
+    "value": 42,
+    "items": ["a", "b", "c"]
+  },
+  "description": "A JSON test file with sample data"
+}
+
