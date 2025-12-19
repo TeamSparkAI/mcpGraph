@@ -106,7 +106,7 @@ export class GraphExecutor {
       }
 
       // Execute nodes until we reach the exit node
-      while (currentNodeId !== exitNode.id) {
+      while (true) {
         const node = this.graph.getNode(currentNodeId);
         if (!node) {
           throw new Error(`Node not found: ${currentNodeId}`);
@@ -238,31 +238,17 @@ export class GraphExecutor {
 
         if (result.nextNode) {
           currentNodeId = result.nextNode;
+          // If next node is the exit node, continue to process it in next iteration
+          if (currentNodeId === exitNode.id) {
+            continue;
+          }
         } else {
           throw new Error(`Node ${currentNodeId} has no next node and is not the exit node`);
         }
       }
 
-      // Should not reach here, but handle exit node
-      const finalExitNode = this.graph.getNode(exitNode.id);
-      if (finalExitNode && finalExitNode.type === "exit") {
-        const result = executeExitNode(finalExitNode, context, Date.now());
-        if (this.controller) {
-          this.controller.setStatus("finished");
-          this.controller.setCurrentNode(null);
-        }
-        const endTime = Date.now();
-        const telemetry = enableTelemetry
-          ? this.buildTelemetry(context, startTime, endTime)
-          : undefined;
-        return {
-          result: result.output,
-          executionHistory: context.getHistory(),
-          telemetry,
-        };
-      }
-
-      throw new Error(`Exit node ${exitNode.id} not found or invalid`);
+      // Should not reach here - exit node should have been processed and returned
+      throw new Error(`Exit node was not reached`);
     } catch (error) {
       if (this.controller) {
         this.controller.setStatus("error");
