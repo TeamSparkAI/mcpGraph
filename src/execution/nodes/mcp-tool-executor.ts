@@ -12,7 +12,8 @@ export async function executeMcpToolNode(
   node: McpNode,
   context: ExecutionContext,
   clientManager: McpClientManager,
-  serverConfig: ServerConfig
+  serverConfig: ServerConfig,
+  startTime: number
 ): Promise<{ output: unknown; nextNode: string }> {
   logger.debug(`Executing MCP tool node: ${node.id} (${node.server}.${node.tool})`);
 
@@ -70,9 +71,10 @@ export async function executeMcpToolNode(
   logger.debug(`MCP tool output: ${JSON.stringify(toolOutput, null, 2)}`);
 
   const output = toolOutput;
+  const endTime = Date.now();
 
   context.setNodeOutput(node.id, output);
-  context.addHistory(node.id, transformedArgs, output);
+  context.addHistory(node.id, "mcp", transformedArgs, output, startTime, endTime);
 
   return {
     output,

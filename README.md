@@ -190,3 +190,4 @@ See [`examples/api-usage.ts`](examples/api-usage.ts) for a complete example.
 - [Contributing Guide](CONTRIBUTING.md) - Setup, development, and contribution guidelines
 - [Design Document](docs/design.md) - Complete design and architecture
 - [Implementation](docs/implementation.md) - Implementation details and architecture
+- [Introspection & Debugging](docs/introspection-debugging.md) - Guide for building visualizer applications and debuggers

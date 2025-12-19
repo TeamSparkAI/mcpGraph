@@ -13,9 +13,25 @@ import type { McpGraphConfig, NodeDefinition } from './types/config.js';
 import { validateGraph, type ValidationError } from './graph/validator.js';
 import { GraphExecutor } from './execution/executor.js';
 import { McpClientManager } from './mcp/client-manager.js';
+import type {
+  ExecutionOptions,
+  ExecutionResult as CoreExecutionResult,
+  ExecutionController,
+  ExecutionState,
+  ExecutionHooks,
+} from './types/execution.js';
 
 // Re-export types for consumers
 export type { NodeDefinition, McpGraphConfig } from './types/config.js';
+export type {
+  ExecutionOptions,
+  ExecutionHooks,
+  ExecutionController,
+  ExecutionState,
+  ExecutionStatus,
+  NodeExecutionRecord,
+  ExecutionTelemetry,
+} from './types/execution.js';
 
 export interface ToolInfo {
   name: string;
@@ -27,6 +43,8 @@ export interface ToolInfo {
 export interface ExecutionResult {
   result: unknown;
   structuredContent?: Record<string, unknown>;
+  executionHistory?: CoreExecutionResult['executionHistory'];
+  telemetry?: CoreExecutionResult['telemetry'];
 }
 
 export class McpGraphApi {
@@ -103,14 +121,46 @@ export class McpGraphApi {
    */
   async executeTool(
     toolName: string,
-    toolArguments: Record<string, unknown> = {}
+    toolArguments: Record<string, unknown> = {},
+    options?: ExecutionOptions
   ): Promise<ExecutionResult> {
-    const result = await this.executor.executeTool(toolName, toolArguments);
+    const executionResult = await this.executor.executeTool(toolName, toolArguments, options);
     
     return {
-      result,
-      structuredContent: result as Record<string, unknown>,
+      result: executionResult.result,
+      structuredContent: executionResult.result as Record<string, unknown>,
+      executionHistory: executionResult.executionHistory,
+      telemetry: executionResult.telemetry,
     };
+  }
+
+  /**
+   * Get the execution controller (available during execution with hooks/breakpoints)
+   */
+  getController(): ExecutionController | null {
+    return this.executor.getController();
+  }
+
+  /**
+   * Get the graph structure
+   */
+  getGraph() {
+    return this.executor.getGraph();
+  }
+
+  /**
+   * Get the current execution state (if execution is in progress)
+   */
+  getExecutionState(): ExecutionState | null {
+    const controller = this.executor.getController();
+    if (!controller) {
+      return null;
+    }
+    try {
+      return controller.getState();
+    } catch {
+      return null;
+    }
   }
 
   /**

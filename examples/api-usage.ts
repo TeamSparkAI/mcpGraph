@@ -38,6 +38,48 @@ async function example() {
   await api.close();
 }
 
+// Example: Using introspection and debugging features
+async function introspectionExample() {
+  const api = new McpGraphApi('examples/count_files.yaml');
+
+  // Execute with hooks and telemetry
+  const result = await api.executeTool('count_files', {
+    directory: './tests/files',
+  }, {
+    hooks: {
+      onNodeStart: async (nodeId, node) => {
+        console.log(`[Hook] Starting node: ${nodeId} (${node.type})`);
+        return true; // Continue execution
+      },
+      onNodeComplete: async (nodeId, node, input, output, duration) => {
+        console.log(`[Hook] Node ${nodeId} completed in ${duration}ms`);
+      },
+    },
+    enableTelemetry: true,
+  });
+
+  // Access execution history
+  if (result.executionHistory) {
+    console.log('\nExecution History:');
+    for (const record of result.executionHistory) {
+      console.log(`  ${record.nodeId} (${record.nodeType}): ${record.duration}ms`);
+    }
+  }
+
+  // Access telemetry
+  if (result.telemetry) {
+    console.log('\nTelemetry:');
+    console.log(`  Total duration: ${result.telemetry.totalDuration}ms`);
+    console.log(`  Errors: ${result.telemetry.errorCount}`);
+    for (const [nodeType, duration] of result.telemetry.nodeDurations) {
+      const count = result.telemetry.nodeCounts.get(nodeType) || 0;
+      console.log(`  ${nodeType}: ${count} executions, ${duration}ms total`);
+    }
+  }
+
+  await api.close();
+}
+
 // Example: Validate config without creating an API instance
 function validateConfigExample() {
   const errors = McpGraphApi.validateConfig('examples/count_files.yaml');
@@ -64,6 +106,12 @@ function loadAndValidateExample() {
 
 // Run examples
 if (import.meta.url === `file://${process.argv[1]}`) {
-  example().catch(console.error);
+  const exampleToRun = process.argv[2] || 'basic';
+  
+  if (exampleToRun === 'introspection') {
+    introspectionExample().catch(console.error);
+  } else {
+    example().catch(console.error);
+  }
 }
 

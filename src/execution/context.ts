@@ -3,10 +3,11 @@
  */
 
 import type { ExecutionContext as ExprContext } from "../expressions/context.js";
+import type { NodeExecutionRecord } from "../types/execution.js";
 
 export class ExecutionContext {
   private data: ExprContext;
-  private history: Array<{ nodeId: string; input: unknown; output: unknown }>;
+  private history: NodeExecutionRecord[];
 
   constructor(toolInput: Record<string, unknown>) {
     // Initialize context with tool input available as $.input
@@ -30,11 +31,28 @@ export class ExecutionContext {
     this.data.last = output;
   }
 
-  addHistory(nodeId: string, input: unknown, output: unknown): void {
-    this.history.push({ nodeId, input, output });
+  addHistory(
+    nodeId: string,
+    nodeType: string,
+    input: unknown,
+    output: unknown,
+    startTime: number,
+    endTime: number,
+    error?: Error
+  ): void {
+    this.history.push({
+      nodeId,
+      nodeType,
+      input,
+      output,
+      startTime,
+      endTime,
+      duration: endTime - startTime,
+      error,
+    });
   }
 
-  getHistory(): Array<{ nodeId: string; input: unknown; output: unknown }> {
+  getHistory(): NodeExecutionRecord[] {
     return this.history;
   }
 }

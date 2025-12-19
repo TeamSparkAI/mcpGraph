@@ -9,17 +9,20 @@ import { logger } from "../../logger.js";
 
 export async function executeSwitchNode(
   node: SwitchNode,
-  context: ExecutionContext
+  context: ExecutionContext,
+  startTime: number
 ): Promise<{ output: unknown; nextNode: string }> {
   logger.debug(`Executing switch node: ${node.id}`);
 
   const exprContext = context.getData();
+  const endTime = Date.now();
 
   // Evaluate conditions in order
   for (const condition of node.conditions) {
     // If no rule is specified, this is a default/fallback case
     if (condition.rule === undefined || condition.rule === null) {
       logger.debug(`Switch node ${node.id}: Using default/fallback target: ${condition.target}`);
+      context.addHistory(node.id, "switch", exprContext, exprContext, startTime, endTime);
       return {
         output: exprContext,
         nextNode: condition.target,
@@ -31,6 +34,7 @@ export async function executeSwitchNode(
 
     if (ruleResult) {
       logger.debug(`Switch node ${node.id}: Condition matched, routing to: ${condition.target}`);
+      context.addHistory(node.id, "switch", exprContext, exprContext, startTime, endTime);
       return {
         output: exprContext,
         nextNode: condition.target,
@@ -39,8 +43,10 @@ export async function executeSwitchNode(
   }
 
   // No conditions matched and no default case
-  throw new Error(
+  const error = new Error(
     `Switch node ${node.id}: No conditions matched and no default case provided`
   );
+  context.addHistory(node.id, "switch", exprContext, null, startTime, endTime, error);
+  throw error;
 }
 

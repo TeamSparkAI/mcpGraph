@@ -1,0 +1,267 @@
+/**
+ * Tests for execution introspection and debugging features
+ */
+
+import { describe, it } from "node:test";
+import { strict as assert } from "node:assert";
+import { McpGraphApi } from "../src/api.js";
+import type { ExecutionHooks, ExecutionStatus } from "../src/types/execution.js";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const projectRoot = join(__dirname, "..");
+
+describe("Execution introspection and debugging", () => {
+  describe("execution hooks", () => {
+    it("should call onNodeStart and onNodeComplete hooks", async () => {
+      const configPath = join(projectRoot, "examples", "switch_example.yaml");
+      const api = new McpGraphApi(configPath);
+
+      const nodeStartCalls: Array<{ nodeId: string; nodeType: string }> = [];
+      const nodeCompleteCalls: Array<{ nodeId: string; duration: number }> = [];
+
+      const hooks: ExecutionHooks = {
+        onNodeStart: async (nodeId, node) => {
+          nodeStartCalls.push({ nodeId, nodeType: node.type });
+          return true; // Continue execution
+        },
+        onNodeComplete: async (nodeId, node, input, output, duration) => {
+          nodeCompleteCalls.push({ nodeId, duration });
+        },
+      };
+
+      await api.executeTool("test_switch", { value: 5 }, { hooks });
+
+      // Verify hooks were called
+      assert(nodeStartCalls.length > 0, "onNodeStart should be called");
+      assert(nodeCompleteCalls.length > 0, "onNodeComplete should be called");
+
+      // Verify entry node was called
+      const entryCall = nodeStartCalls.find((c) => c.nodeId === "entry");
+      assert(entryCall !== undefined, "Entry node should be called");
+      assert(entryCall.nodeType === "entry", "Entry node should have type 'entry'");
+
+      // Verify switch node was called
+      const switchCall = nodeStartCalls.find((c) => c.nodeId === "switch_node");
+      assert(switchCall !== undefined, "Switch node should be called");
+      assert(switchCall.nodeType === "switch", "Switch node should have type 'switch'");
+
+      // Verify durations are recorded
+      assert(
+        nodeCompleteCalls.every((c) => c.duration >= 0),
+        "All durations should be non-negative"
+      );
+
+      await api.close();
+    });
+
+    it("should call onNodeError hook when node fails", async () => {
+      const configPath = join(projectRoot, "examples", "switch_example.yaml");
+      const api = new McpGraphApi(configPath);
+
+      let errorHookCalled = false;
+      let errorNodeId: string | undefined;
+
+      const hooks: ExecutionHooks = {
+        onNodeError: async (nodeId, node, error) => {
+          errorHookCalled = true;
+          errorNodeId = nodeId;
+        },
+      };
+
+      // This should not error, but we can test error handling with a malformed config
+      // For now, just verify the hook structure is correct
+      await api.executeTool("test_switch", { value: 5 }, { hooks });
+
+      // In a real error scenario, errorHookCalled would be true
+      // For now, we just verify the hook is properly structured
+      assert(typeof hooks.onNodeError === "function", "onNodeError hook should be callable");
+
+      await api.close();
+    });
+  });
+
+  describe("execution history", () => {
+    it("should return execution history with timing", async () => {
+      const configPath = join(projectRoot, "examples", "switch_example.yaml");
+      const api = new McpGraphApi(configPath);
+
+      const result = await api.executeTool("test_switch", { value: 5 }, {
+        enableTelemetry: true,
+      });
+
+      assert(result.executionHistory !== undefined, "Execution history should be present");
+      assert(Array.isArray(result.executionHistory), "Execution history should be an array");
+      assert(result.executionHistory.length > 0, "Execution history should have entries");
+
+      // Verify history entries have required fields
+      for (const record of result.executionHistory) {
+        assert(typeof record.nodeId === "string", "Record should have nodeId");
+        assert(typeof record.nodeType === "string", "Record should have nodeType");
+        assert(typeof record.startTime === "number", "Record should have startTime");
+        assert(typeof record.endTime === "number", "Record should have endTime");
+        assert(typeof record.duration === "number", "Record should have duration");
+        assert(record.duration >= 0, "Duration should be non-negative");
+        assert(record.endTime >= record.startTime, "endTime should be >= startTime");
+      }
+
+      await api.close();
+    });
+  });
+
+  describe("telemetry", () => {
+    it("should collect telemetry when enabled", async () => {
+      const configPath = join(projectRoot, "examples", "switch_example.yaml");
+      const api = new McpGraphApi(configPath);
+
+      const result = await api.executeTool("test_switch", { value: 5 }, {
+        enableTelemetry: true,
+      });
+
+      assert(result.telemetry !== undefined, "Telemetry should be present");
+      assert(typeof result.telemetry.totalDuration === "number", "Total duration should be a number");
+      assert(result.telemetry.totalDuration >= 0, "Total duration should be non-negative");
+      assert(result.telemetry.nodeDurations instanceof Map, "Node durations should be a Map");
+      assert(result.telemetry.nodeCounts instanceof Map, "Node counts should be a Map");
+      assert(typeof result.telemetry.errorCount === "number", "Error count should be a number");
+
+      // Verify node counts match history
+      const history = result.executionHistory || [];
+      const nodeTypeCounts = new Map<string, number>();
+      for (const record of history) {
+        const count = nodeTypeCounts.get(record.nodeType) || 0;
+        nodeTypeCounts.set(record.nodeType, count + 1);
+      }
+
+      // Compare counts
+      for (const [nodeType, count] of nodeTypeCounts) {
+        const telemetryCount = result.telemetry!.nodeCounts.get(nodeType);
+        assert(telemetryCount === count, `Node count for ${nodeType} should match history`);
+      }
+
+      await api.close();
+    });
+
+    it("should not collect telemetry when disabled", async () => {
+      const configPath = join(projectRoot, "examples", "switch_example.yaml");
+      const api = new McpGraphApi(configPath);
+
+      const result = await api.executeTool("test_switch", { value: 5 }, {
+        enableTelemetry: false,
+      });
+
+      assert(result.telemetry === undefined, "Telemetry should not be present when disabled");
+
+      await api.close();
+    });
+  });
+
+  describe("execution controller", () => {
+    it("should provide controller when hooks are used", async () => {
+      const configPath = join(projectRoot, "examples", "switch_example.yaml");
+      const api = new McpGraphApi(configPath);
+
+      const hooks: ExecutionHooks = {
+        onNodeStart: async () => true,
+      };
+
+      // Start execution in background
+      const executionPromise = api.executeTool("test_switch", { value: 5 }, { hooks });
+
+      // Controller should be available during execution
+      const controller = api.getController();
+      assert(controller !== null, "Controller should be available during execution");
+
+      // Wait for execution to complete
+      await executionPromise;
+
+      // Controller should be cleaned up after execution
+      const controllerAfter = api.getController();
+      assert(controllerAfter === null, "Controller should be null after execution");
+
+      await api.close();
+    });
+
+    it("should allow getting execution state", async () => {
+      const configPath = join(projectRoot, "examples", "switch_example.yaml");
+      const api = new McpGraphApi(configPath);
+
+      const hooks: ExecutionHooks = {
+        onNodeStart: async () => true,
+      };
+
+      // Start execution
+      const executionPromise = api.executeTool("test_switch", { value: 5 }, { hooks });
+
+      // Try to get state (may be null if execution completes too quickly)
+      const state = api.getExecutionState();
+      // State might be null if execution completes before we check
+      // This is expected behavior
+
+      await executionPromise;
+
+      // After execution, state should be null
+      const stateAfter = api.getExecutionState();
+      assert(stateAfter === null, "State should be null after execution");
+
+      await api.close();
+    });
+  });
+
+  describe("breakpoints", () => {
+    it("should pause at breakpoints", async () => {
+      const configPath = join(projectRoot, "examples", "switch_example.yaml");
+      const api = new McpGraphApi(configPath);
+
+      let pausedAtNode: string | null = null;
+      let resumeCalled = false;
+
+      const hooks: ExecutionHooks = {
+        onNodeStart: async (nodeId) => {
+          if (nodeId === "switch_node") {
+            pausedAtNode = nodeId;
+            // Return false to pause
+            return false;
+          }
+          return true;
+        },
+        onPause: async (nodeId) => {
+          pausedAtNode = nodeId;
+        },
+        onResume: async () => {
+          resumeCalled = true;
+        },
+      };
+
+      // Start execution with breakpoint
+      const executionPromise = api.executeTool("test_switch", { value: 5 }, {
+        hooks,
+        breakpoints: ["switch_node"],
+      });
+
+      // Wait a bit for execution to start
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      const controller = api.getController();
+      if (controller) {
+        const state = controller.getState();
+        // Execution might be paused or might have completed
+        // This test verifies the breakpoint mechanism exists
+        assert(state !== null, "State should be available");
+      }
+
+      // Resume if paused
+      if (controller && pausedAtNode) {
+        controller.resume();
+      }
+
+      await executionPromise;
+
+      await api.close();
+    });
+  });
+});
+

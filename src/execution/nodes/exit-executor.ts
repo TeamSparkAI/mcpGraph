@@ -8,7 +8,8 @@ import { logger } from "../../logger.js";
 
 export function executeExitNode(
   node: ExitNode,
-  context: ExecutionContext
+  context: ExecutionContext,
+  startTime: number
 ): { output: unknown } {
   logger.debug(`Executing exit node: ${node.id}`);
 
@@ -16,8 +17,9 @@ export function executeExitNode(
   // Use the last output or the context's output
   const data = context.getData();
   const output = data.output || data.last || {};
+  const endTime = Date.now();
 
-  context.addHistory(node.id, data, output);
+  context.addHistory(node.id, "exit", data, output, startTime, endTime);
 
   return {
     output,
