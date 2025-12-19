@@ -141,8 +141,10 @@ describe("MCP server integration", () => {
 
       assert(result !== undefined, "Result should be defined");
       assert(!result.isError, "Result should not be an error");
+      assert(result.content !== undefined, "Result should have content");
+      assert(Array.isArray(result.content), "Content should be an array");
       
-      const textContent = result.content?.find((c) => c.type === "text");
+      const textContent = result.content.find((c) => c.type === "text");
       assert(textContent !== undefined, "Should have text content");
       const parsed = JSON.parse((textContent as { text: string }).text);
       assert(parsed.result === "high", `Expected "high", got "${parsed.result}"`);
@@ -163,8 +165,10 @@ describe("MCP server integration", () => {
 
       assert(result !== undefined, "Result should be defined");
       assert(!result.isError, "Result should not be an error");
+      assert(result.content !== undefined, "Result should have content");
+      assert(Array.isArray(result.content), "Content should be an array");
       
-      const textContent = result.content?.find((c) => c.type === "text");
+      const textContent = result.content.find((c) => c.type === "text");
       assert(textContent !== undefined, "Should have text content");
       const parsed = JSON.parse((textContent as { text: string }).text);
       assert(parsed.result === "low", `Expected "low", got "${parsed.result}"`);
@@ -180,8 +184,10 @@ describe("MCP server integration", () => {
 
       assert(result !== undefined, "Result should be defined");
       assert(!result.isError, "Result should not be an error");
+      assert(result.content !== undefined, "Result should have content");
+      assert(Array.isArray(result.content), "Content should be an array");
       
-      const textContent = result.content?.find((c) => c.type === "text");
+      const textContent = result.content.find((c) => c.type === "text");
       assert(textContent !== undefined, "Should have text content");
       const parsed = JSON.parse((textContent as { text: string }).text);
       assert(parsed.result === "zero_or_negative", `Expected "zero_or_negative", got "${parsed.result}"`);
@@ -197,8 +203,10 @@ describe("MCP server integration", () => {
 
       assert(result !== undefined, "Result should be defined");
       assert(!result.isError, "Result should not be an error");
+      assert(result.content !== undefined, "Result should have content");
+      assert(Array.isArray(result.content), "Content should be an array");
       
-      const textContent = result.content?.find((c) => c.type === "text");
+      const textContent = result.content.find((c) => c.type === "text");
       assert(textContent !== undefined, "Should have text content");
       const parsed = JSON.parse((textContent as { text: string }).text);
       assert(parsed.result === "zero_or_negative", `Expected "zero_or_negative", got "${parsed.result}"`);
