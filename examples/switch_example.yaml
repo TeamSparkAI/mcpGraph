@@ -1,0 +1,80 @@
+version: "1.0"
+
+# MCP Server Metadata
+server:
+  name: "switchExample"
+  version: "1.0.0"
+  description: "Example demonstrating switch node functionality"
+
+# Tool Definitions
+tools:
+  - name: "test_switch"
+    description: "Test switch node with conditional routing"
+    inputSchema:
+      type: "object"
+      properties:
+        value:
+          type: "number"
+          description: "A numeric value to route based on"
+      required:
+        - value
+    outputSchema:
+      type: "object"
+      properties:
+        result:
+          type: "string"
+          description: "The routing result"
+
+# Graph Nodes
+nodes:
+  # Entry node: Receives tool arguments
+  - id: "entry"
+    type: "entry"
+    tool: "test_switch"
+    next: "switch_node"
+  
+  # Switch node: Routes based on value
+  - id: "switch_node"
+    type: "switch"
+    conditions:
+      - rule:
+          ">":
+            - { var: "value" }
+            - 10
+        target: "high_path"
+      - rule:
+          ">":
+            - { var: "value" }
+            - 0
+        target: "low_path"
+      - target: "zero_path"
+  
+  # High path (> 10)
+  - id: "high_path"
+    type: "transform"
+    transform:
+      expr: |
+        { "result": "high" }
+    next: "exit"
+  
+  # Low path (> 0 but <= 10)
+  - id: "low_path"
+    type: "transform"
+    transform:
+      expr: |
+        { "result": "low" }
+    next: "exit"
+  
+  # Zero/negative path (default)
+  - id: "zero_path"
+    type: "transform"
+    transform:
+      expr: |
+        { "result": "zero_or_negative" }
+    next: "exit"
+  
+  # Exit node: Returns the result
+  - id: "exit"
+    type: "exit"
+    tool: "test_switch"
+
