@@ -5,7 +5,7 @@
 import type { NodeDefinition } from "./config.js";
 import type { ExecutionContext } from "../execution/context.js";
 
-export type ExecutionStatus = "not_started" | "running" | "paused" | "finished" | "error";
+export type ExecutionStatus = "not_started" | "running" | "paused" | "finished" | "error" | "stopped";
 
 export interface NodeExecutionRecord {
   nodeId: string;
@@ -102,6 +102,12 @@ export interface ExecutionController {
    * Clear breakpoints
    */
   clearBreakpoints(): void;
+
+  /**
+   * Stop/cancel the ongoing execution.
+   * This immediately halts execution at the current node boundary.
+   */
+  stop(): void;
 }
 
 export interface ExecutionOptions {

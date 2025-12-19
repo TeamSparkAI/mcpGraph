@@ -16,6 +16,7 @@ export class ExecutionController implements IExecutionController {
   private breakpoints: Set<string> = new Set();
   private pauseRequested: boolean = false;
   private stepRequested: boolean = false;
+  private stopRequested: boolean = false;
   private resumePromise: Promise<void> | null = null;
   private resumeResolve: (() => void) | null = null;
 
@@ -49,6 +50,10 @@ export class ExecutionController implements IExecutionController {
 
   shouldPause(nodeId: string): boolean {
     return this.breakpoints.has(nodeId) || this.pauseRequested;
+  }
+
+  shouldStop(): boolean {
+    return this.stopRequested;
   }
 
   pause(): void {
@@ -110,6 +115,20 @@ export class ExecutionController implements IExecutionController {
     if (this.stepRequested) {
       this.stepRequested = false;
       this.pauseRequested = true;
+    }
+  }
+
+  stop(): void {
+    if (this.status === "running" || this.status === "paused") {
+      this.stopRequested = true;
+      const wasPaused = this.status === "paused";
+      this.status = "stopped";
+      // If paused, resume to allow stop to take effect
+      if (wasPaused && this.resumeResolve) {
+        this.resumeResolve();
+      }
+    } else {
+      throw new Error(`Cannot stop: execution status is "${this.status}"`);
     }
   }
 }

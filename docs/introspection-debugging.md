@@ -193,6 +193,13 @@ interface ExecutionController {
    * Clear breakpoints
    */
   clearBreakpoints(): void;
+  
+  /**
+   * Stop/cancel the ongoing execution.
+   * Only valid when status is "running" or "paused"
+   * Immediately halts execution at the current node boundary.
+   */
+  stop(): void;
 }
 ```
 
@@ -236,6 +243,13 @@ function handleResume() {
   const controller = api.getController();
   if (controller) {
     controller.resume();
+  }
+}
+
+function handleStop() {
+  const controller = api.getController();
+  if (controller) {
+    controller.stop();
   }
 }
 ```
@@ -316,7 +330,8 @@ type ExecutionStatus =
   | "running"      // Execution is actively running
   | "paused"       // Execution is paused (can resume/step)
   | "finished"     // Execution completed successfully
-  | "error";       // Execution failed with an error
+  | "error"        // Execution failed with an error
+  | "stopped";     // Execution was stopped/cancelled
 ```
 
 ### Execution State Interface
@@ -508,6 +523,13 @@ class GraphVisualizer {
     const controller = this.api.getController();
     if (controller) {
       await controller.step();
+    }
+  }
+  
+  stop() {
+    const controller = this.api.getController();
+    if (controller) {
+      controller.stop();
     }
   }
   

@@ -107,6 +107,15 @@ export class GraphExecutor {
 
       // Execute nodes until we reach the exit node
       while (true) {
+        // Check for stop request before processing next node
+        if (this.controller && this.controller.shouldStop()) {
+          if (this.controller) {
+            this.controller.setStatus("stopped");
+            this.controller.setCurrentNode(null);
+          }
+          throw new Error("Execution was stopped");
+        }
+
         const node = this.graph.getNode(currentNodeId);
         if (!node) {
           throw new Error(`Node not found: ${currentNodeId}`);
@@ -120,15 +129,39 @@ export class GraphExecutor {
         // Check for breakpoint or pause request
         if (this.controller && this.controller.shouldPause(currentNodeId)) {
           await this.controller.waitIfPaused();
+          // Check again for stop after resuming from pause
+          if (this.controller && this.controller.shouldStop()) {
+            if (this.controller) {
+              this.controller.setStatus("stopped");
+              this.controller.setCurrentNode(null);
+            }
+            throw new Error("Execution was stopped");
+          }
         }
 
         // Call onNodeStart hook
         if (hooks?.onNodeStart) {
           const shouldContinue = await hooks.onNodeStart(currentNodeId, node, context);
+          // Check for stop after hook (hook may have called stop())
+          if (this.controller && this.controller.shouldStop()) {
+            if (this.controller) {
+              this.controller.setStatus("stopped");
+              this.controller.setCurrentNode(null);
+            }
+            throw new Error("Execution was stopped");
+          }
           if (shouldContinue === false) {
             // Hook requested pause
             if (this.controller) {
               await this.controller.waitIfPaused();
+              // Check for stop after resuming from pause
+              if (this.controller && this.controller.shouldStop()) {
+                if (this.controller) {
+                  this.controller.setStatus("stopped");
+                  this.controller.setCurrentNode(null);
+                }
+                throw new Error("Execution was stopped");
+              }
             }
           }
         }
@@ -173,6 +206,14 @@ export class GraphExecutor {
               result = await executeTransformNode(node, context, nodeStartTime);
               break;
             case "mcp":
+              // Check for stop before starting MCP call (which may take time)
+              if (this.controller && this.controller.shouldStop()) {
+                if (this.controller) {
+                  this.controller.setStatus("stopped");
+                  this.controller.setCurrentNode(null);
+                }
+                throw new Error("Execution was stopped");
+              }
               const serverConfig = this.getServerConfig(node.server);
               result = await executeMcpToolNode(
                 node,
@@ -181,6 +222,14 @@ export class GraphExecutor {
                 serverConfig,
                 nodeStartTime
               );
+              // Check for stop after MCP call completes
+              if (this.controller && this.controller.shouldStop()) {
+                if (this.controller) {
+                  this.controller.setStatus("stopped");
+                  this.controller.setCurrentNode(null);
+                }
+                throw new Error("Execution was stopped");
+              }
               break;
             case "switch":
               result = await executeSwitchNode(node, context, nodeStartTime);
@@ -251,10 +300,15 @@ export class GraphExecutor {
       throw new Error(`Exit node was not reached`);
     } catch (error) {
       if (this.controller) {
-        this.controller.setStatus("error");
-        this.controller.setCurrentNode(null);
-        if (error instanceof Error) {
-          // Store error in controller state would require extending ExecutionState
+        // Don't override "stopped" status with "error" if execution was stopped
+        const state = this.controller.getState();
+        if (this.controller.shouldStop() && state.status === "stopped") {
+          // Status already set to stopped, just clean up
+          this.controller.setCurrentNode(null);
+        } else if (!(error instanceof Error && error.message === "Execution was stopped")) {
+          // Only set error status if it wasn't a stop request
+          this.controller.setStatus("error");
+          this.controller.setCurrentNode(null);
         }
       }
       throw error;
