@@ -13,20 +13,24 @@ This document memorializes the high-level design and tooling recommendations for
 - Frontend tools for visual graph editing (like React Flow) are industry standard
 - Strong ecosystem for both backend orchestration and frontend visualization
 
-### Graph Execution Engine: Flowcraft
+### Graph Execution Engine
 
-**Flowcraft** is the recommended graph execution engine for orchestrating the directed graph of MCP server calls.
+The system implements a custom graph execution engine that orchestrates the directed graph of MCP server calls.
 
-**Why Flowcraft:**
-- **Workflow-Focused**: Designed specifically for workflow orchestration (similar to n8n/Zapier), making it a natural fit for tool-call-based nodes
-- **Control Flow**: Built-in support for conditionals (if/switch), loops, and parallelism
-- **Data Flow**: Designed to handle data transformation and flow between nodes, with built-in support for modifying node inputs/outputs
-- **Lightweight**: Dependency-free and focused on workflow execution
-- **Static Analysis**: Provides tools to analyze workflows, detect cycles, and catch errors before execution
-- **Programmatic API**: Can be used programmatically to build workflows from custom YAML configurations
+**Design Approach:**
+- **Custom Execution Loop**: A lightweight, sequential execution loop that provides full control over execution flow
+- **Simple Architecture**: Direct mapping from YAML node definitions to execution, avoiding abstraction layers
+- **Data Flow**: Execution context maintains state and data flow between nodes
+- **Control Flow**: Supports conditional routing via switch nodes; cycles are supported for future loop constructs
+- **Observability**: Built-in execution history tracking for debugging and introspection
 
-**Implementation Approach:**
-The system will define its own custom YAML format for graph definitions. The YAML will be parsed into a graph structure, which will then be used to programmatically construct Flowcraft workflows. This allows full control over the YAML schema while leveraging Flowcraft's execution engine for running the graph.
+**Implementation:**
+The YAML configuration is parsed into a graph structure (`Graph` class) and executed by a custom `GraphExecutor` that:
+- Starts at the tool's entry node
+- Executes nodes sequentially based on the graph structure
+- Tracks execution state and history
+- Routes conditionally via switch nodes
+- Continues until the exit node is reached
 
 ### MCP Integration
 
@@ -90,9 +94,9 @@ The system exposes an MCP server that reads a YAML configuration file. When a to
    - **Entry Node**: Receives tool arguments, initializes execution context, passes to next node
    - **Pre-transform**: Apply JSONata to the incoming data to format the tool arguments (if node is an MCP tool call)
    - **Call Tool**: Use the MCP SDK to `callTool` on the target server (if node is an MCP tool call)
-   - **Post-transform**: Reformat the tool's output for the next step (if node is an MCP tool call)
-   - **Route**: Evaluate json-logic against the current data state to decide which edge to follow next (if node is a switch/conditional)
-   - **Observe**: Emit an event to the UI with the node_id, input_data, and output_data
+   - **Transform**: Apply JSONata expressions to transform data (if node is a transform node)
+   - **Route**: Evaluate JSON Logic against the current data state to decide which edge to follow next (if node is a switch/conditional)
+   - **Track History**: Record node execution with inputs and outputs for observability
 5. **Exit Node**: When execution reaches the exit node, extract the final result and return it to the MCP tool caller
 
 ## Visual Tooling & Observability
@@ -208,7 +212,9 @@ nodes:
 
 ## System Components
 
-1. **Executable**: Exposes an MCP server to run the graph
-2. **Visual Editor**: Tools to visually view and edit the graph
-3. **Execution Observer**: Ability to observe the graph as it executes
-4. **Graph Runner**: Core orchestration engine that executes the directed graph (supports cycles for loops and retries)
+1. **Executable**: Exposes an MCP server to run the graph (`mcpgraph` CLI)
+2. **Programmatic API**: Exports `McpGraphApi` class for programmatic use (e.g., by visualizer applications)
+3. **Graph Executor**: Core orchestration engine that executes the directed graph sequentially
+4. **Execution Context**: Tracks execution state, data flow, and history
+5. **Visual Editor**: Tools to visually view and edit the graph (future)
+6. **Execution Observer**: Ability to observe and debug graph execution (future - see `docs/future-introspection-debugging.md`)

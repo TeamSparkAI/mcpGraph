@@ -24,7 +24,7 @@ The implementation creates a working MCP server that can:
   - `js-yaml` - YAML parsing
   - `zod` - Schema validation
 
-**Note:** `flowcraft` was planned but not used - a custom execution loop was implemented instead.
+**Note:** A custom execution loop was implemented to provide full control over execution flow and enable future introspection/debugging capabilities.
 
 ### 1.2 Type Definitions
 
@@ -222,15 +222,15 @@ Execution state management:
 **File: `src/execution/executor.ts`**
 
 Main graph execution orchestrator:
-- Custom execution loop (Flowcraft not used)
+- Custom sequential execution loop
 - Start at tool's entry node
-- Execute current node
-- Move to next node(s)
+- Execute current node based on type (entry, mcp, transform, switch, exit)
+- Move to next node based on node's `next` field or switch routing
 - Continue until exit node is reached
-- Track execution path
-- Handle errors
+- Track execution history (node inputs/outputs)
+- Handle errors with context
 
-**Note:** Cycle handling with limits was planned but not explicitly implemented - the while loop naturally handles cycles.
+**Note:** The execution loop supports cycles (directed graphs with cycles), but infinite loops are prevented by the exit node check. Future loop node types can leverage this cycle support.
 
 ### 6.3 Execution Flow
 
@@ -346,7 +346,7 @@ README updated with:
 
 ## Implementation Decisions
 
-1. **Flowcraft Usage**: Flowcraft was planned but not used. A custom execution loop was implemented instead, giving full control over execution flow.
+1. **Custom Execution Engine**: A custom execution loop was implemented to provide full control over execution flow, enable observability (execution history), and support future debugging/introspection features.
 
 2. **Expression Evaluation**: All expressions (JSONata, JSON Logic) are evaluated with a consistent context that includes tool inputs and previous node outputs.
 
@@ -358,10 +358,14 @@ README updated with:
 
 6. **Code Organization**: Some planned separate files were integrated into existing files (e.g., server setup in main.ts, tool registration in main.ts). This works well and keeps the codebase simpler.
 
-## Future Considerations (Out of Scope for Initial Implementation)
+## Future Considerations
 
+See `docs/future-introspection-debugging.md` for planned introspection and debugging features.
+
+Other future enhancements:
 - Visual editor/UX
 - Hot-reload of configuration
+- Loop node types (for, while, foreach)
 - Parallel node execution
 - Retry logic for failed nodes
 - Execution history persistence
