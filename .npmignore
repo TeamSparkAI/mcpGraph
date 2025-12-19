@@ -1,7 +1,6 @@
 # Source files (only dist is published)
 src/
 tests/
-docs/
 
 # Development files
 tsconfig.json
