@@ -128,7 +128,28 @@ export class GraphExecutor {
 
         // Check for breakpoint or pause request
         if (this.controller && this.controller.shouldPause(currentNodeId)) {
-          await this.controller.waitIfPaused();
+          // If breakpoint hit, set pauseRequested
+          this.controller.checkAndSetBreakpointPause(currentNodeId);
+          
+          // Set status to paused
+          this.controller.setStatus("paused");
+          
+          // Wait for resume - this creates the promise and blocks until resume() is called
+          const pausePromise = this.controller.waitIfPaused();
+          
+          // Call onPause hook to notify that we've paused (status is "paused", waiting for resume)
+          if (hooks?.onPause) {
+            await hooks.onPause(currentNodeId, context);
+          }
+          
+          // Wait for resume to be called
+          await pausePromise;
+          
+          // Call onResume hook after resuming
+          if (hooks?.onResume) {
+            await hooks.onResume();
+          }
+          
           // Check again for stop after resuming from pause
           if (this.controller && this.controller.shouldStop()) {
             if (this.controller) {
@@ -153,7 +174,15 @@ export class GraphExecutor {
           if (shouldContinue === false) {
             // Hook requested pause
             if (this.controller) {
+              // Call onPause hook before waiting
+              if (hooks?.onPause) {
+                await hooks.onPause(currentNodeId, context);
+              }
               await this.controller.waitIfPaused();
+              // Call onResume hook after resuming
+              if (hooks?.onResume) {
+                await hooks.onResume();
+              }
               // Check for stop after resuming from pause
               if (this.controller && this.controller.shouldStop()) {
                 if (this.controller) {

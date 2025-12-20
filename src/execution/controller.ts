@@ -37,11 +37,14 @@ export class ExecutionController implements IExecutionController {
       this.status = "paused";
       this.pauseRequested = false;
       
-      // Create promise for resume
-      this.resumePromise = new Promise((resolve) => {
-        this.resumeResolve = resolve;
-      });
+      // Create promise for resume if it doesn't exist
+      if (!this.resumePromise) {
+        this.resumePromise = new Promise((resolve) => {
+          this.resumeResolve = resolve;
+        });
+      }
       
+      // Wait for resume - execution is now paused
       await this.resumePromise;
       this.resumePromise = null;
       this.resumeResolve = null;
@@ -50,6 +53,15 @@ export class ExecutionController implements IExecutionController {
 
   shouldPause(nodeId: string): boolean {
     return this.breakpoints.has(nodeId) || this.pauseRequested;
+  }
+
+  /**
+   * Check if we should pause due to a breakpoint and set pauseRequested if so
+   */
+  checkAndSetBreakpointPause(nodeId: string): void {
+    if (this.breakpoints.has(nodeId) && !this.pauseRequested && this.status === "running") {
+      this.pauseRequested = true;
+    }
   }
 
   shouldStop(): boolean {

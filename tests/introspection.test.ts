@@ -218,47 +218,71 @@ describe("Execution introspection and debugging", () => {
 
       let pausedAtNode: string | null = null;
       let resumeCalled = false;
+      const executionOrder: string[] = [];
+      let resumeResolve: (() => void) | null = null;
+      const resumePromise = new Promise<void>((resolve) => {
+        resumeResolve = resolve;
+      });
 
       const hooks: ExecutionHooks = {
         onNodeStart: async (nodeId) => {
-          if (nodeId === "switch_node") {
-            pausedAtNode = nodeId;
-            // Return false to pause
-            return false;
-          }
+          executionOrder.push(`start:${nodeId}`);
+          // Don't pause here - let the breakpoint do it
           return true;
+        },
+        onNodeComplete: async (nodeId) => {
+          executionOrder.push(`complete:${nodeId}`);
         },
         onPause: async (nodeId) => {
           pausedAtNode = nodeId;
+          executionOrder.push(`pause:${nodeId}`);
+          // Signal that we've paused (status is already "paused" at this point)
+          if (resumeResolve) {
+            resumeResolve();
+          }
         },
         onResume: async () => {
           resumeCalled = true;
+          executionOrder.push("resume");
         },
       };
 
       // Start execution with breakpoint
       const executionPromise = api.executeTool("test_switch", { value: 5 }, {
         hooks,
-        breakpoints: ["switch_node"],
+        breakpoints: ["switch_node"], // Breakpoint should pause here
       });
 
-      // Wait a bit for execution to start
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      // Wait for pause to occur
+      await resumePromise;
 
       const controller = api.getController();
-      if (controller) {
-        const state = controller.getState();
-        // Execution might be paused or might have completed
-        // This test verifies the breakpoint mechanism exists
-        assert(state !== null, "State should be available");
-      }
+      assert(controller !== null, "Controller should be available during execution");
+      
+      const state = controller!.getState();
+      assert(state.status === "paused", `Expected status "paused", got "${state.status}"`);
+      assert(state.currentNodeId === "switch_node", `Expected current node "switch_node", got "${state.currentNodeId}"`);
+      assert(pausedAtNode === "switch_node", "onPause should have been called with switch_node");
 
-      // Resume if paused
-      if (controller && pausedAtNode) {
-        controller.resume();
-      }
+      // Verify execution order: entry should complete, switch should pause before starting
+      assert(executionOrder.includes("start:entry"), "Entry node should have started");
+      assert(executionOrder.includes("complete:entry"), "Entry node should have completed");
+      // Note: breakpoint check happens before onNodeStart, so switch_node won't have started yet
+      assert(executionOrder.includes("pause:switch_node"), "Should have paused at switch_node");
+      assert(!executionOrder.includes("start:switch_node"), "Switch node should not have started yet (paused at breakpoint)");
+      assert(!executionOrder.includes("complete:switch_node"), "Switch node should not have completed yet");
 
+      // Resume execution
+      controller!.resume();
+      
+      // Wait for execution to complete (onResume will be called during execution)
       await executionPromise;
+      
+      // Verify onResume was called
+      assert(resumeCalled, "onResume should have been called");
+
+      // Verify switch node completed after resume
+      assert(executionOrder.includes("complete:switch_node"), "Switch node should have completed after resume");
 
       await api.close();
     });
