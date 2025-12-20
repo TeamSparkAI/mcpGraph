@@ -104,6 +104,11 @@ export interface ExecutionController {
   clearBreakpoints(): void;
 
   /**
+   * Get all current breakpoints
+   */
+  getBreakpoints(): string[];
+
+  /**
    * Stop/cancel the ongoing execution.
    * This immediately halts execution at the current node boundary.
    */
