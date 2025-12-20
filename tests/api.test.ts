@@ -29,9 +29,10 @@ describe("API integration", () => {
 
     it("should count files in the test directory", async () => {
       const testDir = join(projectRoot, "tests", "files");
-      const result = await api.executeTool("count_files", {
+      const { promise } = api.executeTool("count_files", {
         directory: testDir,
       });
+      const result = await promise;
 
       assert(result !== undefined, "Result should be defined");
       assert(result.result !== undefined, "Result should have result property");
@@ -64,9 +65,10 @@ describe("API integration", () => {
     });
 
     it("should route to high_path when value is greater than 10", async () => {
-      const result = await api.executeTool("test_switch", {
+      const { promise } = api.executeTool("test_switch", {
         value: 15,
       });
+      const result = await promise;
 
       assert(result !== undefined, "Result should be defined");
       const resultObj = result.result as { result?: string };
@@ -74,9 +76,10 @@ describe("API integration", () => {
     });
 
     it("should route to low_path when value is between 1 and 10", async () => {
-      const result = await api.executeTool("test_switch", {
+      const { promise } = api.executeTool("test_switch", {
         value: 5,
       });
+      const result = await promise;
 
       assert(result !== undefined, "Result should be defined");
       const resultObj = result.result as { result?: string };
@@ -84,9 +87,10 @@ describe("API integration", () => {
     });
 
     it("should route to zero_path (default) when value is zero", async () => {
-      const result = await api.executeTool("test_switch", {
+      const { promise } = api.executeTool("test_switch", {
         value: 0,
       });
+      const result = await promise;
 
       assert(result !== undefined, "Result should be defined");
       const resultObj = result.result as { result?: string };
@@ -94,9 +98,10 @@ describe("API integration", () => {
     });
 
     it("should route to zero_path (default) when value is negative", async () => {
-      const result = await api.executeTool("test_switch", {
+      const { promise } = api.executeTool("test_switch", {
         value: -5,
       });
+      const result = await promise;
 
       assert(result !== undefined, "Result should be defined");
       const resultObj = result.result as { result?: string };

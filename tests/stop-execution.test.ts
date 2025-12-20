@@ -37,9 +37,10 @@ describe("Execution stop/cancel", () => {
     };
 
     try {
-      await api.executeTool("test_switch", { value: 5 }, {
+      const { promise } = api.executeTool("test_switch", { value: 5 }, {
         hooks,
       });
+      await promise;
       assert.fail("Execution should have been stopped");
     } catch (error) {
       assert(error instanceof Error, "Should throw an error");
@@ -75,10 +76,11 @@ describe("Execution stop/cancel", () => {
     };
 
     try {
-      await api.executeTool("test_switch", { value: 5 }, {
+      const { promise } = api.executeTool("test_switch", { value: 5 }, {
         hooks,
         breakpoints: ["switch_node"], // Pause at this node (no MCP calls)
       });
+      await promise;
       assert.fail("Execution should have been stopped");
     } catch (error) {
       assert(error instanceof Error, "Should throw an error");
@@ -116,7 +118,8 @@ describe("Execution stop/cancel", () => {
     };
 
     try {
-      await api.executeTool("test_switch", { value: 5 }, { hooks });
+      const { promise } = api.executeTool("test_switch", { value: 5 }, { hooks });
+      await promise;
       assert.fail("Execution should have been stopped");
     } catch (error) {
       assert(error instanceof Error, "Should throw an error");

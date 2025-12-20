@@ -54,7 +54,8 @@ async function main() {
       const toolName = request.params.name;
       
       logger.info(`Tool called: ${toolName}`);
-      const executionResult = await api.executeTool(toolName, request.params.arguments || {});
+      const { promise } = api.executeTool(toolName, request.params.arguments || {});
+      const executionResult = await promise;
       
       return {
         content: [

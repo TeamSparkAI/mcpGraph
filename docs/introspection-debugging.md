@@ -22,8 +22,8 @@ import { McpGraphApi, type ExecutionHooks } from 'mcpgraph';
 
 const api = new McpGraphApi('config.yaml');
 
-// Execute with debugging enabled
-const result = await api.executeTool('count_files', {
+// Execute with debugging enabled - controller is available immediately
+const { promise, controller } = api.executeTool('count_files', {
   directory: './tests/files'
 }, {
   hooks: {
@@ -36,6 +36,14 @@ const result = await api.executeTool('count_files', {
   },
   enableTelemetry: true
 });
+
+// Controller is available immediately (no polling needed)
+if (controller) {
+  console.log('Controller available for pause/resume/stop');
+}
+
+// Wait for execution to complete
+const result = await promise;
 
 // Access execution history and telemetry
 console.log('History:', result.executionHistory);
@@ -141,14 +149,13 @@ The execution controller provides programmatic control over execution flow. It's
 ### Getting the Controller
 
 ```typescript
-// Start execution with hooks/breakpoints
-const executionPromise = api.executeTool('my_tool', {}, {
+// Start execution with hooks/breakpoints - controller is available immediately
+const { promise: executionPromise, controller } = api.executeTool('my_tool', {}, {
   hooks: { /* ... */ },
   breakpoints: ['node_1', 'node_2']
 });
 
-// Get controller (available during execution)
-const controller = api.getController();
+// Controller is available immediately (no polling needed)
 if (controller) {
   // Use controller methods
   controller.pause();
@@ -218,36 +225,32 @@ const hooks: ExecutionHooks = {
   }
 };
 
-// Start execution
-const executionPromise = api.executeTool('my_tool', {}, {
+// Start execution - controller is available immediately
+const { promise: executionPromise, controller } = api.executeTool('my_tool', {}, {
   hooks,
   breakpoints: ['entry_node'] // Start paused
 });
 
-// In your UI event handlers:
+// In your UI event handlers (controller is available immediately):
 function handleStep() {
-  const controller = api.getController();
   if (controller) {
     await controller.step();
   }
 }
 
 function handlePause() {
-  const controller = api.getController();
   if (controller) {
     controller.pause();
   }
 }
 
 function handleResume() {
-  const controller = api.getController();
   if (controller) {
     controller.resume();
   }
 }
 
 function handleStop() {
-  const controller = api.getController();
   if (controller) {
     controller.stop();
   }
@@ -269,7 +272,11 @@ await api.executeTool('my_tool', {}, {
 ### 2. Via Execution Controller
 
 ```typescript
-const controller = api.getController();
+// Get controller from executeTool return value
+const { controller } = api.executeTool('my_tool', {}, {
+  hooks: { /* ... */ }
+});
+
 if (controller) {
   // Set breakpoints dynamically
   controller.setBreakpoints(['node_1', 'node_2']);
@@ -314,8 +321,11 @@ if (state) {
   console.log('Context:', state.context.getData());
 }
 
-// Or via controller
-const controller = api.getController();
+// Or via controller (from executeTool return value)
+const { controller } = api.executeTool('my_tool', {}, {
+  hooks: { /* ... */ }
+});
+
 if (controller) {
   const state = controller.getState();
   // Same state object
@@ -506,16 +516,14 @@ class GraphVisualizer {
   }
   
   pause() {
-    const controller = this.api.getController();
-    if (controller) {
-      controller.pause();
+    if (this.controller) {
+      this.controller.pause();
     }
   }
   
   resume() {
-    const controller = this.api.getController();
-    if (controller) {
-      controller.resume();
+    if (this.controller) {
+      this.controller.resume();
     }
   }
   
@@ -527,9 +535,8 @@ class GraphVisualizer {
   }
   
   stop() {
-    const controller = this.api.getController();
-    if (controller) {
-      controller.stop();
+    if (this.controller) {
+      this.controller.stop();
     }
   }
   
@@ -566,15 +573,18 @@ class GraphVisualizer {
 class McpGraphApi {
   /**
    * Execute a tool with optional debugging options
+   * Returns both the execution promise and controller (if hooks/breakpoints are provided)
+   * Controller is available immediately - no polling needed
    */
-  async executeTool(
+  executeTool(
     toolName: string,
     toolArguments: Record<string, unknown>,
     options?: ExecutionOptions
-  ): Promise<ExecutionResult>;
+  ): { promise: Promise<ExecutionResult>; controller: ExecutionController | null };
   
   /**
    * Get the execution controller (available during execution)
+   * @deprecated Use the controller returned from executeTool() instead
    */
   getController(): ExecutionController | null;
   

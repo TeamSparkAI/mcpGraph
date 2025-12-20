@@ -27,9 +27,10 @@ async function example() {
   }
 
   // Execute a tool
-  const result = await api.executeTool('count_files', {
+  const { promise } = api.executeTool('count_files', {
     directory: './tests/files',
   });
+  const result = await promise;
 
   console.log('Execution result:', result.result);
   console.log('Structured content:', result.structuredContent);
@@ -43,7 +44,7 @@ async function introspectionExample() {
   const api = new McpGraphApi('examples/count_files.yaml');
 
   // Execute with hooks and telemetry
-  const result = await api.executeTool('count_files', {
+  const { promise, controller } = api.executeTool('count_files', {
     directory: './tests/files',
   }, {
     hooks: {
@@ -57,6 +58,13 @@ async function introspectionExample() {
     },
     enableTelemetry: true,
   });
+  
+  // Controller is available immediately (no polling needed)
+  if (controller) {
+    console.log('Controller available for pause/resume/stop');
+  }
+  
+  const result = await promise;
 
   // Access execution history
   if (result.executionHistory) {

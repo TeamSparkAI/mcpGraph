@@ -118,24 +118,34 @@ export class McpGraphApi {
 
   /**
    * Execute a tool with the given arguments
+   * Returns both the execution promise and the controller (if hooks/breakpoints are provided)
    */
-  async executeTool(
+  executeTool(
     toolName: string,
     toolArguments: Record<string, unknown> = {},
     options?: ExecutionOptions
-  ): Promise<ExecutionResult> {
-    const executionResult = await this.executor.executeTool(toolName, toolArguments, options);
+  ): { promise: Promise<ExecutionResult>; controller: ExecutionController | null } {
+    // Start execution and get controller immediately
+    const executionPromise = this.executor.executeTool(toolName, toolArguments, options);
+    const controller = this.executor.getController();
     
-    return {
+    // Wrap the execution result
+    const wrappedPromise = executionPromise.then(executionResult => ({
       result: executionResult.result,
       structuredContent: executionResult.result as Record<string, unknown>,
       executionHistory: executionResult.executionHistory,
       telemetry: executionResult.telemetry,
+    }));
+    
+    return {
+      promise: wrappedPromise,
+      controller,
     };
   }
 
   /**
    * Get the execution controller (available during execution with hooks/breakpoints)
+   * @deprecated Use the controller returned from executeTool() instead
    */
   getController(): ExecutionController | null {
     return this.executor.getController();

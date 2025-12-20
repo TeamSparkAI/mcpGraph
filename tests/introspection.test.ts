@@ -33,7 +33,8 @@ describe("Execution introspection and debugging", () => {
         },
       };
 
-      await api.executeTool("test_switch", { value: 5 }, { hooks });
+      const { promise } = api.executeTool("test_switch", { value: 5 }, { hooks });
+      await promise;
 
       // Verify hooks were called
       assert(nodeStartCalls.length > 0, "onNodeStart should be called");
@@ -74,7 +75,8 @@ describe("Execution introspection and debugging", () => {
 
       // This should not error, but we can test error handling with a malformed config
       // For now, just verify the hook structure is correct
-      await api.executeTool("test_switch", { value: 5 }, { hooks });
+      const { promise } = api.executeTool("test_switch", { value: 5 }, { hooks });
+      await promise;
 
       // In a real error scenario, errorHookCalled would be true
       // For now, we just verify the hook is properly structured
@@ -89,9 +91,10 @@ describe("Execution introspection and debugging", () => {
       const configPath = join(projectRoot, "examples", "switch_example.yaml");
       const api = new McpGraphApi(configPath);
 
-      const result = await api.executeTool("test_switch", { value: 5 }, {
+      const { promise } = api.executeTool("test_switch", { value: 5 }, {
         enableTelemetry: true,
       });
+      const result = await promise;
 
       assert(result.executionHistory !== undefined, "Execution history should be present");
       assert(Array.isArray(result.executionHistory), "Execution history should be an array");
@@ -117,9 +120,10 @@ describe("Execution introspection and debugging", () => {
       const configPath = join(projectRoot, "examples", "switch_example.yaml");
       const api = new McpGraphApi(configPath);
 
-      const result = await api.executeTool("test_switch", { value: 5 }, {
+      const { promise } = api.executeTool("test_switch", { value: 5 }, {
         enableTelemetry: true,
       });
+      const result = await promise;
 
       assert(result.telemetry !== undefined, "Telemetry should be present");
       assert(typeof result.telemetry.totalDuration === "number", "Total duration should be a number");
@@ -149,9 +153,10 @@ describe("Execution introspection and debugging", () => {
       const configPath = join(projectRoot, "examples", "switch_example.yaml");
       const api = new McpGraphApi(configPath);
 
-      const result = await api.executeTool("test_switch", { value: 5 }, {
+      const { promise } = api.executeTool("test_switch", { value: 5 }, {
         enableTelemetry: false,
       });
+      const result = await promise;
 
       assert(result.telemetry === undefined, "Telemetry should not be present when disabled");
 
@@ -168,19 +173,24 @@ describe("Execution introspection and debugging", () => {
         onNodeStart: async () => true,
       };
 
-      // Start execution in background
-      const executionPromise = api.executeTool("test_switch", { value: 5 }, { hooks });
+      // Start execution - controller is available immediately (no polling needed)
+      const { promise: executionPromise, controller } = api.executeTool("test_switch", { value: 5 }, { hooks });
 
-      // Controller should be available during execution
-      const controller = api.getController();
-      assert(controller !== null, "Controller should be available during execution");
+      // Controller should be available immediately
+      assert(controller !== null, "Controller should be available immediately");
+      
+      // Can use controller immediately (e.g., to pause/resume/stop)
+      const initialState = controller!.getState();
+      assert(initialState !== null, "State should be available");
 
       // Wait for execution to complete
       await executionPromise;
-
-      // Controller should be cleaned up after execution
-      const controllerAfter = api.getController();
-      assert(controllerAfter === null, "Controller should be null after execution");
+      
+      // After execution completes, the controller's state shows "finished"
+      const finalState = controller!.getState();
+      assert(finalState !== null, "State should still be available after execution");
+      assert(finalState.status === "finished", "Status should be 'finished' after successful execution");
+      assert(finalState.currentNodeId === null, "Current node should be null after execution");
 
       await api.close();
     });
@@ -193,19 +203,24 @@ describe("Execution introspection and debugging", () => {
         onNodeStart: async () => true,
       };
 
-      // Start execution
-      const executionPromise = api.executeTool("test_switch", { value: 5 }, { hooks });
+      // Start execution - controller is available immediately
+      const { promise: executionPromise, controller: returnedController } = api.executeTool("test_switch", { value: 5 }, { hooks });
+      
+      // Controller should be available immediately
+      assert(returnedController !== null, "Controller should be available immediately");
 
       // Try to get state (may be null if execution completes too quickly)
-      const state = api.getExecutionState();
+      const state = returnedController!.getState();
       // State might be null if execution completes before we check
       // This is expected behavior
 
       await executionPromise;
 
-      // After execution, state should be null
-      const stateAfter = api.getExecutionState();
-      assert(stateAfter === null, "State should be null after execution");
+      // After execution, state should show "finished"
+      const stateAfter = returnedController!.getState();
+      assert(stateAfter !== null, "State should still be available after execution");
+      assert(stateAfter.status === "finished", "Status should be 'finished' after successful execution");
+      assert(stateAfter.currentNodeId === null, "Current node should be null after execution");
 
       await api.close();
     });
@@ -247,17 +262,17 @@ describe("Execution introspection and debugging", () => {
         },
       };
 
-      // Start execution with breakpoint
-      const executionPromise = api.executeTool("test_switch", { value: 5 }, {
+      // Start execution with breakpoint - controller is available immediately
+      const { promise: executionPromise, controller } = api.executeTool("test_switch", { value: 5 }, {
         hooks,
         breakpoints: ["switch_node"], // Breakpoint should pause here
       });
+      
+      // Controller should be available immediately (no polling needed)
+      assert(controller !== null, "Controller should be available immediately");
 
       // Wait for pause to occur
       await resumePromise;
-
-      const controller = api.getController();
-      assert(controller !== null, "Controller should be available during execution");
       
       const state = controller!.getState();
       assert(state.status === "paused", `Expected status "paused", got "${state.status}"`);
