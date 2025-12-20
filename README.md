@@ -94,14 +94,39 @@ This graph:
 ## Node Types
 
 - **`entry`**: Entry point for a tool's graph execution. Receives tool arguments.
+  - **Output**: The tool input arguments (passed through as-is)
 - **`mcp`**: Calls an MCP tool on an internal or external MCP server.
+  - **Output**: The MCP tool's response (parsed from the tool's content)
 - **`transform`**: Applies [JSONata](https://jsonata.org/) expressions to transform data between nodes.
+  - **Output**: The result of evaluating the JSONata expression
 - **`switch`**: Uses [JSON Logic](https://jsonlogic.com/) to conditionally route to different nodes. Note: `var` operations in JSON Logic rules are evaluated using JSONata, allowing full JSONata expression support.
+  - **Output**: The node ID of the target node that was routed to (string)
 - **`exit`**: Exit point that returns the final result to the MCP tool caller.
+  - **Output**: The output from the previous node in the execution history
+
+## Execution History & Debugging
+
+mcpGraph maintains a complete execution history for each tool execution, enabling powerful debugging and introspection capabilities:
+
+- **Execution History**: Every node execution is recorded with timing, inputs, outputs, and a unique `executionIndex`
+- **Time-Travel Debugging**: Get the context that was available to any specific execution using `getContextForExecution(executionIndex)`
+- **History Functions**: Use JSONata functions to access execution history:
+  - `$previousNode()` - Get the previous node's output
+  - `$executionCount(nodeName)` - Count how many times a node executed
+  - `$nodeExecution(nodeName, index)` - Get a specific execution of a node
+  - `$nodeExecutions(nodeName)` - Get all executions of a node as an array
+- **Loop Support**: Nodes can execute multiple times in loops, with each execution tracked separately
+
+See [docs/introspection-debugging.md](docs/introspection-debugging.md) for detailed documentation on debugging features.
 
 **Context Access:**
 - All node outputs are accessible by node ID (e.g., `$.entry_count_files.directory`, `$.list_directory_node`)
-- The `$previousNode()` function is available in all JSONata expressions to access the output of the node that executed immediately before the current node
+- History functions are available in all JSONata expressions:
+  - `$previousNode()` - Get the previous node's output
+  - `$previousNode(index)` - Get the node that executed N steps before current
+  - `$executionCount(nodeName)` - Count executions of a node
+  - `$nodeExecution(nodeName, index)` - Get a specific execution of a node
+  - `$nodeExecutions(nodeName)` - Get all executions of a node as an array
 
 ## For Developers
 

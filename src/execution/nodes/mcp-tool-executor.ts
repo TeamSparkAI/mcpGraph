@@ -13,19 +13,20 @@ export async function executeMcpToolNode(
   context: ExecutionContext,
   clientManager: McpClientManager,
   serverConfig: ServerConfig,
-  previousNodeId: string | null,
   startTime: number
 ): Promise<{ output: unknown; nextNode: string }> {
   logger.debug(`Executing MCP tool node: ${node.id} (${node.server}.${node.tool})`);
 
   const exprContext = context.getData();
+  const history = context.getHistory();
+  const currentIndex = history.length; // This will be the index after we add this execution
 
   // Pre-transform: Apply JSONata to format tool arguments
   const transformedArgs: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(node.args)) {
     if (typeof value === "string" && value.startsWith("$")) {
       // JSONata expression
-      const evaluated = await evaluateJsonata(value, exprContext, previousNodeId);
+      const evaluated = await evaluateJsonata(value, exprContext, history, currentIndex);
       transformedArgs[key] = evaluated;
       logger.debug(`JSONata "${value}" evaluated to: ${JSON.stringify(evaluated)}`);
     } else {
@@ -74,8 +75,7 @@ export async function executeMcpToolNode(
   const output = toolOutput;
   const endTime = Date.now();
 
-  context.setNodeOutput(node.id, output);
-  context.addHistory(node.id, "mcp", transformedArgs, output, startTime, endTime);
+  context.addHistory(node.id, "mcp", output, startTime, endTime);
 
   return {
     output,

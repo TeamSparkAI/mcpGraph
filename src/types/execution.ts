@@ -8,12 +8,12 @@ import type { ExecutionContext } from "../execution/context.js";
 export type ExecutionStatus = "not_started" | "running" | "paused" | "finished" | "error" | "stopped";
 
 export interface NodeExecutionRecord {
+  executionIndex: number;  // Position in overall execution history (0, 1, 2, ...) - unique identifier
   nodeId: string;
   nodeType: string;
   startTime: number;
   endTime: number;
   duration: number;
-  input: unknown;
   output: unknown;
   error?: Error;
 }

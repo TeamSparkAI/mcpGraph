@@ -19,8 +19,7 @@ export function executeEntryNode(
   const output = toolInput;
   const endTime = Date.now();
 
-  context.setNodeOutput(node.id, output);
-  context.addHistory(node.id, "entry", toolInput, output, startTime, endTime);
+  context.addHistory(node.id, "entry", output, startTime, endTime);
 
   return {
     output,

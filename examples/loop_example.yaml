@@ -1,0 +1,84 @@
+version: "1.0"
+
+# MCP Server Metadata
+server:
+  name: "loopExample"
+  version: "1.0.0"
+  description: "Example with a loop using history functions"
+
+# Tool Definitions
+tools:
+  - name: "sum_to_n"
+    description: "Sums numbers from 1 to n using a loop"
+    inputSchema:
+      type: "object"
+      properties:
+        n:
+          type: "number"
+          description: "The number to sum to"
+      required:
+        - n
+    outputSchema:
+      type: "object"
+      properties:
+        sum:
+          type: "number"
+          description: "The sum from 1 to n"
+
+# Graph Nodes
+nodes:
+  # Entry node: Receives tool arguments
+  - id: "entry_sum"
+    type: "entry"
+    tool: "sum_to_n"
+    next: "increment_node"
+  
+  # Increment counter and add to sum
+  # Uses $nodeExecution() to get the previous iteration of this node
+  # First iteration: $executionCount("increment_node") = 0, so we initialize
+  # Subsequent iterations: $nodeExecution("increment_node", -1) gets the last execution
+  - id: "increment_node"
+    type: "transform"
+    transform:
+      expr: |
+        $executionCount("increment_node") = 0
+          ? {
+              "counter": 1,
+              "sum": 1,
+              "target": $.entry_sum.n
+            }
+          : {
+              "counter": $nodeExecution("increment_node", -1).counter + 1,
+              "sum": $nodeExecution("increment_node", -1).sum + $nodeExecution("increment_node", -1).counter + 1,
+              "target": $.entry_sum.n
+            }
+    next: "check_condition"
+  
+  # Check if we should continue looping
+  - id: "check_condition"
+    type: "switch"
+    conditions:
+      - rule:
+          "<": [{"var": "$.increment_node.counter"}, {"var": "$.increment_node.target"}]
+        target: "increment_node"
+      - target: "exit_sum"
+  
+  # Exit node: Extracts the sum from increment_node
+  # Uses $previousNode() to verify it returns the switch node's output (target node ID)
+  # The output matches the tool's outputSchema (just the sum)
+  - id: "exit_sum"
+    type: "transform"
+    transform:
+      expr: |
+        $previousNode() = "exit_sum" ? {
+          "sum": $.increment_node.sum
+        } : {
+          "sum": 0,
+          "error": "previousNode check failed"
+        }
+    next: "exit_sum_final"
+  
+  # Final exit node
+  - id: "exit_sum_final"
+    type: "exit"
+    tool: "sum_to_n"

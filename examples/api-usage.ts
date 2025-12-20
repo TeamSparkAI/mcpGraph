@@ -70,7 +70,7 @@ async function introspectionExample() {
   if (result.executionHistory) {
     console.log('\nExecution History:');
     for (const record of result.executionHistory) {
-      console.log(`  ${record.nodeId} (${record.nodeType}): ${record.duration}ms`);
+      console.log(`  [${record.executionIndex}] ${record.nodeId} (${record.nodeType}): ${record.duration}ms`);
     }
   }
 
@@ -85,6 +85,57 @@ async function introspectionExample() {
     }
   }
 
+  await api.close();
+}
+
+// Example: Time-travel debugging with getContextForExecution
+async function timeTravelDebuggingExample() {
+  const api = new McpGraphApi('examples/count_files.yaml');
+
+  let executionIndexToInspect: number | null = null;
+  
+  const { promise, controller } = api.executeTool('count_files', {
+    directory: './tests/files',
+  }, {
+    hooks: {
+      onNodeComplete: async (nodeId, node, input, output, duration) => {
+        // When count_files_node completes, inspect the context that was available to list_directory_node
+        if (nodeId === 'count_files_node') {
+          // Find the execution index of list_directory_node
+          const state = api.getExecutionState();
+          if (state) {
+            const listDirRecord = state.executionHistory.find(r => r.nodeId === 'list_directory_node');
+            if (listDirRecord) {
+              executionIndexToInspect = listDirRecord.executionIndex;
+            }
+          }
+        }
+      },
+    },
+  });
+  
+  await promise;
+  
+  if (executionIndexToInspect !== null && controller) {
+    // Get the context that was available to list_directory_node when it executed
+    const context = api.getContextForExecution(executionIndexToInspect);
+    if (context) {
+      console.log('\nTime-Travel Debugging:');
+      console.log(`Context available to execution #${executionIndexToInspect} (list_directory_node):`);
+      console.log(JSON.stringify(context, null, 2));
+    }
+    
+    // Get the execution record itself
+    const record = api.getExecutionByIndex(executionIndexToInspect);
+    if (record) {
+      console.log(`\nExecution Record #${executionIndexToInspect}:`);
+      console.log(`  Node: ${record.nodeId}`);
+      console.log(`  Type: ${record.nodeType}`);
+      console.log(`  Duration: ${record.duration}ms`);
+      console.log(`  Output: ${JSON.stringify(record.output).substring(0, 100)}...`);
+    }
+  }
+  
   await api.close();
 }
 
@@ -118,6 +169,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   
   if (exampleToRun === 'introspection') {
     introspectionExample().catch(console.error);
+  } else if (exampleToRun === 'debugging') {
+    timeTravelDebuggingExample().catch(console.error);
   } else {
     example().catch(console.error);
   }

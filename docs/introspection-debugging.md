@@ -364,16 +364,18 @@ Execution history provides a complete record of all node executions with detaile
 
 ```typescript
 interface NodeExecutionRecord {
+  executionIndex: number;  // Position in overall execution history (0, 1, 2, ...) - unique identifier
   nodeId: string;           // ID of the executed node
   nodeType: string;         // Type of node (entry, exit, transform, mcp, switch)
   startTime: number;        // Timestamp when node started (milliseconds)
   endTime: number;          // Timestamp when node ended (milliseconds)
   duration: number;         // Execution duration (milliseconds)
-  input: unknown;           // Input data for the node
   output: unknown;          // Output data from the node
   error?: Error;            // Error object if node failed
 }
 ```
+
+**Note**: The `input` field has been removed. Input context can be derived by building context from history up to the execution index using `getContextForExecution(executionIndex)`.
 
 ### Accessing History
 
@@ -397,6 +399,31 @@ if (state) {
   // Access history during execution
 }
 ```
+
+### Time-Travel Debugging
+
+You can get the context that was available to a specific execution using `getContextForExecution()`:
+
+```typescript
+// Get context for a specific execution
+const context = api.getContextForExecution(5);
+if (context) {
+  console.log('Context available to execution #5:', context);
+}
+
+// Get a specific execution record
+const record = api.getExecutionByIndex(5);
+if (record) {
+  console.log(`Execution #5: ${record.nodeId} executed at ${record.startTime}`);
+  console.log(`Output:`, record.output);
+  
+  // Get the context that was available to this execution
+  const inputContext = api.getContextForExecution(record.executionIndex);
+  console.log('Input context:', inputContext);
+}
+```
+
+**Note**: Both methods require an active execution with a controller (hooks/breakpoints enabled). They return `null` if no execution is in progress or the index is invalid.
 
 ## Telemetry
 

@@ -131,10 +131,15 @@ The YAML configuration centers around MCP server and tool definitions:
    - Note: Entry and exit nodes are defined in the nodes section with a `tool` field indicating which tool they belong to
 3. **Nodes**: The directed graph of nodes that execute when tools are called. Node types include:
    - **`entry`**: Entry point for a tool's graph execution. Receives tool arguments and initializes execution context.
+     - **Output**: The tool input arguments (passed through as-is)
    - **`mcp`**: Calls an MCP tool on an internal or external MCP server using `callTool`
+     - **Output**: The MCP tool's response (parsed from the tool's content)
    - **`transform`**: Applies JSONata expressions to transform data between nodes
+     - **Output**: The result of evaluating the JSONata expression
    - **`switch`**: Uses JSON Logic to conditionally route to different nodes based on data
+     - **Output**: The node ID of the target node that was routed to (string)
    - **`exit`**: Exit point for a tool's graph execution. Extracts and returns the final result to the MCP tool caller
+     - **Output**: The output from the previous node in the execution history
 
 ### Example YAML Structure: count_files Tool
 

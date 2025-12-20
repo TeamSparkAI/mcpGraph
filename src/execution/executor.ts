@@ -114,7 +114,6 @@ export class GraphExecutor {
       }
 
       // Execute nodes until we reach the exit node
-      let previousNodeId: string | null = null;
       while (true) {
         // Check for stop request before processing next node
         if (this.controller && this.controller.shouldStop()) {
@@ -207,6 +206,9 @@ export class GraphExecutor {
         logger.debug(`Executing node: ${currentNodeId} (type: ${node.type})`);
 
         const nodeStartTime = Date.now();
+        // Capture input context before node executes (only if hooks are provided)
+        const inputContext = hooks?.onNodeComplete ? context.getData() : undefined;
+        
         let result: { output: unknown; nextNode?: string };
         let nodeError: Error | undefined;
 
@@ -216,13 +218,13 @@ export class GraphExecutor {
               result = executeEntryNode(node, toolInput, context, nodeStartTime);
               break;
             case "exit":
-              result = executeExitNode(node, context, previousNodeId, nodeStartTime);
+              result = executeExitNode(node, context, nodeStartTime);
               // Call onNodeComplete hook for exit node
-              if (hooks?.onNodeComplete) {
+              if (hooks?.onNodeComplete && inputContext !== undefined) {
                 await hooks.onNodeComplete(
                   currentNodeId,
                   node,
-                  context.getData(),
+                  inputContext,
                   result.output,
                   Date.now() - nodeStartTime
                 );
@@ -241,7 +243,7 @@ export class GraphExecutor {
                 telemetry,
               };
             case "transform":
-              result = await executeTransformNode(node, context, previousNodeId, nodeStartTime);
+              result = await executeTransformNode(node, context, nodeStartTime);
               break;
             case "mcp":
               // Check for stop before starting MCP call (which may take time)
@@ -258,7 +260,6 @@ export class GraphExecutor {
                 context,
                 this.clientManager,
                 serverConfig,
-                previousNodeId,
                 nodeStartTime
               );
               // Check for stop after MCP call completes
@@ -271,18 +272,18 @@ export class GraphExecutor {
               }
               break;
             case "switch":
-              result = await executeSwitchNode(node, context, previousNodeId, nodeStartTime);
+              result = await executeSwitchNode(node, context, nodeStartTime);
               break;
             default:
               throw new Error(`Unknown node type: ${(node as { type: string }).type}`);
           }
 
           // Call onNodeComplete hook
-          if (hooks?.onNodeComplete) {
+          if (hooks?.onNodeComplete && inputContext !== undefined) {
             await hooks.onNodeComplete(
               currentNodeId,
               node,
-              context.getData(),
+              inputContext,
               result.output,
               Date.now() - nodeStartTime
             );
@@ -303,7 +304,6 @@ export class GraphExecutor {
             context.addHistory(
               currentNodeId,
               node.type,
-              context.getData(),
               null,
               nodeStartTime,
               nodeEndTime,
@@ -325,8 +325,6 @@ export class GraphExecutor {
         }
 
         if (result.nextNode) {
-          // Update previous node ID before moving to next node
-          previousNodeId = currentNodeId;
           currentNodeId = result.nextNode;
           // If next node is the exit node, continue to process it in next iteration
           if (currentNodeId === exitNode.id) {

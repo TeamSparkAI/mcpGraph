@@ -9,7 +9,7 @@
 
 import { logger } from './logger.js';
 import { loadConfig } from './config/loader.js';
-import type { McpGraphConfig, NodeDefinition } from './types/config.js';
+import type { McpGraphConfig } from './types/config.js';
 import { validateGraph, type ValidationError } from './graph/validator.js';
 import { GraphExecutor } from './execution/executor.js';
 import { McpClientManager } from './mcp/client-manager.js';
@@ -18,7 +18,7 @@ import type {
   ExecutionResult as CoreExecutionResult,
   ExecutionController,
   ExecutionState,
-  ExecutionHooks,
+  NodeExecutionRecord,
 } from './types/execution.js';
 
 // Re-export types for consumers
@@ -169,6 +169,46 @@ export class McpGraphApi {
     try {
       return controller.getState();
     } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Get the context that was available to a specific execution (for debugging)
+   * @param executionIndex - The execution index to get context for
+   * @returns Context object that was available to that execution, or null if execution not found
+   */
+  getContextForExecution(executionIndex: number): Record<string, unknown> | null {
+    const controller = this.executor.getController();
+    if (!controller) {
+      return null;
+    }
+    try {
+      const state = controller.getState();
+      const context = state.context;
+      return context.getContextForExecution(executionIndex);
+    } catch (error) {
+      logger.error(`Error getting context for execution ${executionIndex}: ${error instanceof Error ? error.message : String(error)}`);
+      return null;
+    }
+  }
+
+  /**
+   * Get a specific execution record by index
+   * @param executionIndex - The execution index
+   * @returns Execution record or null if not found
+   */
+  getExecutionByIndex(executionIndex: number): NodeExecutionRecord | null {
+    const controller = this.executor.getController();
+    if (!controller) {
+      return null;
+    }
+    try {
+      const state = controller.getState();
+      const context = state.context;
+      return context.getExecutionByIndex(executionIndex) || null;
+    } catch (error) {
+      logger.error(`Error getting execution ${executionIndex}: ${error instanceof Error ? error.message : String(error)}`);
       return null;
     }
   }

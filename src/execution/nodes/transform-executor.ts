@@ -10,7 +10,6 @@ import { logger } from "../../logger.js";
 export async function executeTransformNode(
   node: TransformNode,
   context: ExecutionContext,
-  previousNodeId: string | null,
   startTime: number
 ): Promise<{ output: unknown; nextNode: string }> {
   logger.debug(`Executing transform node: ${node.id}`);
@@ -19,13 +18,15 @@ export async function executeTransformNode(
   const exprContext = context.getData();
   logger.debug(`Transform context: ${JSON.stringify(exprContext, null, 2)}`);
   
-  const output = await evaluateJsonata(node.transform.expr, exprContext, previousNodeId);
+  const history = context.getHistory();
+  const currentIndex = history.length; // This will be the index after we add this execution
+  
+  const output = await evaluateJsonata(node.transform.expr, exprContext, history, currentIndex);
   const endTime = Date.now();
   
   logger.debug(`Transform output: ${JSON.stringify(output, null, 2)}`);
 
-  context.setNodeOutput(node.id, output);
-  context.addHistory(node.id, "transform", exprContext, output, startTime, endTime);
+  context.addHistory(node.id, "transform", output, startTime, endTime);
 
   return {
     output,
