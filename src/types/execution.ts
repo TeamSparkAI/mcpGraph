@@ -114,6 +114,11 @@ export interface ExecutionOptions {
   hooks?: ExecutionHooks;
   breakpoints?: string[];
   enableTelemetry?: boolean;
+  /**
+   * Start execution in a paused state.
+   * When true, execution will pause at the entry node, allowing step-through debugging from the start.
+   */
+  startPaused?: boolean;
 }
 
 export interface ExecutionTelemetry {

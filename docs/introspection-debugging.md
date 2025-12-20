@@ -225,10 +225,10 @@ const hooks: ExecutionHooks = {
   }
 };
 
-// Start execution - controller is available immediately
+// Start execution in paused state - controller is available immediately
 const { promise: executionPromise, controller } = api.executeTool('my_tool', {}, {
   hooks,
-  breakpoints: ['entry_node'] // Start paused
+  startPaused: true, // Start paused at entry node for step-through debugging
 });
 
 // In your UI event handlers (controller is available immediately):
@@ -573,7 +573,7 @@ class GraphVisualizer {
 class McpGraphApi {
   /**
    * Execute a tool with optional debugging options
-   * Returns both the execution promise and controller (if hooks/breakpoints are provided)
+   * Returns both the execution promise and controller (if hooks/breakpoints/startPaused are provided)
    * Controller is available immediately - no polling needed
    */
   executeTool(
@@ -612,6 +612,7 @@ interface ExecutionOptions {
   hooks?: ExecutionHooks;      // Execution hooks for observation/control
   breakpoints?: string[];      // Node IDs to pause at
   enableTelemetry?: boolean;   // Enable telemetry collection
+  startPaused?: boolean;       // Start execution in paused state (pauses at entry node)
 }
 ```
 

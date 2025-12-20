@@ -302,5 +302,112 @@ describe("Execution introspection and debugging", () => {
       await api.close();
     });
   });
+
+  describe("startPaused", () => {
+    it("should start execution in paused state", async () => {
+      const configPath = join(projectRoot, "examples", "switch_example.yaml");
+      const api = new McpGraphApi(configPath);
+
+      let pausedAtNode: string | null = null;
+      let resumeCalled = false;
+
+      const hooks: ExecutionHooks = {
+        onPause: async (nodeId) => {
+          pausedAtNode = nodeId;
+        },
+        onResume: async () => {
+          resumeCalled = true;
+        },
+      };
+
+      // Start execution with startPaused - should pause at entry node
+      const { promise: executionPromise, controller } = api.executeTool("test_switch", { value: 5 }, {
+        hooks,
+        startPaused: true,
+      });
+
+      // Controller should be available immediately
+      assert(controller !== null, "Controller should be available immediately");
+
+      // Wait a bit for execution to start and pause
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      const state = controller!.getState();
+      assert(state.status === "paused", `Expected status "paused", got "${state.status}"`);
+      assert(state.currentNodeId === "entry", `Expected current node "entry", got "${state.currentNodeId}"`);
+      assert(pausedAtNode === "entry", "onPause should have been called with entry node");
+
+      // Step to next node
+      await controller!.step();
+
+      // Wait a bit for step to complete and pause again
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      // Should be paused at next node
+      const stateAfterStep = controller!.getState();
+      assert(stateAfterStep.status === "paused", "Should still be paused after step");
+      assert(stateAfterStep.currentNodeId !== "entry", "Should have moved to next node");
+
+      // Resume execution
+      controller!.resume();
+      assert(resumeCalled, "onResume should have been called");
+
+      // Wait for execution to complete
+      await executionPromise;
+
+      await api.close();
+    });
+
+    it("should allow stepping from initial paused state", async () => {
+      const configPath = join(projectRoot, "examples", "switch_example.yaml");
+      const api = new McpGraphApi(configPath);
+
+      const executionOrder: string[] = [];
+
+      const hooks: ExecutionHooks = {
+        onNodeStart: async (nodeId) => {
+          executionOrder.push(`start:${nodeId}`);
+          return true;
+        },
+        onPause: async (nodeId) => {
+          executionOrder.push(`pause:${nodeId}`);
+        },
+      };
+
+      // Start execution paused
+      const { promise: executionPromise, controller } = api.executeTool("test_switch", { value: 5 }, {
+        hooks,
+        startPaused: true,
+      });
+
+      assert(controller !== null, "Controller should be available");
+
+      // Wait for initial pause
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      // Should be paused at entry
+      let state = controller!.getState();
+      assert(state.status === "paused", "Should be paused");
+      assert(state.currentNodeId === "entry", "Should be at entry node");
+
+      // Step through a few nodes
+      await controller!.step(); // entry -> switch_node
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      
+      state = controller!.getState();
+      assert(state.status === "paused", "Should still be paused");
+      assert(executionOrder.includes("start:entry"), "Entry node should have started");
+      assert(executionOrder.includes("pause:entry"), "Should have paused at entry");
+
+      await controller!.step(); // switch_node -> next node
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      // Resume and complete
+      controller!.resume();
+      await executionPromise;
+
+      await api.close();
+    });
+  });
 });
 

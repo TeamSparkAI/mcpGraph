@@ -68,12 +68,20 @@ export class GraphExecutor {
     const hooks = options?.hooks;
     const breakpoints = options?.breakpoints || [];
     const enableTelemetry = options?.enableTelemetry ?? false;
+    const startPaused = options?.startPaused ?? false;
 
-    // Initialize controller if hooks or breakpoints are provided
-    if (hooks || breakpoints.length > 0) {
+    // Initialize controller if hooks, breakpoints, or startPaused are provided
+    if (hooks || breakpoints.length > 0 || startPaused) {
       this.controller = new ExecutionController();
       this.controller.setBreakpoints(breakpoints);
       this.controller.setStatus("not_started");
+      
+      // If startPaused is true, set pauseRequested so execution pauses at entry node
+      if (startPaused && this.controller) {
+        // Set pauseRequested directly - it will be checked after status is set to "running"
+        // and the first node is processed
+        (this.controller as any).pauseRequested = true;
+      }
     }
 
     // Find entry node for this tool
