@@ -33,6 +33,7 @@ The implementation creates a working MCP server that can:
 All TypeScript interfaces defined:
 - `McpGraphConfig` - Root configuration structure
 - `ServerMetadata` - MCP server metadata
+- `ExecutionLimits` - Optional execution limits configuration (maxNodeExecutions, maxExecutionTimeMs)
 - `ToolDefinition` - Tool definition with input/output schemas (entry/exit nodes are defined in nodes with `tool` field)
 - `NodeDefinition` - Base node interface
 - `EntryNode` - Entry point node that receives tool arguments
@@ -212,11 +213,15 @@ Exit node execution:
 **File: `src/execution/context.ts`**
 
 Execution state management:
-- Current node tracking
-- Data context (node outputs stored by node ID, e.g., `$.entry_node_id.*`, `$.mcp_node_id.*`)
-- Execution history
-- Error state
-- Data access for expressions (all data referenced by node ID)
+- **Execution History**: Single source of truth - ordered array of `NodeExecutionRecord` objects
+  - Each record includes: `executionIndex` (unique sequential ID), `nodeId`, `nodeType`, `startTime`, `endTime`, `duration`, `output`, `error`
+  - No `input` field - input context is derived from history when needed
+- **Context Building**: Context for JSONata/JSON Logic is built from history once per node execution
+  - Walks backwards through history, most recent execution of each node wins
+  - Flat context structure: `{ "node_id": output, ... }` - backward compatible with `$.node_id` notation
+  - Supports time-travel debugging via `getContextForExecution(executionIndex)` - builds context up to a specific point
+- **Data Access**: All data referenced by node ID (e.g., `$.entry_node_id.*`, `$.mcp_node_id.*`)
+- **Loop Support**: When same node executes multiple times, context contains latest execution; history functions provide access to all executions
 
 ### 6.2 Graph Executor
 
@@ -231,7 +236,11 @@ Main graph execution orchestrator:
 - Track execution history (node inputs/outputs)
 - Handle errors with context
 
-**Note:** The execution loop supports cycles (directed graphs with cycles), but infinite loops are prevented by the exit node check. Future loop node types can leverage this cycle support.
+**Note:** The execution loop supports cycles (directed graphs with cycles). To prevent infinite loops, execution limits are enforced:
+- **`maxNodeExecutions`**: Maximum total node executions across the entire graph (default: 1000)
+- **`maxExecutionTimeMs`**: Maximum wall-clock time for graph execution in milliseconds (default: 300000 = 5 minutes)
+- Both limits are checked before each node execution. If either limit is exceeded, execution stops immediately with a clear error message.
+- Limits are configurable in the YAML configuration via the optional `executionLimits` section.
 
 ### 6.3 Execution Flow
 

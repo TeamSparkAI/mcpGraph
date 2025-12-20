@@ -26,6 +26,11 @@ server:
   version: "1.0.0"
   description: "File utilities"
 
+# Optional: Execution limits to prevent infinite loops
+executionLimits:
+  maxNodeExecutions: 1000      # Maximum total node executions (default: 1000)
+  maxExecutionTimeMs: 300000   # Maximum execution time in milliseconds (default: 300000 = 5 minutes)
+
 # Tool Definitions
 tools:
   - name: "count_files"
@@ -108,25 +113,26 @@ This graph:
 
 mcpGraph maintains a complete execution history for each tool execution, enabling powerful debugging and introspection capabilities:
 
-- **Execution History**: Every node execution is recorded with timing, inputs, outputs, and a unique `executionIndex`
+- **Execution History**: Every node execution is recorded with timing, outputs, and a unique `executionIndex` (sequential: 0, 1, 2, ...)
+- **Context Structure**: Context for expressions is built from history - a flat structure where each node ID maps to its latest output
+  - Simple notation: `$.node_id` accesses the latest output of a node
+  - When nodes execute multiple times (loops), context shows the most recent execution
+  - History functions provide access to all executions, not just the latest
 - **Time-Travel Debugging**: Get the context that was available to any specific execution using `getContextForExecution(executionIndex)`
 - **History Functions**: Use JSONata functions to access execution history:
   - `$previousNode()` - Get the previous node's output
+  - `$previousNode(index)` - Get the node that executed N steps before current
   - `$executionCount(nodeName)` - Count how many times a node executed
-  - `$nodeExecution(nodeName, index)` - Get a specific execution of a node
+  - `$nodeExecution(nodeName, index)` - Get a specific execution of a node (0 = first, -1 = last)
   - `$nodeExecutions(nodeName)` - Get all executions of a node as an array
-- **Loop Support**: Nodes can execute multiple times in loops, with each execution tracked separately
+- **Loop Support**: Nodes can execute multiple times in loops, with each execution tracked separately in history
 
 See [docs/introspection-debugging.md](docs/introspection-debugging.md) for detailed documentation on debugging features.
 
 **Context Access:**
 - All node outputs are accessible by node ID (e.g., `$.entry_count_files.directory`, `$.list_directory_node`)
-- History functions are available in all JSONata expressions:
-  - `$previousNode()` - Get the previous node's output
-  - `$previousNode(index)` - Get the node that executed N steps before current
-  - `$executionCount(nodeName)` - Count executions of a node
-  - `$nodeExecution(nodeName, index)` - Get a specific execution of a node
-  - `$nodeExecutions(nodeName)` - Get all executions of a node as an array
+- Latest execution wins: `$.increment_node` returns the most recent output when a node executes multiple times
+- History functions are available in all JSONata expressions (including those used in JSON Logic `var` operations)
 
 ## For Developers
 
@@ -147,6 +153,35 @@ npm install mcpgraph
 ```
 
 ## Configuration
+
+### Execution Limits
+
+mcpGraph supports cyclical graphs, which requires guardrails to prevent infinite loops. Execution limits can be configured at the graph level:
+
+```yaml
+version: "1.0"
+
+server:
+  name: "myServer"
+  version: "1.0.0"
+  description: "My MCP server"
+
+# Optional: Execution limits to prevent infinite loops
+executionLimits:
+  maxNodeExecutions: 1000      # Maximum total node executions (default: 1000)
+  maxExecutionTimeMs: 300000   # Maximum execution time in milliseconds (default: 300000 = 5 minutes)
+
+tools:
+  # ... tool definitions ...
+```
+
+**Execution Limits:**
+- **`maxNodeExecutions`** (optional): Maximum number of node executions across the entire graph. Default: `1000`. If execution reaches this limit, an error is thrown.
+- **`maxExecutionTimeMs`** (optional): Maximum wall-clock time for graph execution in milliseconds. Default: `300000` (5 minutes). If execution exceeds this time, an error is thrown.
+
+Both limits are checked before each node execution. If either limit is exceeded, execution stops immediately with a clear error message indicating which limit was hit.
+
+**Note:** These limits are optional. If not specified, the defaults apply. They can be set to higher values for long-running batch jobs or lower values for quick operations.
 
 ### As an MCP Server
 

@@ -2,10 +2,16 @@
  * Type definitions for mcpGraph configuration
  */
 
+export interface ExecutionLimits {
+  maxNodeExecutions?: number; // Maximum total node executions across entire graph (default: 1000)
+  maxExecutionTimeMs?: number; // Maximum execution time in milliseconds (default: 300000 = 5 minutes)
+}
+
 export interface McpGraphConfig {
   version: string;
   server: ServerMetadata;
   servers?: Record<string, ServerConfig>;
+  executionLimits?: ExecutionLimits;
   tools: ToolDefinition[];
   nodes: NodeDefinition[];
 }

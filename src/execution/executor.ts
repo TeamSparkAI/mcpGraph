@@ -108,6 +108,11 @@ export class GraphExecutor {
     const startTime = Date.now();
     let currentNodeId = entryNode.id;
 
+    // Get execution limits with defaults
+    const limits = this.config.executionLimits || {};
+    const maxNodeExecutions = limits.maxNodeExecutions ?? 1000;
+    const maxExecutionTimeMs = limits.maxExecutionTimeMs ?? 300000; // 5 minutes
+
     try {
       if (this.controller) {
         this.controller.setStatus("running");
@@ -115,6 +120,31 @@ export class GraphExecutor {
 
       // Execute nodes until we reach the exit node
       while (true) {
+        // Check execution limits before processing next node
+        const currentHistoryLength = context.getHistory().length;
+        if (currentHistoryLength >= maxNodeExecutions) {
+          const error = new Error(
+            `Execution limit exceeded: maximum node executions (${maxNodeExecutions}) reached. Current execution count: ${currentHistoryLength}`
+          );
+          if (this.controller) {
+            this.controller.setStatus("error");
+            this.controller.setCurrentNode(null);
+          }
+          throw error;
+        }
+
+        const elapsedTime = Date.now() - startTime;
+        if (elapsedTime >= maxExecutionTimeMs) {
+          const error = new Error(
+            `Execution limit exceeded: maximum execution time (${maxExecutionTimeMs}ms) reached. Elapsed time: ${elapsedTime}ms`
+          );
+          if (this.controller) {
+            this.controller.setStatus("error");
+            this.controller.setCurrentNode(null);
+          }
+          throw error;
+        }
+
         // Check for stop request before processing next node
         if (this.controller && this.controller.shouldStop()) {
           if (this.controller) {

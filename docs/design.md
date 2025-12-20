@@ -124,12 +124,16 @@ Graph definitions should feel like Kubernetes manifests or GitHub Actions - decl
 The YAML configuration centers around MCP server and tool definitions:
 
 1. **MCP Server Metadata**: Defines the MCP server information (name, version, description)
-2. **Tools**: Array of tool definitions, each containing:
+2. **Execution Limits** (optional): Guardrails to prevent infinite loops in cyclical graphs:
+   - **`maxNodeExecutions`** (optional): Maximum total node executions across the entire graph. Default: `1000`. If execution reaches this limit, an error is thrown.
+   - **`maxExecutionTimeMs`** (optional): Maximum wall-clock time for graph execution in milliseconds. Default: `300000` (5 minutes). If execution exceeds this time, an error is thrown.
+   - Both limits are checked before each node execution. If either limit is exceeded, execution stops immediately with a clear error message.
+3. **Tools**: Array of tool definitions, each containing:
    - Standard MCP tool metadata (name, description)
    - Input parameters schema (MCP tool parameter definitions)
    - Output schema (what the tool returns)
    - Note: Entry and exit nodes are defined in the nodes section with a `tool` field indicating which tool they belong to
-3. **Nodes**: The directed graph of nodes that execute when tools are called. Node types include:
+4. **Nodes**: The directed graph of nodes that execute when tools are called. Node types include:
    - **`entry`**: Entry point for a tool's graph execution. Receives tool arguments and initializes execution context.
      - **Output**: The tool input arguments (passed through as-is)
    - **`mcp`**: Calls an MCP tool on an internal or external MCP server using `callTool`
@@ -153,6 +157,11 @@ server:
   name: "fileUtils"
   version: "1.0.0"
   description: "File utilities"
+
+# Optional: Execution limits to prevent infinite loops
+executionLimits:
+  maxNodeExecutions: 1000      # Maximum total node executions (default: 1000)
+  maxExecutionTimeMs: 300000   # Maximum execution time in milliseconds (default: 300000 = 5 minutes)
 
 # Tool Definitions
 tools:
@@ -228,5 +237,10 @@ nodes:
 2. **Programmatic API**: Exports `McpGraphApi` class for programmatic use (e.g., by visualizer applications)
 3. **Graph Executor**: Core orchestration engine that executes the directed graph sequentially
 4. **Execution Context**: Tracks execution state, data flow, and history
+   - **Execution History**: Single source of truth - ordered array of all node executions with unique `executionIndex`
+   - **Context Building**: Context for expressions is built from history (most recent execution of each node wins)
+   - **Flat Structure**: Simple `{ "node_id": output }` structure - backward compatible with `$.node_id` notation
+   - **Loop Handling**: When nodes execute multiple times, context shows latest; history functions provide access to all executions
+   - **Time-Travel Debugging**: Can reconstruct context at any point in execution history
 5. **Visual Editor**: Tools to visually view and edit the graph (future)
 6. **Execution Observer**: Ability to observe and debug graph execution (future - see `docs/future-introspection-debugging.md`)
