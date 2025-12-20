@@ -96,8 +96,12 @@ This graph:
 - **`entry`**: Entry point for a tool's graph execution. Receives tool arguments.
 - **`mcp`**: Calls an MCP tool on an internal or external MCP server.
 - **`transform`**: Applies [JSONata](https://jsonata.org/) expressions to transform data between nodes.
-- **`switch`**: Uses [JSON Logic](https://jsonlogic.com/) to conditionally route to different nodes.
+- **`switch`**: Uses [JSON Logic](https://jsonlogic.com/) to conditionally route to different nodes. Note: `var` operations in JSON Logic rules are evaluated using JSONata, allowing full JSONata expression support.
 - **`exit`**: Exit point that returns the final result to the MCP tool caller.
+
+**Context Access:**
+- All node outputs are accessible by node ID (e.g., `$.entry_count_files.directory`, `$.list_directory_node`)
+- The `$previousNode()` function is available in all JSONata expressions to access the output of the node that executed immediately before the current node
 
 ## For Developers
 

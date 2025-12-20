@@ -22,9 +22,6 @@ export class ExecutionContext {
   setNodeOutput(nodeId: string, output: unknown): void {
     // Store output with node ID as key for reference
     this.data[nodeId] = output;
-    // Also store in a generic way for JSONata access
-    this.data.output = output;
-    this.data.last = output;
   }
 
   addHistory(

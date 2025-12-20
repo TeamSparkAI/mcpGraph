@@ -133,6 +133,7 @@ JSON Logic library wrapper:
 - Rule evaluation with context data
 - Boolean results for routing decisions
 - Error handling
+- **Note:** `var` operations in JSON Logic rules are pre-processed and evaluated using JSONata, providing full JSONata expression support (including `$previousNode()` function) within JSON Logic rules
 
 ### 4.3 Expression Context
 
@@ -348,7 +349,7 @@ README updated with:
 
 1. **Custom Execution Engine**: A custom execution loop was implemented to provide full control over execution flow, enable observability (execution history), and support future debugging/introspection features.
 
-2. **Expression Evaluation**: All expressions (JSONata, JSON Logic) are evaluated with a consistent context where all data is referenced by node ID. Tool input is stored as the entry node's output (e.g., `$.entry_count_files.directory`), and each node's output is stored by its node ID (e.g., `$.list_directory_node`).
+2. **Expression Evaluation**: All expressions (JSONata, JSON Logic) are evaluated with a consistent context where all data is referenced by node ID. Tool input is stored as the entry node's output (e.g., `$.entry_count_files.directory`), and each node's output is stored by its node ID (e.g., `$.list_directory_node`). The `$previousNode()` function is available in all JSONata expressions (including those used in JSON Logic `var` operations) to access the output of the node that executed immediately before the current node.
 
 3. **Data Flow**: Data flows through nodes as a JSON object where each node's output is stored by its node ID. Each node can read from previous nodes (by their node IDs) and write its own output (stored by its node ID).
 

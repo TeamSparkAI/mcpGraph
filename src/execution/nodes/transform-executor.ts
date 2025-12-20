@@ -10,6 +10,7 @@ import { logger } from "../../logger.js";
 export async function executeTransformNode(
   node: TransformNode,
   context: ExecutionContext,
+  previousNodeId: string | null,
   startTime: number
 ): Promise<{ output: unknown; nextNode: string }> {
   logger.debug(`Executing transform node: ${node.id}`);
@@ -18,7 +19,7 @@ export async function executeTransformNode(
   const exprContext = context.getData();
   logger.debug(`Transform context: ${JSON.stringify(exprContext, null, 2)}`);
   
-  const output = await evaluateJsonata(node.transform.expr, exprContext);
+  const output = await evaluateJsonata(node.transform.expr, exprContext, previousNodeId);
   const endTime = Date.now();
   
   logger.debug(`Transform output: ${JSON.stringify(output, null, 2)}`);

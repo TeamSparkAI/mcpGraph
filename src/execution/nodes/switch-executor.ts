@@ -10,6 +10,7 @@ import { logger } from "../../logger.js";
 export async function executeSwitchNode(
   node: SwitchNode,
   context: ExecutionContext,
+  previousNodeId: string | null,
   startTime: number
 ): Promise<{ output: unknown; nextNode: string }> {
   logger.debug(`Executing switch node: ${node.id}`);
@@ -29,8 +30,8 @@ export async function executeSwitchNode(
       };
     }
 
-    // Evaluate the JSON Logic rule
-    const ruleResult = evaluateJsonLogic(condition.rule, exprContext);
+    // Evaluate the JSON Logic rule (now uses JSONata for var operations)
+    const ruleResult = await evaluateJsonLogic(condition.rule, exprContext, previousNodeId);
 
     if (ruleResult) {
       logger.debug(`Switch node ${node.id}: Condition matched, routing to: ${condition.target}`);

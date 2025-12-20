@@ -67,6 +67,7 @@ transform:
 - Allows complex rules (e.g., "if price > 100 and status == 'active'") as pure JSON objects
 - Declarative and observable
 - No embedded code execution
+- **Note:** `var` operations in JSON Logic rules are evaluated using JSONata, allowing full JSONata expression support (including `$previousNode()` function)
 
 **Resources:** [JSON Logic Documentation](https://jsonlogic.com/)
 
@@ -74,8 +75,14 @@ transform:
 ```yaml
 condition:
   and:
-    - ">": [{ var: "price" }, 100]
-    - "==": [{ var: "status" }, "active"]
+    - ">": [{ var: "entry.price" }, 100]
+    - "==": [{ var: "entry.status" }, "active"]
+```
+
+**Advanced Example with JSONata:**
+```yaml
+condition:
+  ">": [{ var: "$previousNode().count" }, 10]
 ```
 
 ## High-Level Design: The Graph Runner

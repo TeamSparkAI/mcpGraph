@@ -13,6 +13,7 @@ export async function executeMcpToolNode(
   context: ExecutionContext,
   clientManager: McpClientManager,
   serverConfig: ServerConfig,
+  previousNodeId: string | null,
   startTime: number
 ): Promise<{ output: unknown; nextNode: string }> {
   logger.debug(`Executing MCP tool node: ${node.id} (${node.server}.${node.tool})`);
@@ -24,7 +25,7 @@ export async function executeMcpToolNode(
   for (const [key, value] of Object.entries(node.args)) {
     if (typeof value === "string" && value.startsWith("$")) {
       // JSONata expression
-      const evaluated = await evaluateJsonata(value, exprContext);
+      const evaluated = await evaluateJsonata(value, exprContext, previousNodeId);
       transformedArgs[key] = evaluated;
       logger.debug(`JSONata "${value}" evaluated to: ${JSON.stringify(evaluated)}`);
     } else {

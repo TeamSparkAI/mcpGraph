@@ -7,10 +7,25 @@ import { logger } from "../logger.js";
 
 export async function evaluateJsonata(
   expression: string,
-  context: Record<string, unknown>
+  context: Record<string, unknown>,
+  previousNodeId?: string | null
 ): Promise<unknown> {
   try {
     const expr = jsonata(expression);
+    
+    // Register $previousNode() function if previousNodeId is provided
+    if (previousNodeId) {
+      expr.registerFunction(
+        "previousNode",
+        () => {
+          const previousOutput = context[previousNodeId];
+          logger.debug(`$previousNode() returning output from node: ${previousNodeId}`);
+          return previousOutput !== undefined ? previousOutput : null;
+        },
+        "<:o>" // No arguments, returns object
+      );
+    }
+    
     const result = await expr.evaluate(context);
     
     // Log for debugging
