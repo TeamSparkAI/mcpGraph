@@ -123,7 +123,7 @@ Graph structure validation:
 JSONata library wrapper:
 - Expression evaluation with context data
 - Error handling
-- Support for JSONata references (e.g., `$.input.directory`)
+- Support for JSONata references (e.g., `$.entry_count_files.directory` for tool input, `$.list_directory_node` for node outputs)
 
 ### 4.2 JSON Logic Integration
 
@@ -192,7 +192,7 @@ Switch node execution:
 Entry node execution:
 - Receive tool arguments from MCP client
 - Initialize execution context with tool arguments
-- Make tool arguments available to subsequent nodes (e.g., `$.input.*`)
+- Make tool arguments available to subsequent nodes via entry node output (e.g., `$.entry_count_files.directory`)
 - Pass execution to next node
 
 ### 5.6 Exit Node Executor
@@ -212,10 +212,10 @@ Exit node execution:
 
 Execution state management:
 - Current node tracking
-- Data context (tool inputs, node outputs)
+- Data context (node outputs stored by node ID, e.g., `$.entry_node_id.*`, `$.mcp_node_id.*`)
 - Execution history
 - Error state
-- Data access for expressions
+- Data access for expressions (all data referenced by node ID)
 
 ### 6.2 Graph Executor
 
@@ -348,9 +348,9 @@ README updated with:
 
 1. **Custom Execution Engine**: A custom execution loop was implemented to provide full control over execution flow, enable observability (execution history), and support future debugging/introspection features.
 
-2. **Expression Evaluation**: All expressions (JSONata, JSON Logic) are evaluated with a consistent context that includes tool inputs and previous node outputs.
+2. **Expression Evaluation**: All expressions (JSONata, JSON Logic) are evaluated with a consistent context where all data is referenced by node ID. Tool input is stored as the entry node's output (e.g., `$.entry_count_files.directory`), and each node's output is stored by its node ID (e.g., `$.list_directory_node`).
 
-3. **Data Flow**: Data flows through nodes as a JSON object that accumulates results. Each node can read from and write to this context.
+3. **Data Flow**: Data flows through nodes as a JSON object where each node's output is stored by its node ID. Each node can read from previous nodes (by their node IDs) and write its own output (stored by its node ID).
 
 4. **Error Handling**: Errors at any node are caught, logged, and propagated. Basic error handling works; custom error types would be an enhancement.
 

@@ -57,7 +57,7 @@ nodes:
     server: "filesystem"
     tool: "list_directory"
     args:
-      path: "$.input.directory"
+      path: "$.entry_count_files.directory"
     next: "count_files_node"
   
   # Transform and count files
@@ -65,7 +65,7 @@ nodes:
     type: "transform"
     transform:
       expr: |
-        { "count": $count($split(list_directory_node, "\n")) }
+        { "count": $count($split($.list_directory_node, "\n")) }
     next: "exit_count_files"
   
   # Exit node: Returns the count

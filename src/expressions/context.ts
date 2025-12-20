@@ -3,8 +3,9 @@
  */
 
 export interface ExecutionContext {
-  input: Record<string, unknown>; // Tool input arguments
-  [key: string]: unknown; // Node outputs and other context data
+  // Node outputs and other context data (indexed by node ID)
+  // Tool input is stored as the entry node's output
+  [key: string]: unknown;
 }
 
 export function buildContext(

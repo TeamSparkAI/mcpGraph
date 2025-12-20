@@ -39,12 +39,12 @@ nodes:
     conditions:
       - rule:
           ">":
-            - { var: "value" }
+            - { var: "entry.value" }
             - 10
         target: "high_path"
       - rule:
           ">":
-            - { var: "value" }
+            - { var: "entry.value" }
             - 0
         target: "low_path"
       - target: "zero_path"

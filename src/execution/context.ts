@@ -10,12 +10,8 @@ export class ExecutionContext {
   private history: NodeExecutionRecord[];
 
   constructor(toolInput: Record<string, unknown>) {
-    // Initialize context with tool input available as $.input
-    this.data = {
-      input: toolInput,
-      // Also make input properties directly accessible for convenience
-      ...toolInput,
-    };
+    // Initialize empty context - tool input will be stored by entry node
+    this.data = {};
     this.history = [];
   }
 
