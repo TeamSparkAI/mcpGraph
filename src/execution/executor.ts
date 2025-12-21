@@ -178,9 +178,12 @@ export class GraphExecutor {
           // Get execution index before node executes (this will be the index after we add this execution)
           const executionIndex = context.getHistory().length;
           
+          // Get data context available at the point of pause
+          const dataContext = context.getData();
+          
           // Call onPause hook to notify that we've paused (status is "paused", waiting for resume)
           if (hooks?.onPause) {
-            await hooks.onPause(executionIndex, currentNodeId, context);
+            await hooks.onPause(executionIndex, currentNodeId, dataContext);
           }
           
           // Wait for resume to be called
@@ -204,9 +207,12 @@ export class GraphExecutor {
         // Get execution index before node executes (this will be the index after we add this execution)
         const executionIndex = context.getHistory().length;
 
+        // Get data context available to the node (same as what nodes see for JSONata/JSON Logic)
+        const dataContext = context.getData();
+
         // Call onNodeStart hook
         if (hooks?.onNodeStart) {
-          const shouldContinue = await hooks.onNodeStart(executionIndex, currentNodeId, node, context);
+          const shouldContinue = await hooks.onNodeStart(executionIndex, currentNodeId, node, dataContext);
           // Check for stop after hook (hook may have called stop())
           if (this.controller && this.controller.shouldStop()) {
             if (this.controller) {
@@ -220,7 +226,7 @@ export class GraphExecutor {
             if (this.controller) {
               // Call onPause hook before waiting
               if (hooks?.onPause) {
-                await hooks.onPause(executionIndex, currentNodeId, context);
+                await hooks.onPause(executionIndex, currentNodeId, dataContext);
               }
               await this.controller.waitIfPaused();
               // Call onResume hook after resuming
@@ -357,9 +363,13 @@ export class GraphExecutor {
           // Get execution index after error has been added to history
           const errorExecutionIndex = context.getHistory().length - 1;
           
+          // Get data context available at the time of error (before the error occurred)
+          // Build context from history up to (but not including) the error execution
+          const errorDataContext = context.getContextForExecution(errorExecutionIndex);
+          
           // Call onNodeError hook
           if (hooks?.onNodeError) {
-            await hooks.onNodeError(errorExecutionIndex, currentNodeId, node, nodeError, context);
+            await hooks.onNodeError(errorExecutionIndex, currentNodeId, node, nodeError, errorDataContext);
           }
 
           if (this.controller) {

@@ -65,7 +65,10 @@ describe("Execution stop/cancel", () => {
     let paused = false;
 
     const hooks: ExecutionHooks = {
-      onPause: async (executionIndex) => {
+      onPause: async (executionIndex, nodeId, context) => {
+        // Verify context is the data context (plain object)
+        assert(typeof context === "object", "Context should be an object");
+        assert(context !== null, "Context should not be null");
         paused = true;
         // Stop while paused
         const controller = api.getController();

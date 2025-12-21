@@ -107,9 +107,14 @@ describe("Execution introspection and debugging", () => {
       let errorNodeId: string | undefined;
 
       const hooks: ExecutionHooks = {
-        onNodeError: async (executionIndex, nodeId, node, error) => {
+        onNodeError: async (executionIndex, nodeId, node, error, context) => {
           errorHookCalled = true;
           errorNodeId = nodeId;
+          // Verify context is the data context (plain object), not the ExecutionContext class
+          assert(typeof context === "object", "Context should be an object");
+          assert(context !== null, "Context should not be null");
+          // Context should have properties (node outputs)
+          assert(Object.keys(context).length >= 0, "Context should be a plain object");
         },
       };
 
@@ -280,7 +285,10 @@ describe("Execution introspection and debugging", () => {
       });
 
       const hooks: ExecutionHooks = {
-        onNodeStart: async (executionIndex, nodeId) => {
+        onNodeStart: async (executionIndex, nodeId, node, context) => {
+          // Verify context is the data context (plain object)
+          assert(typeof context === "object", "Context should be an object");
+          assert(context !== null, "Context should not be null");
           executionOrder.push(`start:${nodeId}`);
           // Don't pause here - let the breakpoint do it
           return true;
@@ -352,7 +360,10 @@ describe("Execution introspection and debugging", () => {
       let resumeCalled = false;
 
       const hooks: ExecutionHooks = {
-        onPause: async (executionIndex, nodeId) => {
+        onPause: async (executionIndex, nodeId, context) => {
+          // Verify context is the data context (plain object)
+          assert(typeof context === "object", "Context should be an object");
+          assert(context !== null, "Context should not be null");
           pausedAtNode = nodeId;
         },
         onResume: async () => {
@@ -405,11 +416,17 @@ describe("Execution introspection and debugging", () => {
       const executionOrder: string[] = [];
 
       const hooks: ExecutionHooks = {
-        onNodeStart: async (executionIndex, nodeId) => {
+        onNodeStart: async (executionIndex, nodeId, node, context) => {
+          // Verify context is the data context (plain object)
+          assert(typeof context === "object", "Context should be an object");
+          assert(context !== null, "Context should not be null");
           executionOrder.push(`start:${nodeId}`);
           return true;
         },
-        onPause: async (executionIndex, nodeId) => {
+        onPause: async (executionIndex, nodeId, context) => {
+          // Verify context is the data context (plain object)
+          assert(typeof context === "object", "Context should be an object");
+          assert(context !== null, "Context should not be null");
           executionOrder.push(`pause:${nodeId}`);
         },
       };

@@ -3,7 +3,8 @@
  */
 
 import type { NodeDefinition } from "./config.js";
-import type { ExecutionContext } from "../execution/context.js";
+import type { ExecutionContext as ExecutionContextClass } from "../execution/context.js";
+import type { ExecutionContext as DataContext } from "../expressions/context.js";
 
 export type ExecutionStatus = "not_started" | "running" | "paused" | "finished" | "error" | "stopped";
 
@@ -22,7 +23,7 @@ export interface ExecutionState {
   status: ExecutionStatus;
   currentNodeId: string | null;
   executionHistory: NodeExecutionRecord[];
-  context: ExecutionContext;
+  context: ExecutionContextClass;
   error?: Error;
 }
 
@@ -32,14 +33,14 @@ export interface ExecutionHooks {
    * @param executionIndex - The unique execution index for this node execution (0, 1, 2, ...)
    * @param nodeId - The ID of the node being executed
    * @param node - The node definition
-   * @param context - The execution context
+   * @param context - The data context available to the node (same as what nodes see for JSONata/JSON Logic)
    * @returns Return false to pause execution (breakpoint)
    */
   onNodeStart?: (
     executionIndex: number,
     nodeId: string,
     node: NodeDefinition,
-    context: ExecutionContext
+    context: DataContext
   ) => Promise<boolean>;
 
   /**
@@ -66,23 +67,23 @@ export interface ExecutionHooks {
    * @param nodeId - The ID of the node that encountered the error
    * @param node - The node definition
    * @param error - The error that occurred
-   * @param context - The execution context
+   * @param context - The data context available to the node at the time of error (same as what nodes see for JSONata/JSON Logic)
    */
   onNodeError?: (
     executionIndex: number,
     nodeId: string,
     node: NodeDefinition,
     error: Error,
-    context: ExecutionContext
+    context: DataContext
   ) => Promise<void>;
 
   /**
    * Called when execution pauses (breakpoint hit or manual pause)
    * @param executionIndex - The unique execution index for the current node execution (0, 1, 2, ...)
    * @param nodeId - The ID of the node where execution paused
-   * @param context - The execution context
+   * @param context - The data context available at the point of pause (same as what nodes see for JSONata/JSON Logic)
    */
-  onPause?: (executionIndex: number, nodeId: string, context: ExecutionContext) => Promise<void>;
+  onPause?: (executionIndex: number, nodeId: string, context: DataContext) => Promise<void>;
 
   /**
    * Called when execution resumes

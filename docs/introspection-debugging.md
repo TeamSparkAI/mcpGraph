@@ -62,39 +62,64 @@ All hooks are async functions that return Promises:
 interface ExecutionHooks {
   /**
    * Called before a node executes
-   * Return false to pause execution (acts as a breakpoint)
+   * @param executionIndex - The unique execution index for this node execution (0, 1, 2, ...)
+   * @param nodeId - The ID of the node being executed
+   * @param node - The node definition
+   * @param context - The data context available to the node (same as what nodes see for JSONata/JSON Logic evaluation)
+   * @returns Return false to pause execution (acts as a breakpoint)
    */
   onNodeStart?: (
+    executionIndex: number,
     nodeId: string,
     node: NodeDefinition,
-    context: ExecutionContext
+    context: Record<string, unknown>
   ) => Promise<boolean>;
   
   /**
    * Called after a node completes successfully
+   * @param executionIndex - The unique execution index for this node execution (0, 1, 2, ...)
+   * @param nodeId - The ID of the node that completed
+   * @param node - The node definition
+   * @param input - The data context available to the node when it started (same as what nodes see for JSONata/JSON Logic evaluation)
+   * @param output - The output from the node
+   * @param duration - The duration of the node execution in milliseconds
    */
   onNodeComplete?: (
+    executionIndex: number,
     nodeId: string,
     node: NodeDefinition,
-    input: unknown,
+    input: Record<string, unknown>,
     output: unknown,
     duration: number
   ) => Promise<void>;
   
   /**
    * Called when a node encounters an error
+   * @param executionIndex - The unique execution index for this node execution (0, 1, 2, ...)
+   * @param nodeId - The ID of the node that encountered the error
+   * @param node - The node definition
+   * @param error - The error that occurred
+   * @param context - The data context available to the node at the time of error (same as what nodes see for JSONata/JSON Logic evaluation)
    */
   onNodeError?: (
+    executionIndex: number,
     nodeId: string,
     node: NodeDefinition,
     error: Error,
-    context: ExecutionContext
+    context: Record<string, unknown>
   ) => Promise<void>;
   
   /**
    * Called when execution pauses (breakpoint hit or manual pause)
+   * @param executionIndex - The unique execution index for the current node execution (0, 1, 2, ...)
+   * @param nodeId - The ID of the node where execution paused
+   * @param context - The data context available at the point of pause (same as what nodes see for JSONata/JSON Logic evaluation)
    */
-  onPause?: (nodeId: string, context: ExecutionContext) => Promise<void>;
+  onPause?: (
+    executionIndex: number,
+    nodeId: string,
+    context: Record<string, unknown>
+  ) => Promise<void>;
   
   /**
    * Called when execution resumes
