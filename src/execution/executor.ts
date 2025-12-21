@@ -175,9 +175,12 @@ export class GraphExecutor {
           // Wait for resume - this creates the promise and blocks until resume() is called
           const pausePromise = this.controller.waitIfPaused();
           
+          // Get execution index before node executes (this will be the index after we add this execution)
+          const executionIndex = context.getHistory().length;
+          
           // Call onPause hook to notify that we've paused (status is "paused", waiting for resume)
           if (hooks?.onPause) {
-            await hooks.onPause(currentNodeId, context);
+            await hooks.onPause(executionIndex, currentNodeId, context);
           }
           
           // Wait for resume to be called
@@ -198,9 +201,12 @@ export class GraphExecutor {
           }
         }
 
+        // Get execution index before node executes (this will be the index after we add this execution)
+        const executionIndex = context.getHistory().length;
+
         // Call onNodeStart hook
         if (hooks?.onNodeStart) {
-          const shouldContinue = await hooks.onNodeStart(currentNodeId, node, context);
+          const shouldContinue = await hooks.onNodeStart(executionIndex, currentNodeId, node, context);
           // Check for stop after hook (hook may have called stop())
           if (this.controller && this.controller.shouldStop()) {
             if (this.controller) {
@@ -214,7 +220,7 @@ export class GraphExecutor {
             if (this.controller) {
               // Call onPause hook before waiting
               if (hooks?.onPause) {
-                await hooks.onPause(currentNodeId, context);
+                await hooks.onPause(executionIndex, currentNodeId, context);
               }
               await this.controller.waitIfPaused();
               // Call onResume hook after resuming
@@ -249,9 +255,12 @@ export class GraphExecutor {
               break;
             case "exit":
               result = executeExitNode(node, context, nodeStartTime);
+              // Get execution index after exit node has been added to history
+              const exitExecutionIndex = context.getHistory().length - 1;
               // Call onNodeComplete hook for exit node
               if (hooks?.onNodeComplete && inputContext !== undefined) {
                 await hooks.onNodeComplete(
+                  exitExecutionIndex,
                   currentNodeId,
                   node,
                   inputContext,
@@ -308,9 +317,13 @@ export class GraphExecutor {
               throw new Error(`Unknown node type: ${(node as { type: string }).type}`);
           }
 
+          // Get execution index after node has been added to history
+          const nodeExecutionIndex = context.getHistory().length - 1;
+          
           // Call onNodeComplete hook
           if (hooks?.onNodeComplete && inputContext !== undefined) {
             await hooks.onNodeComplete(
+              nodeExecutionIndex,
               currentNodeId,
               node,
               inputContext,
@@ -341,9 +354,12 @@ export class GraphExecutor {
             );
           }
 
+          // Get execution index after error has been added to history
+          const errorExecutionIndex = context.getHistory().length - 1;
+          
           // Call onNodeError hook
           if (hooks?.onNodeError) {
-            await hooks.onNodeError(currentNodeId, node, nodeError, context);
+            await hooks.onNodeError(errorExecutionIndex, currentNodeId, node, nodeError, context);
           }
 
           if (this.controller) {

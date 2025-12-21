@@ -29,9 +29,14 @@ export interface ExecutionState {
 export interface ExecutionHooks {
   /**
    * Called before a node executes
-   * Return false to pause execution (breakpoint)
+   * @param executionIndex - The unique execution index for this node execution (0, 1, 2, ...)
+   * @param nodeId - The ID of the node being executed
+   * @param node - The node definition
+   * @param context - The execution context
+   * @returns Return false to pause execution (breakpoint)
    */
   onNodeStart?: (
+    executionIndex: number,
     nodeId: string,
     node: NodeDefinition,
     context: ExecutionContext
@@ -39,8 +44,15 @@ export interface ExecutionHooks {
 
   /**
    * Called after a node completes successfully
+   * @param executionIndex - The unique execution index for this node execution (0, 1, 2, ...)
+   * @param nodeId - The ID of the node that completed
+   * @param node - The node definition
+   * @param input - The input context available to the node when it started
+   * @param output - The output from the node
+   * @param duration - The duration of the node execution in milliseconds
    */
   onNodeComplete?: (
+    executionIndex: number,
     nodeId: string,
     node: NodeDefinition,
     input: unknown,
@@ -50,8 +62,14 @@ export interface ExecutionHooks {
 
   /**
    * Called when a node encounters an error
+   * @param executionIndex - The unique execution index for this node execution (0, 1, 2, ...)
+   * @param nodeId - The ID of the node that encountered the error
+   * @param node - The node definition
+   * @param error - The error that occurred
+   * @param context - The execution context
    */
   onNodeError?: (
+    executionIndex: number,
     nodeId: string,
     node: NodeDefinition,
     error: Error,
@@ -60,8 +78,11 @@ export interface ExecutionHooks {
 
   /**
    * Called when execution pauses (breakpoint hit or manual pause)
+   * @param executionIndex - The unique execution index for the current node execution (0, 1, 2, ...)
+   * @param nodeId - The ID of the node where execution paused
+   * @param context - The execution context
    */
-  onPause?: (nodeId: string, context: ExecutionContext) => Promise<void>;
+  onPause?: (executionIndex: number, nodeId: string, context: ExecutionContext) => Promise<void>;
 
   /**
    * Called when execution resumes

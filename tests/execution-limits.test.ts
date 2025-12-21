@@ -255,7 +255,7 @@ describe("Execution limits", () => {
         // Provide hooks to get a controller
         const { promise, controller } = api.executeTool("infinite_loop", {}, {
           hooks: {
-            onNodeStart: async () => true,
+            onNodeStart: async (executionIndex) => true,
           },
         });
 

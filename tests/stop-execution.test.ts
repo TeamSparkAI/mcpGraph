@@ -23,7 +23,7 @@ describe("Execution stop/cancel", () => {
     let executionStopped = false;
 
     const hooks: ExecutionHooks = {
-      onNodeStart: async (nodeId, node) => {
+      onNodeStart: async (executionIndex, nodeId, node) => {
         nodeStartCount++;
         // Stop after the entry node (before the switch node)
         if (nodeId === "entry") {
@@ -65,7 +65,7 @@ describe("Execution stop/cancel", () => {
     let paused = false;
 
     const hooks: ExecutionHooks = {
-      onPause: async () => {
+      onPause: async (executionIndex) => {
         paused = true;
         // Stop while paused
         const controller = api.getController();
@@ -100,7 +100,7 @@ describe("Execution stop/cancel", () => {
     const api = new McpGraphApi(configPath);
 
     const hooks: ExecutionHooks = {
-      onNodeStart: async (nodeId) => {
+      onNodeStart: async (executionIndex, nodeId) => {
         if (nodeId === "switch_node") {
           const controller = api.getController();
           if (controller) {

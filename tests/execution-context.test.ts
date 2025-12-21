@@ -54,7 +54,7 @@ describe("Execution context and history", () => {
 
       let contextAtListDir: Record<string, unknown> | null = null;
       const hooks = {
-        onNodeComplete: async (_nodeId: string) => {
+        onNodeComplete: async (_executionIndex: number, _nodeId: string) => {
           const nodeId = _nodeId;
           if (nodeId === "list_directory_node") {
             // Get context for execution #1 (list_directory_node)
@@ -110,7 +110,7 @@ describe("Execution context and history", () => {
 
       let entryRecord: any = null;
       const hooks = {
-        onNodeComplete: async (nodeId: string) => {
+        onNodeComplete: async (_executionIndex: number, nodeId: string) => {
           if (nodeId === "count_files_node") {
             // Get execution record for entry node (index 0)
             entryRecord = api.getExecutionByIndex(0);
@@ -142,6 +142,73 @@ describe("Execution context and history", () => {
       const record = api.getExecutionByIndex(0);
       assert.equal(record, null, "Should return null when no execution in progress");
       await api.close();
+    });
+  });
+
+  describe("executionIndex in hooks", () => {
+    it("should pass correct executionIndex to hooks in loop scenario", { timeout: 10000 }, async () => {
+      const configPath = join(projectRoot, "examples", "loop_example.yaml");
+      const api = new McpGraphApi(configPath);
+
+      const hookExecutionIndices: number[] = [];
+      const hookNodeIds: string[] = [];
+
+      const hooks = {
+        onNodeStart: async (executionIndex: number, nodeId: string) => {
+          hookExecutionIndices.push(executionIndex);
+          hookNodeIds.push(nodeId);
+          return true;
+        },
+      };
+
+      const { promise } = api.executeTool("sum_to_n", { n: 3 }, { hooks });
+      const result = await promise;
+      await api.close();
+
+      assert(result.executionHistory, "Execution history should be present");
+      
+      // Verify executionIndex values match history
+      assert.equal(
+        hookExecutionIndices.length,
+        result.executionHistory.length,
+        "Number of hook calls should match execution history length"
+      );
+
+      for (let i = 0; i < hookExecutionIndices.length; i++) {
+        assert.equal(
+          hookExecutionIndices[i],
+          result.executionHistory[i].executionIndex,
+          `Hook executionIndex at position ${i} (${hookExecutionIndices[i]}) should match history record executionIndex (${result.executionHistory[i].executionIndex})`
+        );
+        assert.equal(
+          hookNodeIds[i],
+          result.executionHistory[i].nodeId,
+          `Hook nodeId at position ${i} should match history record nodeId`
+        );
+      }
+
+      // Verify increment_node executes multiple times with different executionIndex values
+      const incrementNodeExecutions = result.executionHistory.filter(
+        (r) => r.nodeId === "increment_node"
+      );
+      assert.equal(incrementNodeExecutions.length, 3, "increment_node should execute 3 times");
+      
+      const incrementNodeHookIndices = hookExecutionIndices.filter(
+        (_, i) => hookNodeIds[i] === "increment_node"
+      );
+      assert.equal(
+        incrementNodeHookIndices.length,
+        3,
+        "onNodeStart should be called 3 times for increment_node"
+      );
+      
+      // Verify each execution has unique executionIndex
+      const uniqueIndices = new Set(incrementNodeHookIndices);
+      assert.equal(
+        uniqueIndices.size,
+        3,
+        "Each increment_node execution should have unique executionIndex"
+      );
     });
   });
 

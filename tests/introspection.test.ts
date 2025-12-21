@@ -20,25 +20,65 @@ describe("Execution introspection and debugging", () => {
       const configPath = join(projectRoot, "examples", "switch_example.yaml");
       const api = new McpGraphApi(configPath);
 
-      const nodeStartCalls: Array<{ nodeId: string; nodeType: string }> = [];
-      const nodeCompleteCalls: Array<{ nodeId: string; duration: number }> = [];
+      const nodeStartCalls: Array<{ executionIndex: number; nodeId: string; nodeType: string }> = [];
+      const nodeCompleteCalls: Array<{ executionIndex: number; nodeId: string; duration: number }> = [];
 
       const hooks: ExecutionHooks = {
-        onNodeStart: async (nodeId, node) => {
-          nodeStartCalls.push({ nodeId, nodeType: node.type });
+        onNodeStart: async (executionIndex, nodeId, node) => {
+          nodeStartCalls.push({ executionIndex, nodeId, nodeType: node.type });
           return true; // Continue execution
         },
-        onNodeComplete: async (nodeId, node, input, output, duration) => {
-          nodeCompleteCalls.push({ nodeId, duration });
+        onNodeComplete: async (executionIndex, nodeId, node, input, output, duration) => {
+          nodeCompleteCalls.push({ executionIndex, nodeId, duration });
         },
       };
 
       const { promise } = api.executeTool("test_switch", { value: 5 }, { hooks });
-      await promise;
+      const result = await promise;
+      await api.close();
 
       // Verify hooks were called
       assert(nodeStartCalls.length > 0, "onNodeStart should be called");
       assert(nodeCompleteCalls.length > 0, "onNodeComplete should be called");
+
+      // Verify executionIndex matches execution history
+      assert(result.executionHistory, "Execution history should be present");
+      assert.equal(
+        nodeStartCalls.length,
+        result.executionHistory.length,
+        "Number of onNodeStart calls should match execution history length"
+      );
+      assert.equal(
+        nodeCompleteCalls.length,
+        result.executionHistory.length,
+        "Number of onNodeComplete calls should match execution history length"
+      );
+
+      // Verify executionIndex values match history
+      for (let i = 0; i < nodeStartCalls.length; i++) {
+        const hookCall = nodeStartCalls[i];
+        const historyRecord = result.executionHistory[i];
+        assert.equal(
+          hookCall.executionIndex,
+          historyRecord.executionIndex,
+          `onNodeStart executionIndex (${hookCall.executionIndex}) should match history record executionIndex (${historyRecord.executionIndex}) for node ${hookCall.nodeId}`
+        );
+        assert.equal(
+          hookCall.nodeId,
+          historyRecord.nodeId,
+          `onNodeStart nodeId should match history record nodeId`
+        );
+      }
+
+      for (let i = 0; i < nodeCompleteCalls.length; i++) {
+        const hookCall = nodeCompleteCalls[i];
+        const historyRecord = result.executionHistory[i];
+        assert.equal(
+          hookCall.executionIndex,
+          historyRecord.executionIndex,
+          `onNodeComplete executionIndex (${hookCall.executionIndex}) should match history record executionIndex (${historyRecord.executionIndex}) for node ${hookCall.nodeId}`
+        );
+      }
 
       // Verify entry node was called
       const entryCall = nodeStartCalls.find((c) => c.nodeId === "entry");
@@ -67,7 +107,7 @@ describe("Execution introspection and debugging", () => {
       let errorNodeId: string | undefined;
 
       const hooks: ExecutionHooks = {
-        onNodeError: async (nodeId, node, error) => {
+        onNodeError: async (executionIndex, nodeId, node, error) => {
           errorHookCalled = true;
           errorNodeId = nodeId;
         },
@@ -240,15 +280,15 @@ describe("Execution introspection and debugging", () => {
       });
 
       const hooks: ExecutionHooks = {
-        onNodeStart: async (nodeId) => {
+        onNodeStart: async (executionIndex, nodeId) => {
           executionOrder.push(`start:${nodeId}`);
           // Don't pause here - let the breakpoint do it
           return true;
         },
-        onNodeComplete: async (nodeId) => {
+        onNodeComplete: async (executionIndex, nodeId) => {
           executionOrder.push(`complete:${nodeId}`);
         },
-        onPause: async (nodeId) => {
+        onPause: async (executionIndex, nodeId) => {
           pausedAtNode = nodeId;
           executionOrder.push(`pause:${nodeId}`);
           // Signal that we've paused (status is already "paused" at this point)
@@ -312,7 +352,7 @@ describe("Execution introspection and debugging", () => {
       let resumeCalled = false;
 
       const hooks: ExecutionHooks = {
-        onPause: async (nodeId) => {
+        onPause: async (executionIndex, nodeId) => {
           pausedAtNode = nodeId;
         },
         onResume: async () => {
@@ -365,11 +405,11 @@ describe("Execution introspection and debugging", () => {
       const executionOrder: string[] = [];
 
       const hooks: ExecutionHooks = {
-        onNodeStart: async (nodeId) => {
+        onNodeStart: async (executionIndex, nodeId) => {
           executionOrder.push(`start:${nodeId}`);
           return true;
         },
-        onPause: async (nodeId) => {
+        onPause: async (executionIndex, nodeId) => {
           executionOrder.push(`pause:${nodeId}`);
         },
       };

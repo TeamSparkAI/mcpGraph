@@ -26,14 +26,14 @@ const api = new McpGraphApi('config.yaml');
 const { promise, controller } = api.executeTool('count_files', {
   directory: './tests/files'
 }, {
-  hooks: {
-    onNodeStart: async (nodeId, node) => {
-      console.log(`Starting node: ${nodeId} (${node.type})`);
-    },
-    onNodeComplete: async (nodeId, node, input, output, duration) => {
-      console.log(`Node ${nodeId} completed in ${duration}ms`);
-    }
-  },
+      hooks: {
+        onNodeStart: async (executionIndex, nodeId, node) => {
+          console.log(`Starting node: ${nodeId} (${node.type}) at execution index ${executionIndex}`);
+        },
+        onNodeComplete: async (executionIndex, nodeId, node, input, output, duration) => {
+          console.log(`Node ${nodeId} (execution ${executionIndex}) completed in ${duration}ms`);
+        }
+      },
   enableTelemetry: true
 });
 
@@ -110,21 +110,23 @@ All hooks are async functions. If you don't need async operations, you can simpl
 ```typescript
 const hooks: ExecutionHooks = {
   // Async function - no await needed if you don't have async operations
-  onNodeStart: async (nodeId, node, context) => {
+  onNodeStart: async (executionIndex, nodeId, node, context) => {
     // Update UI synchronously
     updateNodeStatus(nodeId, 'running');
     highlightNode(nodeId);
+    // executionIndex uniquely identifies this execution instance (important for loops)
     return true; // Continue execution
   },
   
   // Async function - can use await if needed
-  onNodeComplete: async (nodeId, node, input, output, duration) => {
+  onNodeComplete: async (executionIndex, nodeId, node, input, output, duration) => {
     // Update UI synchronously
     updateNodeResult(nodeId, {
       input,
       output,
       duration,
-      status: 'completed'
+      status: 'completed',
+      executionIndex // Track which execution instance this was
     });
     updateNodeVisualization(nodeId, output);
     
@@ -132,10 +134,11 @@ const hooks: ExecutionHooks = {
     // await logToServer(nodeId, output);
   },
   
-  onNodeError: async (nodeId, node, error, context) => {
+  onNodeError: async (executionIndex, nodeId, node, error, context) => {
     // Error handling
     showError(nodeId, error);
     updateNodeStatus(nodeId, 'error');
+    // executionIndex can be used to get context: api.getContextForExecution(executionIndex)
   }
 };
 
@@ -214,8 +217,8 @@ interface ExecutionController {
 
 ```typescript
 const hooks: ExecutionHooks = {
-  onPause: async (nodeId, context) => {
-    console.log(`Paused at node: ${nodeId}`);
+  onPause: async (executionIndex, nodeId, context) => {
+    console.log(`Paused at node: ${nodeId} (execution index: ${executionIndex})`);
     // Show debugger UI
     showDebuggerUI();
   },
@@ -290,8 +293,9 @@ if (controller) {
 
 ```typescript
 const hooks: ExecutionHooks = {
-  onNodeStart: async (nodeId, node, context) => {
+  onNodeStart: async (executionIndex, nodeId, node, context) => {
     // Conditional breakpoint logic
+    // executionIndex can be used to identify specific execution instances in loops
     if (shouldBreak(nodeId, context)) {
       return false; // Pause execution
     }
@@ -499,26 +503,29 @@ class GraphVisualizer {
   
   async executeWithVisualization(toolName: string, args: Record<string, unknown>) {
     const hooks: ExecutionHooks = {
-      onNodeStart: async (nodeId, node, context) => {
+      onNodeStart: async (executionIndex, nodeId, node, context) => {
         this.updateNodeStatus(nodeId, 'running');
         this.highlightNode(nodeId);
+        // executionIndex uniquely identifies this execution (important for loops)
         return true;
       },
       
-      onNodeComplete: async (nodeId, node, input, output, duration) => {
+      onNodeComplete: async (executionIndex, nodeId, node, input, output, duration) => {
         this.updateNodeStatus(nodeId, 'completed');
-        this.updateNodeData(nodeId, { input, output, duration });
+        this.updateNodeData(nodeId, { input, output, duration, executionIndex });
         this.unhighlightNode(nodeId);
       },
       
-      onNodeError: async (nodeId, node, error, context) => {
+      onNodeError: async (executionIndex, nodeId, node, error, context) => {
         this.updateNodeStatus(nodeId, 'error');
         this.showError(nodeId, error);
+        // Can use executionIndex to get context: api.getContextForExecution(executionIndex)
       },
       
-      onPause: async (nodeId, context) => {
+      onPause: async (executionIndex, nodeId, context) => {
         this.showDebuggerControls();
         this.updateExecutionStatus('paused');
+        // executionIndex identifies which execution instance is paused
       },
       
       onResume: async () => {
