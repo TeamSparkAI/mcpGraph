@@ -19,7 +19,8 @@ const jsonSchemaSchema = z.object({
 const serverMetadataSchema = z.object({
   name: z.string(),
   version: z.string(),
-  description: z.string(),
+  title: z.string().optional(), // Optional, defaults to name if not provided
+  instructions: z.string().optional(),
 });
 
 const stdioServerConfigSchema = z.object({
@@ -120,7 +121,7 @@ const executionLimitsSchema = z.object({
 export const mcpGraphConfigSchema = z.object({
   version: z.string(),
   server: serverMetadataSchema,
-  servers: z.record(serverConfigSchema).optional(),
+  mcpServers: z.record(serverConfigSchema).optional(),
   executionLimits: executionLimitsSchema.optional(),
   tools: z.array(toolDefinitionSchema),
   nodes: z.array(nodeSchema),

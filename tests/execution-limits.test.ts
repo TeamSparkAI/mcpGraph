@@ -17,10 +17,10 @@ const projectRoot = join(__dirname, "..");
 
 describe("Execution limits", () => {
   describe("maxNodeExecutions limit", () => {
-    it("should stop execution when maxNodeExecutions is reached", { timeout: 10000 }, async () => {
+    it("should stop execution when maxNodeExecutions is reached", async () => {
       const testConfig = {
         version: "1.0",
-        server: { name: "test", version: "1.0.0", description: "Test" },
+        server: { name: "test", version: "1.0.0", title: "Test" },
         executionLimits: {
           maxNodeExecutions: 10,
         },
@@ -89,10 +89,10 @@ describe("Execution limits", () => {
       }
     });
 
-    it("should use default maxNodeExecutions (1000) when not specified", { timeout: 15000 }, async () => {
+    it("should use default maxNodeExecutions (1000) when not specified", async () => {
       const testConfig = {
         version: "1.0",
-        server: { name: "test", version: "1.0.0", description: "Test" },
+        server: { name: "test", version: "1.0.0", title: "Test" },
         // No executionLimits specified - should use defaults
         tools: [
           {
@@ -155,10 +155,10 @@ describe("Execution limits", () => {
       }
     });
 
-    it("should allow execution to complete if it finishes before hitting limit", { timeout: 10000 }, async () => {
+    it("should allow execution to complete if it finishes before hitting limit", async () => {
       const testConfig = {
         version: "1.0",
-        server: { name: "test", version: "1.0.0", description: "Test" },
+        server: { name: "test", version: "1.0.0", title: "Test" },
         executionLimits: {
           maxNodeExecutions: 5, // Very low limit
         },
@@ -206,11 +206,11 @@ describe("Execution limits", () => {
       }
     });
 
-    it("should stop exactly at the limit boundary", { timeout: 10000 }, async () => {
+    it("should stop exactly at the limit boundary", async () => {
       const limit = 5;
       const testConfig = {
         version: "1.0",
-        server: { name: "test", version: "1.0.0", description: "Test" },
+        server: { name: "test", version: "1.0.0", title: "Test" },
         executionLimits: {
           maxNodeExecutions: limit,
         },
@@ -287,12 +287,12 @@ describe("Execution limits", () => {
   });
 
   describe("maxExecutionTimeMs limit", () => {
-    it("should stop execution when maxExecutionTimeMs is reached", { timeout: 10000 }, async () => {
+    it("should stop execution when maxExecutionTimeMs is reached", async () => {
       // Create a config with a slow operation (transform that takes time)
       // We'll use a loop that will take longer than the time limit
       const testConfig = {
         version: "1.0",
-        server: { name: "test", version: "1.0.0", description: "Test" },
+        server: { name: "test", version: "1.0.0", title: "Test" },
         executionLimits: {
           maxExecutionTimeMs: 200, // 200ms limit
           maxNodeExecutions: 10000, // High node limit so time limit hits first
@@ -367,12 +367,12 @@ describe("Execution limits", () => {
       }
     });
 
-    it("should use default maxExecutionTimeMs (300000ms) when not specified", { timeout: 10000 }, async () => {
+    it("should use default maxExecutionTimeMs (300000ms) when not specified", async () => {
       // This test would take 5 minutes, so we'll just verify the default is applied
       // by checking that a fast execution doesn't hit the time limit
       const testConfig = {
         version: "1.0",
-        server: { name: "test", version: "1.0.0", description: "Test" },
+        server: { name: "test", version: "1.0.0", title: "Test" },
         // No executionLimits - should use default 300000ms
         tools: [
           {
@@ -410,10 +410,10 @@ describe("Execution limits", () => {
   });
 
   describe("Both limits together", () => {
-    it("should stop at node execution limit when it hits first", { timeout: 10000 }, async () => {
+    it("should stop at node execution limit when it hits first", async () => {
       const testConfig = {
         version: "1.0",
-        server: { name: "test", version: "1.0.0", description: "Test" },
+        server: { name: "test", version: "1.0.0", title: "Test" },
         executionLimits: {
           maxNodeExecutions: 10,
           maxExecutionTimeMs: 60000, // 60 seconds - node limit should hit first
@@ -484,10 +484,10 @@ describe("Execution limits", () => {
       }
     });
 
-    it("should stop at time limit when it hits first", { timeout: 10000 }, async () => {
+    it("should stop at time limit when it hits first", async () => {
       const testConfig = {
         version: "1.0",
-        server: { name: "test", version: "1.0.0", description: "Test" },
+        server: { name: "test", version: "1.0.0", title: "Test" },
         executionLimits: {
           maxNodeExecutions: 10000, // High node limit - time should hit first
           maxExecutionTimeMs: 200, // 200ms - very short
@@ -560,11 +560,11 @@ describe("Execution limits", () => {
   });
 
   describe("Edge cases", () => {
-    it("should reject invalid limit values (schema validation)", { timeout: 5000 }, () => {
+    it("should reject invalid limit values (schema validation)", () => {
       // Test that schema validation rejects invalid values
       const testConfig = {
         version: "1.0",
-        server: { name: "test", version: "1.0.0", description: "Test" },
+        server: { name: "test", version: "1.0.0", title: "Test" },
         executionLimits: {
           maxNodeExecutions: -1, // Invalid: negative
         },

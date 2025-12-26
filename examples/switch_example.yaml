@@ -4,7 +4,8 @@ version: "1.0"
 server:
   name: "switchExample"
   version: "1.0.0"
-  description: "Example demonstrating switch node functionality"
+  title: "Switch Node Example"
+  instructions: "This example demonstrates conditional routing using switch nodes with JSON Logic."
 
 # Tool Definitions
 tools:

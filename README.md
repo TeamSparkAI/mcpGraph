@@ -24,7 +24,8 @@ version: "1.0"
 server:
   name: "fileUtils"
   version: "1.0.0"
-  description: "File utilities"
+  title: "File utilities"
+  instructions: "This server provides file utility tools for counting files in directories."
 
 # Optional: Execution limits to prevent infinite loops
 executionLimits:
@@ -51,7 +52,7 @@ tools:
           description: "The number of files in the directory"
 
 # MCP Servers used by the graph
-servers:
+mcpServers:
   filesystem:
     command: "npx"
     args:
@@ -162,9 +163,10 @@ mcpGraph supports cyclical graphs, which requires guardrails to prevent infinite
 version: "1.0"
 
 server:
-  name: "myServer"
-  version: "1.0.0"
-  description: "My MCP server"
+  name: "myServer"          # Required: unique identifier
+  version: "1.0.0"          # Required: server version
+  title: "My MCP server"    # Optional: display name (defaults to name if not provided)
+  instructions: "Instructions for using this server"  # Optional: server usage instructions
 
 # Optional: Execution limits to prevent infinite loops
 executionLimits:

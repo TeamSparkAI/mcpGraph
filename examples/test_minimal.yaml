@@ -1,0 +1,27 @@
+version: "1.0"
+
+# MCP Server Metadata - minimal config for testing defaults
+# No title (should default to name)
+# No instructions (should be undefined)
+server:
+  name: "testMinimal"
+  version: "1.0.0"
+
+# Tool Definitions
+tools:
+  - name: "test_tool"
+    description: "Test tool"
+    inputSchema:
+      type: "object"
+    outputSchema:
+      type: "object"
+
+# Graph Nodes
+nodes:
+  - id: "entry"
+    type: "entry"
+    tool: "test_tool"
+    next: "exit"
+  - id: "exit"
+    type: "exit"
+    tool: "test_tool"

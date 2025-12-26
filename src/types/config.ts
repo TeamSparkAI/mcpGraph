@@ -10,7 +10,7 @@ export interface ExecutionLimits {
 export interface McpGraphConfig {
   version: string;
   server: ServerMetadata;
-  servers?: Record<string, ServerConfig>;
+  mcpServers?: Record<string, ServerConfig>;
   executionLimits?: ExecutionLimits;
   tools: ToolDefinition[];
   nodes: NodeDefinition[];
@@ -19,7 +19,8 @@ export interface McpGraphConfig {
 export interface ServerMetadata {
   name: string;
   version: string;
-  description: string;
+  title?: string; // Optional, defaults to name if not provided
+  instructions?: string;
 }
 
 export type ServerConfig =

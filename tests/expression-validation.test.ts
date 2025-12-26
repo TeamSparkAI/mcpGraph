@@ -15,10 +15,10 @@ const __dirname = dirname(__filename);
 const projectRoot = join(__dirname, "..");
 
 describe("Expression syntax validation", () => {
-  it("should reject invalid JSONata syntax in transform node", { timeout: 5000 }, () => {
+  it("should reject invalid JSONata syntax in transform node", () => {
     const testConfig = {
       version: "1.0",
-      server: { name: "test", version: "1.0.0", description: "Test" },
+      server: { name: "test", version: "1.0.0", title: "Test" },
       tools: [{ name: "test", description: "Test", inputSchema: { type: "object" }, outputSchema: { type: "object" } }],
       nodes: [
         { id: "entry", type: "entry", tool: "test", next: "transform" },
@@ -48,12 +48,12 @@ describe("Expression syntax validation", () => {
     }
   });
 
-  it("should reject invalid JSONata syntax in MCP node args", { timeout: 5000 }, () => {
+  it("should reject invalid JSONata syntax in MCP node args", () => {
     const testConfig = {
       version: "1.0",
-      server: { name: "test", version: "1.0.0", description: "Test" },
+      server: { name: "test", version: "1.0.0", title: "Test" },
       tools: [{ name: "test", description: "Test", inputSchema: { type: "object" }, outputSchema: { type: "object" } }],
-      servers: { testServer: { command: "echo", args: [] } },
+      mcpServers: { testServer: { command: "echo", args: [] } },
       nodes: [
         { id: "entry", type: "entry", tool: "test", next: "mcp" },
         { id: "mcp", type: "mcp", server: "testServer", tool: "test", args: { path: "$.entry.value +" }, next: "exit" },
@@ -82,10 +82,10 @@ describe("Expression syntax validation", () => {
     }
   });
 
-  it("should reject invalid JSONata in JSON Logic var operation", { timeout: 5000 }, () => {
+  it("should reject invalid JSONata in JSON Logic var operation", () => {
     const testConfig = {
       version: "1.0",
-      server: { name: "test", version: "1.0.0", description: "Test" },
+      server: { name: "test", version: "1.0.0", title: "Test" },
       tools: [{ name: "test", description: "Test", inputSchema: { type: "object" }, outputSchema: { type: "object" } }],
       nodes: [
         { id: "entry", type: "entry", tool: "test", next: "switch" },
@@ -119,7 +119,7 @@ describe("Expression syntax validation", () => {
     }
   });
 
-  it("should accept valid expressions", { timeout: 5000 }, () => {
+  it("should accept valid expressions", () => {
     // Use existing valid config
     const configPath = join(projectRoot, "examples", "count_files.yaml");
     assert.doesNotThrow(() => {

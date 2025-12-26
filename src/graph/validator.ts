@@ -102,7 +102,7 @@ export function validateGraph(config: McpGraphConfig): ValidationError[] {
   for (const node of config.nodes) {
     if (node.type === "mcp") {
       const serverName = node.server;
-      if (!config.servers || !config.servers[serverName]) {
+      if (!config.mcpServers || !config.mcpServers[serverName]) {
         errors.push({
           message: `MCP node "${node.id}" references non-existent server "${serverName}"`,
           nodeId: node.id,

@@ -2,9 +2,10 @@ version: "1.0"
 
 # MCP Server Metadata
 server:
-  name: "fileUtils"
-  version: "1.0.0"
-  description: "File utilities"
+  name: "fileUtils"  # Required: unique identifier
+  version: "1.0.0"    # Required: server version
+  title: "File utilities"  # Optional: display name (defaults to name if not provided)
+  instructions: "This server provides file utility tools for counting files in directories."  # Optional
 
 # Tool Definitions
 tools:
@@ -26,7 +27,7 @@ tools:
           description: "The number of files in the directory"
 
 # MCP Servers used by the graph
-servers:
+mcpServers:
   # Stdio server (type is optional, defaults to stdio)
   filesystem:
     command: "npx"

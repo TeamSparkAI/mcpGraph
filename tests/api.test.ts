@@ -15,6 +15,55 @@ const __dirname = dirname(__filename);
 const projectRoot = join(__dirname, "..");
 
 describe("API integration", () => {
+  describe("getServerInfo", () => {
+    it("should default title to name when title is not provided in config", async () => {
+      const configPath = join(projectRoot, "examples", "test_minimal.yaml");
+      const api = new McpGraphApi(configPath);
+      const serverInfo = api.getServerInfo();
+      
+      assert.equal(serverInfo.name, "testMinimal", "Should have correct name");
+      assert.equal(serverInfo.title, "testMinimal", "Title should default to name when not provided");
+      
+      await api.close();
+    });
+
+    it("should use provided title when title is specified", async () => {
+      const configPath = join(projectRoot, "examples", "count_files.yaml");
+      const api = new McpGraphApi(configPath);
+      
+      const serverInfo = api.getServerInfo();
+      
+      assert.equal(serverInfo.name, "fileUtils", "Should have correct name");
+      assert.equal(serverInfo.title, "File utilities", "Should use provided title");
+      
+      await api.close();
+    });
+
+    it("should return instructions when provided in config", async () => {
+      const configPath = join(projectRoot, "examples", "count_files.yaml");
+      const api = new McpGraphApi(configPath);
+      const serverInfo = api.getServerInfo();
+      
+      assert.equal(serverInfo.name, "fileUtils", "Should have correct name");
+      assert.equal(serverInfo.title, "File utilities", "Should have correct title");
+      assert.equal(serverInfo.instructions, "This server provides file utility tools for counting files in directories.", "Should return instructions when provided");
+      
+      await api.close();
+    });
+
+    it("should return undefined for instructions when not provided", async () => {
+      const configPath = join(projectRoot, "examples", "test_minimal.yaml");
+      const api = new McpGraphApi(configPath);
+      
+      const serverInfo = api.getServerInfo();
+      
+      assert.equal(serverInfo.name, "testMinimal", "Should have correct name");
+      assert(serverInfo.instructions === undefined, "Instructions should be undefined when not provided");
+      
+      await api.close();
+    });
+  });
+
   describe("count_files example", () => {
     let api: McpGraphApi;
 

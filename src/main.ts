@@ -33,11 +33,13 @@ async function main() {
       {
         name: serverInfo.name,
         version: serverInfo.version,
+        title: serverInfo.title, // Optional title (defaults to name if not provided)
       },
       {
         capabilities: {
           tools: {},
         },
+        instructions: serverInfo.instructions, // Set instructions if provided
       }
     );
 

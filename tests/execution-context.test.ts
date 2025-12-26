@@ -15,7 +15,7 @@ const projectRoot = join(__dirname, "..");
 
 describe("Execution context and history", () => {
   describe("executionIndex", () => {
-    it("should assign unique executionIndex to each execution", { timeout: 10000 }, async () => {
+    it("should assign unique executionIndex to each execution", async () => {
       const configPath = join(projectRoot, "examples", "count_files.yaml");
       const api = new McpGraphApi(configPath);
 
@@ -48,7 +48,7 @@ describe("Execution context and history", () => {
   });
 
   describe("getContextForExecution", () => {
-    it("should return context available to a specific execution", { timeout: 10000 }, async () => {
+    it("should return context available to a specific execution", async () => {
       const configPath = join(projectRoot, "examples", "count_files.yaml");
       const api = new McpGraphApi(configPath);
 
@@ -104,7 +104,7 @@ describe("Execution context and history", () => {
   });
 
   describe("getExecutionByIndex", () => {
-    it("should return execution record by index", { timeout: 10000 }, async () => {
+    it("should return execution record by index", async () => {
       const configPath = join(projectRoot, "examples", "count_files.yaml");
       const api = new McpGraphApi(configPath);
 
@@ -146,7 +146,7 @@ describe("Execution context and history", () => {
   });
 
   describe("executionIndex in hooks", () => {
-    it("should pass correct executionIndex to hooks in loop scenario", { timeout: 10000 }, async () => {
+    it("should pass correct executionIndex to hooks in loop scenario", async () => {
       const configPath = join(projectRoot, "examples", "loop_example.yaml");
       const api = new McpGraphApi(configPath);
 
@@ -213,7 +213,7 @@ describe("Execution context and history", () => {
   });
 
   describe("history functions in JSONata", () => {
-    it("should support $previousNode() function in a loop", { timeout: 10000 }, async () => {
+    it("should support $previousNode() function in a loop", async () => {
       const configPath = join(projectRoot, "examples", "loop_example.yaml");
       const api = new McpGraphApi(configPath);
 
@@ -247,7 +247,7 @@ describe("Execution context and history", () => {
       assert.equal(checkConditionRecord.output, "exit_sum", "Switch node should output the target node ID it routed to, which $previousNode() should return");
     });
 
-    it("should support $executionCount() function", { timeout: 10000 }, async () => {
+    it("should support $executionCount() function", async () => {
       const configPath = join(projectRoot, "examples", "loop_example.yaml");
       const api = new McpGraphApi(configPath);
 
@@ -270,7 +270,7 @@ describe("Execution context and history", () => {
       assert.equal(indices.length, uniqueIndices.size, "Each execution should have unique index");
     });
 
-    it("should support $nodeExecution() function to access specific iterations", { timeout: 10000 }, async () => {
+    it("should support $nodeExecution() function to access specific iterations", async () => {
       // This test will need a custom YAML that uses $nodeExecution() in a transform
       // For now, verify the function exists and can be called
       const configPath = join(projectRoot, "examples", "loop_example.yaml");
@@ -300,7 +300,7 @@ describe("Execution context and history", () => {
       assert.equal(lastOutput.counter, 4, "Last execution should have counter = 4");
     });
 
-    it("should support $nodeExecutions() function to get all iterations", { timeout: 10000 }, async () => {
+    it("should support $nodeExecutions() function to get all iterations", async () => {
       const configPath = join(projectRoot, "examples", "loop_example.yaml");
       const api = new McpGraphApi(configPath);
 
@@ -326,7 +326,7 @@ describe("Execution context and history", () => {
   });
 
   describe("multiple executions of same node (loops)", () => {
-    it("should handle multiple executions with unique executionIndex", { timeout: 10000 }, async () => {
+    it("should handle multiple executions with unique executionIndex", async () => {
       // This test verifies that if a node executes multiple times (in a loop),
       // each execution gets a unique executionIndex
       // For a full loop test, we'd need a graph with a loop, but the basic structure is verified
@@ -350,7 +350,7 @@ describe("Execution context and history", () => {
   });
 
   describe("context building from history", () => {
-    it("should build context correctly from history", { timeout: 10000 }, async () => {
+    it("should build context correctly from history", async () => {
       const configPath = join(projectRoot, "examples", "count_files.yaml");
       const api = new McpGraphApi(configPath);
 

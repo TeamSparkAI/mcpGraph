@@ -4,7 +4,8 @@ version: "1.0"
 server:
   name: "loopExample"
   version: "1.0.0"
-  description: "Example with a loop using history functions"
+  title: "Loop Example"
+  instructions: "This example demonstrates loops and execution history functions like $executionCount() and $nodeExecution()."
 
 # Tool Definitions
 tools:

@@ -28,7 +28,7 @@
     "start": "node dist/main.js",
     "dev": "tsx src/main.ts",
     "watch": "tsc --watch",
-    "test": "tsx --test tests/*.test.ts",
+    "test": "tsx --test --test-timeout=30000 tests/*.test.ts",
     "prepublishOnly": "npm run build"
   },
   "keywords": [

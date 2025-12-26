@@ -123,7 +123,7 @@ Graph definitions should feel like Kubernetes manifests or GitHub Actions - decl
 
 The YAML configuration centers around MCP server and tool definitions:
 
-1. **MCP Server Metadata**: Defines the MCP server information (name, version, description)
+1. **MCP Server Metadata**: Defines the MCP server information (name required, version required, title optional defaults to name, instructions optional)
 2. **Execution Limits** (optional): Guardrails to prevent infinite loops in cyclical graphs:
    - **`maxNodeExecutions`** (optional): Maximum total node executions across the entire graph. Default: `1000`. If execution reaches this limit, an error is thrown.
    - **`maxExecutionTimeMs`** (optional): Maximum wall-clock time for graph execution in milliseconds. Default: `300000` (5 minutes). If execution exceeds this time, an error is thrown.
@@ -156,7 +156,8 @@ version: "1.0"
 server:
   name: "fileUtils"
   version: "1.0.0"
-  description: "File utilities"
+  title: "File utilities"
+  instructions: "This server provides file utility tools for counting files in directories."
 
 # Optional: Execution limits to prevent infinite loops
 executionLimits:
@@ -183,7 +184,7 @@ tools:
           description: "The number of files in the directory"
 
 # MCP Servers used by the graph
-servers:
+mcpServers:
   filesystem:
     command: "npx"
     args:

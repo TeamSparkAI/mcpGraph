@@ -46,10 +46,10 @@ export class GraphExecutor {
   }
 
   private getServerConfig(serverName: string): ServerConfig {
-    if (!this.config.servers || !this.config.servers[serverName]) {
+    if (!this.config.mcpServers || !this.config.mcpServers[serverName]) {
       throw new Error(`Server configuration not found: ${serverName}`);
     }
-    return this.config.servers[serverName];
+    return this.config.mcpServers[serverName];
   }
 
   async executeTool(

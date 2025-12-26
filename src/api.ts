@@ -72,18 +72,24 @@ export class McpGraphApi {
     this.clientManager = new McpClientManager();
     this.executor = new GraphExecutor(config, this.clientManager);
 
-    logger.info(`Loaded configuration: ${config.server.name} v${config.server.version}`);
+    const title = config.server.title || config.server.name;
+    logger.info(`Loaded configuration: ${config.server.name} v${config.server.version} - ${title}`);
+    if (config.server.instructions) {
+      logger.debug(`Server instructions: ${config.server.instructions}`);
+    }
     logger.info(`Tools defined: ${config.tools.map(t => t.name).join(', ')}`);
   }
 
   /**
    * Get the server metadata
+   * Title defaults to name if not provided (matching MCP SDK behavior)
    */
-  getServerInfo(): { name: string; version: string; description: string } {
+  getServerInfo(): { name: string; version: string; title: string; instructions?: string } {
     return {
       name: this.config.server.name,
       version: this.config.server.version,
-      description: this.config.server.description,
+      title: this.config.server.title || this.config.server.name, // Default to name if title not provided
+      instructions: this.config.server.instructions,
     };
   }
 
