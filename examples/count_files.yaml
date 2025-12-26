@@ -65,8 +65,7 @@ nodes:
   - id: "count_files_node"
     type: "transform"
     transform:
-      expr: |
-        { "count": $count($split($.list_directory_node, "\n")) }
+      expr: '{ "count": $count($split($.list_directory_node, "\n")) }'
     next: "exit_count_files"
   
   # Exit node: Returns the count

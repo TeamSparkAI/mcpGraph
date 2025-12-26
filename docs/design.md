@@ -55,11 +55,27 @@ To avoid embedding a full programming language while maintaining declarative, ob
 
 **Resources:** [JSONata Documentation](https://jsonata.org/)
 
-**YAML Example:**
+**YAML Example (simple expression - single-quoted string):**
 ```yaml
 transform:
-  expr: "$merge([payload, {'timestamp': $now()}])"
+  expr: '{ "result": "high" }'
 ```
+
+**YAML Example (complex expression - block scalar):**
+```yaml
+transform:
+  expr: |
+    $executionCount("increment_node") = 0
+      ? { "counter": 1, "sum": 1, "target": $.entry_sum.n }
+      : { "counter": $nodeExecution("increment_node", -1).counter + 1, ... }
+```
+
+**Note on Expression Format:**
+The `expr` field is a string containing a JSONata expression. In YAML, you can use either:
+- **Single-quoted strings** (`'...'`) for simple, single-line expressions. This keeps the expression on one line and avoids the need for block scalars.
+- **Block scalars** (`|`) for complex, multi-line expressions. This improves readability for expressions with conditional logic, nested objects, or multiple operations.
+
+Both forms work identically - the expression is evaluated as a string by JSONata. Use single quotes for simple expressions and block scalars for complex ones to improve readability.
 
 ### Routing Decisions: JSON Logic
 
@@ -213,8 +229,7 @@ nodes:
   - id: "count_files_node"
     type: "transform"
     transform:
-      expr: |
-        { "count": $count($split($.list_directory_node, "\n")) }
+      expr: '{ "count": $count($split($.list_directory_node, "\n")) }'
     next: "exit_count_files"
   
   # Exit node: Returns the count

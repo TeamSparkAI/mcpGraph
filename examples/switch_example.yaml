@@ -54,24 +54,21 @@ nodes:
   - id: "high_path"
     type: "transform"
     transform:
-      expr: |
-        { "result": "high" }
+      expr: '{ "result": "high" }'
     next: "exit"
   
   # Low path (> 0 but <= 10)
   - id: "low_path"
     type: "transform"
     transform:
-      expr: |
-        { "result": "low" }
+      expr: '{ "result": "low" }'
     next: "exit"
   
   # Zero/negative path (default)
   - id: "zero_path"
     type: "transform"
     transform:
-      expr: |
-        { "result": "zero_or_negative" }
+      expr: '{ "result": "zero_or_negative" }'
     next: "exit"
   
   # Exit node: Returns the result

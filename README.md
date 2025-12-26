@@ -81,8 +81,7 @@ nodes:
   - id: "count_files_node"
     type: "transform"
     transform:
-      expr: |
-        { "count": $count($split($.list_directory_node, "\n")) }
+      expr: '{ "count": $count($split($.list_directory_node, "\n")) }'
     next: "exit_count_files"
   
   # Exit node: Returns the count
@@ -105,6 +104,7 @@ This graph:
   - **Output**: The MCP tool's response (parsed from the tool's content)
 - **`transform`**: Applies [JSONata](https://jsonata.org/) expressions to transform data between nodes.
   - **Output**: The result of evaluating the JSONata expression
+  - **Expression Format**: The `expr` field is a string containing a JSONata expression. Use single-quoted strings for simple expressions: `expr: '{ "result": "value" }'`. Use block scalars (`|`) for complex multi-line expressions to improve readability.
 - **`switch`**: Uses [JSON Logic](https://jsonlogic.com/) to conditionally route to different nodes. Note: `var` operations in JSON Logic rules are evaluated using JSONata, allowing full JSONata expression support.
   - **Output**: The node ID of the target node that was routed to (string)
 - **`exit`**: Exit point that returns the final result to the MCP tool caller.
@@ -134,6 +134,29 @@ See [docs/introspection-debugging.md](docs/introspection-debugging.md) for detai
 - All node outputs are accessible by node ID (e.g., `$.entry_count_files.directory`, `$.list_directory_node`)
 - Latest execution wins: `$.increment_node` returns the most recent output when a node executes multiple times
 - History functions are available in all JSONata expressions (including those used in JSON Logic `var` operations)
+
+### JSONata Expression Format
+
+The `expr` field in transform nodes is a string containing a JSONata expression. In YAML, you can use either:
+
+- **Single-quoted strings** (`'...'`) for simple, single-line expressions:
+  ```yaml
+  transform:
+    expr: '{ "count": $count($split($.list_directory_node, "\n")) }'
+  ```
+  This keeps the expression on one line and is ideal for simple transformations.
+
+- **Block scalars** (`|`) for complex, multi-line expressions:
+  ```yaml
+  transform:
+    expr: |
+      $executionCount("increment_node") = 0
+        ? { "counter": 1, "sum": 1, "target": $.entry_sum.n }
+        : { "counter": $nodeExecution("increment_node", -1).counter + 1, ... }
+  ```
+  This improves readability for expressions with conditional logic, nested objects, or multiple operations.
+
+Both forms work identically - the expression is evaluated as a string by JSONata. Use single quotes for simple expressions and block scalars for complex ones to improve readability.
 
 ## For Developers
 
