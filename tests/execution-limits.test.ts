@@ -30,30 +30,30 @@ describe("Execution limits", () => {
             description: "Test tool with infinite loop",
             inputSchema: { type: "object" },
             outputSchema: { type: "object" },
-          },
-        ],
-        nodes: [
-          { id: "entry", type: "entry", tool: "infinite_loop", next: "loop" },
-          {
-            id: "loop",
-            type: "transform",
-            transform: {
-              expr: '{"count": ($.loop.count ?? 0) + 1}',
-            },
-            next: "check",
-          },
-          {
-            id: "check",
-            type: "switch",
-            conditions: [
+            nodes: [
+              { id: "entry", type: "entry", next: "loop" },
               {
-                rule: { ">": [{ var: "$.loop.count" }, 999999] }, // Never true, but makes exit reachable
-                target: "exit",
+                id: "loop",
+                type: "transform",
+                transform: {
+                  expr: '{"count": ($.loop.count ?? 0) + 1}',
+                },
+                next: "check",
               },
-              { target: "loop" }, // Always routes back to loop
+              {
+                id: "check",
+                type: "switch",
+                conditions: [
+                  {
+                    rule: { ">": [{ var: "$.loop.count" }, 999999] }, // Never true, but makes exit reachable
+                    target: "exit",
+                  },
+                  { target: "loop" }, // Always routes back to loop
+                ],
+              },
+              { id: "exit", type: "exit" },
             ],
           },
-          { id: "exit", type: "exit", tool: "infinite_loop" },
         ],
       };
 
@@ -100,30 +100,30 @@ describe("Execution limits", () => {
             description: "Test tool with infinite loop",
             inputSchema: { type: "object" },
             outputSchema: { type: "object" },
-          },
-        ],
-        nodes: [
-          { id: "entry", type: "entry", tool: "infinite_loop", next: "loop" },
-          {
-            id: "loop",
-            type: "transform",
-            transform: {
-              expr: '{"count": ($.loop.count ?? 0) + 1}',
-            },
-            next: "check",
-          },
-          {
-            id: "check",
-            type: "switch",
-            conditions: [
+            nodes: [
+              { id: "entry", type: "entry", next: "loop" },
               {
-                rule: { ">": [{ var: "$.loop.count" }, 999999] }, // Never true, but makes exit reachable
-                target: "exit",
+                id: "loop",
+                type: "transform",
+                transform: {
+                  expr: '{"count": ($.loop.count ?? 0) + 1}',
+                },
+                next: "check",
               },
-              { target: "loop" }, // Always routes back to loop
+              {
+                id: "check",
+                type: "switch",
+                conditions: [
+                  {
+                    rule: { ">": [{ var: "$.loop.count" }, 999999] }, // Never true, but makes exit reachable
+                    target: "exit",
+                  },
+                  { target: "loop" }, // Always routes back to loop
+                ],
+              },
+              { id: "exit", type: "exit" },
             ],
           },
-          { id: "exit", type: "exit", tool: "infinite_loop" },
         ],
       };
 
@@ -168,19 +168,19 @@ describe("Execution limits", () => {
             description: "Simple tool that completes quickly",
             inputSchema: { type: "object", properties: { value: { type: "string" } } },
             outputSchema: { type: "object" },
+            nodes: [
+              { id: "entry", type: "entry", next: "transform" },
+              {
+                id: "transform",
+                type: "transform",
+                transform: {
+                  expr: '{"result": $.entry.value}',
+                },
+                next: "exit",
+              },
+              { id: "exit", type: "exit" },
+            ],
           },
-        ],
-        nodes: [
-          { id: "entry", type: "entry", tool: "simple", next: "transform" },
-          {
-            id: "transform",
-            type: "transform",
-            transform: {
-              expr: '{"result": $.entry.value}',
-            },
-            next: "exit",
-          },
-          { id: "exit", type: "exit", tool: "simple" },
         ],
       };
 
@@ -220,30 +220,30 @@ describe("Execution limits", () => {
             description: "Test tool with infinite loop",
             inputSchema: { type: "object" },
             outputSchema: { type: "object" },
-          },
-        ],
-        nodes: [
-          { id: "entry", type: "entry", tool: "infinite_loop", next: "loop" },
-          {
-            id: "loop",
-            type: "transform",
-            transform: {
-              expr: '{"count": ($.loop.count ?? 0) + 1}',
-            },
-            next: "check",
-          },
-          {
-            id: "check",
-            type: "switch",
-            conditions: [
+            nodes: [
+              { id: "entry", type: "entry", next: "loop" },
               {
-                rule: { ">": [{ var: "$.loop.count" }, 999999] }, // Never true, but makes exit reachable
-                target: "exit",
+                id: "loop",
+                type: "transform",
+                transform: {
+                  expr: '{"count": ($.loop.count ?? 0) + 1}',
+                },
+                next: "check",
               },
-              { target: "loop" }, // Always routes back to loop
+              {
+                id: "check",
+                type: "switch",
+                conditions: [
+                  {
+                    rule: { ">": [{ var: "$.loop.count" }, 999999] }, // Never true, but makes exit reachable
+                    target: "exit",
+                  },
+                  { target: "loop" }, // Always routes back to loop
+                ],
+              },
+              { id: "exit", type: "exit" },
             ],
           },
-          { id: "exit", type: "exit", tool: "infinite_loop" },
         ],
       };
 
@@ -303,32 +303,32 @@ describe("Execution limits", () => {
             description: "Test tool with slow loop",
             inputSchema: { type: "object" },
             outputSchema: { type: "object" },
-          },
-        ],
-        nodes: [
-          { id: "entry", type: "entry", tool: "slow_loop", next: "loop" },
-          {
-            id: "loop",
-            type: "transform",
-            transform: {
-              // This will loop and each iteration will take some time
-              // We'll add a small delay by using a complex expression
-              expr: '{"count": ($.loop.count ?? 0) + 1, "timestamp": $now()}',
-            },
-            next: "check",
-          },
-          {
-            id: "check",
-            type: "switch",
-            conditions: [
+            nodes: [
+              { id: "entry", type: "entry", next: "loop" },
               {
-                rule: { ">": [{ var: "$.loop.count" }, 999999] }, // Never true, but makes exit reachable
-                target: "exit",
+                id: "loop",
+                type: "transform",
+                transform: {
+                  // This will loop and each iteration will take some time
+                  // We'll add a small delay by using a complex expression
+                  expr: '{"count": ($.loop.count ?? 0) + 1, "timestamp": $now()}',
+                },
+                next: "check",
               },
-              { target: "loop" }, // Always routes back to loop
+              {
+                id: "check",
+                type: "switch",
+                conditions: [
+                  {
+                    rule: { ">": [{ var: "$.loop.count" }, 999999] }, // Never true, but makes exit reachable
+                    target: "exit",
+                  },
+                  { target: "loop" }, // Always routes back to loop
+                ],
+              },
+              { id: "exit", type: "exit" },
             ],
           },
-          { id: "exit", type: "exit", tool: "slow_loop" },
         ],
       };
 
@@ -380,11 +380,11 @@ describe("Execution limits", () => {
             description: "Simple tool",
             inputSchema: { type: "object" },
             outputSchema: { type: "object" },
+            nodes: [
+              { id: "entry", type: "entry", next: "exit" },
+              { id: "exit", type: "exit" },
+            ],
           },
-        ],
-        nodes: [
-          { id: "entry", type: "entry", tool: "simple", next: "exit" },
-          { id: "exit", type: "exit", tool: "simple" },
         ],
       };
 
@@ -424,30 +424,30 @@ describe("Execution limits", () => {
             description: "Fast infinite loop",
             inputSchema: { type: "object" },
             outputSchema: { type: "object" },
-          },
-        ],
-        nodes: [
-          { id: "entry", type: "entry", tool: "fast_loop", next: "loop" },
-          {
-            id: "loop",
-            type: "transform",
-            transform: {
-              expr: '{"count": ($.loop.count ?? 0) + 1}',
-            },
-            next: "check",
-          },
-          {
-            id: "check",
-            type: "switch",
-            conditions: [
+            nodes: [
+              { id: "entry", type: "entry", next: "loop" },
               {
-                rule: { ">": [{ var: "$.loop.count" }, 999999] }, // Never true, but makes exit reachable
-                target: "exit",
+                id: "loop",
+                type: "transform",
+                transform: {
+                  expr: '{"count": ($.loop.count ?? 0) + 1}',
+                },
+                next: "check",
               },
-              { target: "loop" }, // Always routes back to loop
+              {
+                id: "check",
+                type: "switch",
+                conditions: [
+                  {
+                    rule: { ">": [{ var: "$.loop.count" }, 999999] }, // Never true, but makes exit reachable
+                    target: "exit",
+                  },
+                  { target: "loop" }, // Always routes back to loop
+                ],
+              },
+              { id: "exit", type: "exit" },
             ],
           },
-          { id: "exit", type: "exit", tool: "fast_loop" },
         ],
       };
 
@@ -498,30 +498,30 @@ describe("Execution limits", () => {
             description: "Slow loop",
             inputSchema: { type: "object" },
             outputSchema: { type: "object" },
-          },
-        ],
-        nodes: [
-          { id: "entry", type: "entry", tool: "slow_loop", next: "loop" },
-          {
-            id: "loop",
-            type: "transform",
-            transform: {
-              expr: '{"count": ($.loop.count ?? 0) + 1, "timestamp": $now()}',
-            },
-            next: "check",
-          },
-          {
-            id: "check",
-            type: "switch",
-            conditions: [
+            nodes: [
+              { id: "entry", type: "entry", next: "loop" },
               {
-                rule: { ">": [{ var: "$.loop.count" }, 999999] }, // Never true, but makes exit reachable
-                target: "exit",
+                id: "loop",
+                type: "transform",
+                transform: {
+                  expr: '{"count": ($.loop.count ?? 0) + 1, "timestamp": $now()}',
+                },
+                next: "check",
               },
-              { target: "loop" }, // Always routes back to loop
+              {
+                id: "check",
+                type: "switch",
+                conditions: [
+                  {
+                    rule: { ">": [{ var: "$.loop.count" }, 999999] }, // Never true, but makes exit reachable
+                    target: "exit",
+                  },
+                  { target: "loop" }, // Always routes back to loop
+                ],
+              },
+              { id: "exit", type: "exit" },
             ],
           },
-          { id: "exit", type: "exit", tool: "slow_loop" },
         ],
       };
 
@@ -574,11 +574,11 @@ describe("Execution limits", () => {
             description: "Test",
             inputSchema: { type: "object" },
             outputSchema: { type: "object" },
+            nodes: [
+              { id: "entry", type: "entry", next: "exit" },
+              { id: "exit", type: "exit" },
+            ],
           },
-        ],
-        nodes: [
-          { id: "entry", type: "entry", tool: "test", next: "exit" },
-          { id: "exit", type: "exit", tool: "test" },
         ],
       };
 

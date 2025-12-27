@@ -32,6 +32,15 @@ executionLimits:
   maxNodeExecutions: 1000      # Maximum total node executions (default: 1000)
   maxExecutionTimeMs: 300000   # Maximum execution time in milliseconds (default: 300000 = 5 minutes)
 
+# MCP Servers used by the graph
+mcpServers:
+  filesystem:
+    command: "npx"
+    args:
+      - "-y"
+      - "@modelcontextprotocol/server-filesystem"
+      - "./tests/files"
+
 # Tool Definitions
 tools:
   - name: "count_files"
@@ -50,44 +59,31 @@ tools:
         count:
           type: "number"
           description: "The number of files in the directory"
-
-# MCP Servers used by the graph
-mcpServers:
-  filesystem:
-    command: "npx"
-    args:
-      - "-y"
-      - "@modelcontextprotocol/server-filesystem"
-      - "./tests/files"
-
-# Graph Nodes
-nodes:
-  # Entry node: Receives tool arguments
-  - id: "entry_count_files"
-    type: "entry"
-    tool: "count_files"
-    next: "list_directory_node"
-  
-  # List directory contents
-  - id: "list_directory_node"
-    type: "mcp"
-    server: "filesystem"
-    tool: "list_directory"
-    args:
-      path: "$.entry_count_files.directory"
-    next: "count_files_node"
-  
-  # Transform and count files
-  - id: "count_files_node"
-    type: "transform"
-    transform:
-      expr: '{ "count": $count($split($.list_directory_node, "\n")) }'
-    next: "exit_count_files"
-  
-  # Exit node: Returns the count
-  - id: "exit_count_files"
-    type: "exit"
-    tool: "count_files"
+    nodes:
+      # Entry node: Receives tool arguments
+      - id: "entry"
+        type: "entry"
+        next: "list_directory_node"
+      
+      # List directory contents
+      - id: "list_directory_node"
+        type: "mcp"
+        server: "filesystem"
+        tool: "list_directory"
+        args:
+          path: "$.entry.directory"
+        next: "count_files_node"
+      
+      # Transform and count files
+      - id: "count_files_node"
+        type: "transform"
+        transform:
+          expr: '{ "count": $count($split($.list_directory_node, "\n")) }'
+        next: "exit"
+      
+      # Exit node: Returns the count
+      - id: "exit"
+        type: "exit"
 ```
 
 This graph:
@@ -131,7 +127,7 @@ mcpGraph maintains a complete execution history for each tool execution, enablin
 See [docs/introspection-debugging.md](docs/introspection-debugging.md) for detailed documentation on debugging features.
 
 **Context Access:**
-- All node outputs are accessible by node ID (e.g., `$.entry_count_files.directory`, `$.list_directory_node`)
+- All node outputs are accessible by node ID (e.g., `$.entry.directory`, `$.list_directory_node`)
 - Latest execution wins: `$.increment_node` returns the most recent output when a node executes multiple times
 - History functions are available in all JSONata expressions (including those used in JSON Logic `var` operations)
 

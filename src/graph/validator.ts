@@ -2,7 +2,7 @@
  * Graph structure validator
  */
 
-import type { McpGraphConfig } from "../types/config.js";
+import type { McpGraphConfig, NodeDefinition } from "../types/config.js";
 import { Graph } from "./graph.js";
 import { logger } from "../logger.js";
 
@@ -14,74 +14,56 @@ export interface ValidationError {
 
 export function validateGraph(config: McpGraphConfig): ValidationError[] {
   const errors: ValidationError[] = [];
-  const graph = new Graph(config.nodes);
 
-  // Validate all tools have exactly one entry and one exit node
+  // Validate each tool's graph independently
   for (const tool of config.tools) {
-    const entryNodes = config.nodes.filter(
-      (n) => n.type === "entry" && (n as { tool: string }).tool === tool.name
-    );
-    const exitNodes = config.nodes.filter(
-      (n) => n.type === "exit" && (n as { tool: string }).tool === tool.name
-    );
-
-    if (entryNodes.length === 0) {
-      errors.push({
-        message: `Tool "${tool.name}" has no entry node`,
-        toolName: tool.name,
-      });
-    } else if (entryNodes.length > 1) {
-      errors.push({
-        message: `Tool "${tool.name}" has multiple entry nodes: ${entryNodes.map((n) => n.id).join(", ")}`,
-        toolName: tool.name,
-      });
-    }
-
-    if (exitNodes.length === 0) {
-      errors.push({
-        message: `Tool "${tool.name}" has no exit node`,
-        toolName: tool.name,
-      });
-    } else if (exitNodes.length > 1) {
-      errors.push({
-        message: `Tool "${tool.name}" has multiple exit nodes: ${exitNodes.map((n) => n.id).join(", ")}`,
-        toolName: tool.name,
-      });
-    }
+    const toolErrors = validateToolGraph(tool, config);
+    errors.push(...toolErrors);
   }
 
-  // Validate entry and exit nodes reference valid tools
-  for (const node of config.nodes) {
-    if (node.type === "entry") {
-      const toolName = (node as { tool: string }).tool;
-      const tool = config.tools.find((t) => t.name === toolName);
-      if (!tool) {
-        errors.push({
-          message: `Entry node "${node.id}" references non-existent tool "${toolName}"`,
-          nodeId: node.id,
-        });
-      }
-    }
+  return errors;
+}
 
-    if (node.type === "exit") {
-      const toolName = (node as { tool: string }).tool;
-      const tool = config.tools.find((t) => t.name === toolName);
-      if (!tool) {
-        errors.push({
-          message: `Exit node "${node.id}" references non-existent tool "${toolName}"`,
-          nodeId: node.id,
-        });
-      }
-    }
+function validateToolGraph(tool: { name: string; nodes: NodeDefinition[] }, config: McpGraphConfig): ValidationError[] {
+  const errors: ValidationError[] = [];
+  const graph = new Graph(tool.nodes);
+
+  // Validate tool has exactly one entry and one exit node
+  const entryNodes = tool.nodes.filter((n) => n.type === "entry");
+  const exitNodes = tool.nodes.filter((n) => n.type === "exit");
+
+  if (entryNodes.length === 0) {
+    errors.push({
+      message: `Tool "${tool.name}" has no entry node`,
+      toolName: tool.name,
+    });
+  } else if (entryNodes.length > 1) {
+    errors.push({
+      message: `Tool "${tool.name}" has multiple entry nodes: ${entryNodes.map((n) => n.id).join(", ")}`,
+      toolName: tool.name,
+    });
   }
 
-  // Validate all node references exist
-  for (const node of config.nodes) {
+  if (exitNodes.length === 0) {
+    errors.push({
+      message: `Tool "${tool.name}" has no exit node`,
+      toolName: tool.name,
+    });
+  } else if (exitNodes.length > 1) {
+    errors.push({
+      message: `Tool "${tool.name}" has multiple exit nodes: ${exitNodes.map((n) => n.id).join(", ")}`,
+      toolName: tool.name,
+    });
+  }
+
+  // Validate all node references exist within this tool's graph
+  for (const node of tool.nodes) {
     if ("next" in node && node.next) {
       if (!graph.hasNode(node.next)) {
         errors.push({
-          message: `Node "${node.id}" references non-existent next node "${node.next}"`,
+          message: `Node "${node.id}" in tool "${tool.name}" references non-existent next node "${node.next}"`,
           nodeId: node.id,
+          toolName: tool.name,
         });
       }
     }
@@ -90,8 +72,9 @@ export function validateGraph(config: McpGraphConfig): ValidationError[] {
       for (const condition of node.conditions) {
         if (!graph.hasNode(condition.target)) {
           errors.push({
-            message: `Switch node "${node.id}" references non-existent target "${condition.target}"`,
+            message: `Switch node "${node.id}" in tool "${tool.name}" references non-existent target "${condition.target}"`,
             nodeId: node.id,
+            toolName: tool.name,
           });
         }
       }
@@ -99,36 +82,28 @@ export function validateGraph(config: McpGraphConfig): ValidationError[] {
   }
 
   // Validate mcp nodes reference valid servers
-  for (const node of config.nodes) {
+  for (const node of tool.nodes) {
     if (node.type === "mcp") {
       const serverName = node.server;
       if (!config.mcpServers || !config.mcpServers[serverName]) {
         errors.push({
-          message: `MCP node "${node.id}" references non-existent server "${serverName}"`,
+          message: `MCP node "${node.id}" in tool "${tool.name}" references non-existent server "${serverName}"`,
           nodeId: node.id,
+          toolName: tool.name,
         });
       }
     }
   }
 
   // Validate exit nodes are reachable (basic check - can be enhanced)
-  for (const tool of config.tools) {
-    const entryNodes = config.nodes.filter(
-      (n) => n.type === "entry" && (n as { tool: string }).tool === tool.name
-    );
-    const exitNodes = config.nodes.filter(
-      (n) => n.type === "exit" && (n as { tool: string }).tool === tool.name
-    );
-
-    if (entryNodes.length === 1 && exitNodes.length === 1) {
-      const entryNode = entryNodes[0];
-      const exitNode = exitNodes[0];
-      if (!isReachable(graph, entryNode.id, exitNode.id)) {
-        errors.push({
-          message: `Tool "${tool.name}" exit node "${exitNode.id}" is not reachable from entry node "${entryNode.id}"`,
-          toolName: tool.name,
-        });
-      }
+  if (entryNodes.length === 1 && exitNodes.length === 1) {
+    const entryNode = entryNodes[0];
+    const exitNode = exitNodes[0];
+    if (!isReachable(graph, entryNode.id, exitNode.id)) {
+      errors.push({
+        message: `Tool "${tool.name}" exit node "${exitNode.id}" is not reachable from entry node "${entryNode.id}"`,
+        toolName: tool.name,
+      });
     }
   }
 

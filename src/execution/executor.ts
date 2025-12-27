@@ -23,13 +23,12 @@ import { logger } from "../logger.js";
 
 export class GraphExecutor {
   private config: McpGraphConfig;
-  private graph: Graph;
   private clientManager: McpClientManager;
   private controller: ExecutionController | null = null;
+  private currentToolGraph: Graph | null = null;
 
   constructor(config: McpGraphConfig, clientManager: McpClientManager) {
     this.config = config;
-    this.graph = new Graph(config.nodes);
     this.clientManager = clientManager;
   }
 
@@ -37,8 +36,8 @@ export class GraphExecutor {
     return this.controller;
   }
 
-  getGraph(): Graph {
-    return this.graph;
+  getGraph(): Graph | null {
+    return this.currentToolGraph;
   }
 
   getConfig(): McpGraphConfig {
@@ -84,18 +83,17 @@ export class GraphExecutor {
       }
     }
 
+    // Build graph for this tool's nodes
+    this.currentToolGraph = new Graph(tool.nodes);
+
     // Find entry node for this tool
-    const entryNode = this.config.nodes.find(
-      (n) => n.type === "entry" && (n as { tool: string }).tool === toolName
-    );
+    const entryNode = tool.nodes.find((n) => n.type === "entry");
     if (!entryNode) {
       throw new Error(`Entry node not found for tool: ${toolName}`);
     }
 
     // Find exit node for this tool
-    const exitNode = this.config.nodes.find(
-      (n) => n.type === "exit" && (n as { tool: string }).tool === toolName
-    );
+    const exitNode = tool.nodes.find((n) => n.type === "exit");
     if (!exitNode) {
       throw new Error(`Exit node not found for tool: ${toolName}`);
     }
@@ -154,7 +152,7 @@ export class GraphExecutor {
           throw new Error("Execution was stopped");
         }
 
-        const node = this.graph.getNode(currentNodeId);
+        const node = this.currentToolGraph.getNode(currentNodeId);
         if (!node) {
           throw new Error(`Node not found: ${currentNodeId}`);
         }
@@ -408,10 +406,11 @@ export class GraphExecutor {
       }
       throw error;
     } finally {
-      // Clean up controller after execution
+      // Clean up controller and graph after execution
       if (this.controller) {
         this.controller = null;
       }
+      this.currentToolGraph = null;
     }
   }
 

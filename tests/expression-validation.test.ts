@@ -19,11 +19,18 @@ describe("Expression syntax validation", () => {
     const testConfig = {
       version: "1.0",
       server: { name: "test", version: "1.0.0", title: "Test" },
-      tools: [{ name: "test", description: "Test", inputSchema: { type: "object" }, outputSchema: { type: "object" } }],
-      nodes: [
-        { id: "entry", type: "entry", tool: "test", next: "transform" },
-        { id: "transform", type: "transform", transform: { expr: "{ value: $.entry.value + }" }, next: "exit" },
-        { id: "exit", type: "exit", tool: "test" },
+      tools: [
+        {
+          name: "test",
+          description: "Test",
+          inputSchema: { type: "object" },
+          outputSchema: { type: "object" },
+          nodes: [
+            { id: "entry", type: "entry", next: "transform" },
+            { id: "transform", type: "transform", transform: { expr: "{ value: $.entry.value + }" }, next: "exit" },
+            { id: "exit", type: "exit" },
+          ],
+        },
       ],
     };
 
@@ -52,12 +59,19 @@ describe("Expression syntax validation", () => {
     const testConfig = {
       version: "1.0",
       server: { name: "test", version: "1.0.0", title: "Test" },
-      tools: [{ name: "test", description: "Test", inputSchema: { type: "object" }, outputSchema: { type: "object" } }],
       mcpServers: { testServer: { command: "echo", args: [] } },
-      nodes: [
-        { id: "entry", type: "entry", tool: "test", next: "mcp" },
-        { id: "mcp", type: "mcp", server: "testServer", tool: "test", args: { path: "$.entry.value +" }, next: "exit" },
-        { id: "exit", type: "exit", tool: "test" },
+      tools: [
+        {
+          name: "test",
+          description: "Test",
+          inputSchema: { type: "object" },
+          outputSchema: { type: "object" },
+          nodes: [
+            { id: "entry", type: "entry", next: "mcp" },
+            { id: "mcp", type: "mcp", server: "testServer", tool: "test", args: { path: "$.entry.value +" }, next: "exit" },
+            { id: "exit", type: "exit" },
+          ],
+        },
       ],
     };
 
@@ -86,15 +100,22 @@ describe("Expression syntax validation", () => {
     const testConfig = {
       version: "1.0",
       server: { name: "test", version: "1.0.0", title: "Test" },
-      tools: [{ name: "test", description: "Test", inputSchema: { type: "object" }, outputSchema: { type: "object" } }],
-      nodes: [
-        { id: "entry", type: "entry", tool: "test", next: "switch" },
+      tools: [
         {
-          id: "switch",
-          type: "switch",
-          conditions: [{ rule: { ">": [{ var: "$.entry.value +" }, 0] }, target: "exit" }],
+          name: "test",
+          description: "Test",
+          inputSchema: { type: "object" },
+          outputSchema: { type: "object" },
+          nodes: [
+            { id: "entry", type: "entry", next: "switch" },
+            {
+              id: "switch",
+              type: "switch",
+              conditions: [{ rule: { ">": [{ var: "$.entry.value +" }, 0] }, target: "exit" }],
+            },
+            { id: "exit", type: "exit" },
+          ],
         },
-        { id: "exit", type: "exit", tool: "test" },
       ],
     };
 

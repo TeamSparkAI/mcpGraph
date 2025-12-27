@@ -77,8 +77,8 @@ describe("Execution context and history", () => {
       assert(contextAtListDir !== null, "Context should be returned");
 
       // Context should include entry node output (execution #0)
-      assert("entry_count_files" in contextAtListDir, "Context should include entry node");
-      const entryOutput = contextAtListDir["entry_count_files"] as { directory?: string } | undefined;
+      assert("entry" in contextAtListDir, "Context should include entry node");
+      const entryOutput = contextAtListDir["entry"] as { directory?: string } | undefined;
       assert(entryOutput !== undefined, "Entry output should exist");
       assert.equal(
         entryOutput.directory,
@@ -129,7 +129,7 @@ describe("Execution context and history", () => {
       await api.close();
 
       assert(entryRecord, "Execution record should be returned");
-      assert.equal(entryRecord.nodeId, "entry_count_files", "Should return correct node");
+      assert.equal(entryRecord.nodeId, "entry", "Should return correct node");
       assert.equal(entryRecord.executionIndex, 0, "Should have correct executionIndex");
       assert(entryRecord.output, "Should have output");
     });

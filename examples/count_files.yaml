@@ -7,25 +7,6 @@ server:
   title: "File utilities"  # Optional: display name (defaults to name if not provided)
   instructions: "This server provides file utility tools for counting files in directories."  # Optional
 
-# Tool Definitions
-tools:
-  - name: "count_files"
-    description: "Counts the number of files in a directory"
-    inputSchema:
-      type: "object"
-      properties:
-        directory:
-          type: "string"
-          description: "The directory path to count files in"
-      required:
-        - directory
-    outputSchema:
-      type: "object"
-      properties:
-        count:
-          type: "number"
-          description: "The number of files in the directory"
-
 # MCP Servers used by the graph
 mcpServers:
   # Stdio server (type is optional, defaults to stdio)
@@ -44,32 +25,46 @@ mcpServers:
   #     Authorization: "Bearer token"
   #     X-Custom-Header: "value"
 
-# Graph Nodes
-nodes:
-  # Entry node: Receives tool arguments
-  - id: "entry_count_files"
-    type: "entry"
-    tool: "count_files"
-    next: "list_directory_node"
-  
-  # List directory contents
-  - id: "list_directory_node"
-    type: "mcp"
-    server: "filesystem"
-    tool: "list_directory"
-    args:
-      path: "$.entry_count_files.directory"
-    next: "count_files_node"
-  
-  # Transform and count files
-  - id: "count_files_node"
-    type: "transform"
-    transform:
-      expr: '{ "count": $count($split($.list_directory_node, "\n")) }'
-    next: "exit_count_files"
-  
-  # Exit node: Returns the count
-  - id: "exit_count_files"
-    type: "exit"
-    tool: "count_files"
-
+# Tool Definitions
+tools:
+  - name: "count_files"
+    description: "Counts the number of files in a directory"
+    inputSchema:
+      type: "object"
+      properties:
+        directory:
+          type: "string"
+          description: "The directory path to count files in"
+      required:
+        - directory
+    outputSchema:
+      type: "object"
+      properties:
+        count:
+          type: "number"
+          description: "The number of files in the directory"
+    nodes:
+      # Entry node: Receives tool arguments
+      - id: "entry"
+        type: "entry"
+        next: "list_directory_node"
+      
+      # List directory contents
+      - id: "list_directory_node"
+        type: "mcp"
+        server: "filesystem"
+        tool: "list_directory"
+        args:
+          path: "$.entry.directory"
+        next: "count_files_node"
+      
+      # Transform and count files
+      - id: "count_files_node"
+        type: "transform"
+        transform:
+          expr: '{ "count": $count($split($.list_directory_node, "\n")) }'
+        next: "exit"
+      
+      # Exit node: Returns the count
+      - id: "exit"
+        type: "exit"

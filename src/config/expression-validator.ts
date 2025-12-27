@@ -15,15 +15,17 @@ import type { ValidationError } from "../graph/validator.js";
 export function validateConfigExpressions(config: McpGraphConfig): ValidationError[] {
   const errors: ValidationError[] = [];
 
-  for (const node of config.nodes) {
-    try {
-      validateNodeExpressions(node, config);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      errors.push({
-        message: errorMessage,
-        nodeId: node.id,
-      });
+  for (const tool of config.tools) {
+    for (const node of tool.nodes) {
+      try {
+        validateNodeExpressions(node, config);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        errors.push({
+          message: errorMessage,
+          nodeId: node.id,
+        });
+      }
     }
   }
 

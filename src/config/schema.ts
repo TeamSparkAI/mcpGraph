@@ -63,13 +63,11 @@ const baseNodeSchema = z.object({
 
 const entryNodeSchema = baseNodeSchema.extend({
   type: z.literal("entry"),
-  tool: z.string(),
   next: z.string(),
 });
 
 const exitNodeSchema = baseNodeSchema.extend({
   type: z.literal("exit"),
-  tool: z.string(),
 });
 
 const mcpNodeSchema = baseNodeSchema.extend({
@@ -111,6 +109,7 @@ const toolDefinitionSchema = z.object({
   description: z.string(),
   inputSchema: jsonSchemaSchema,
   outputSchema: jsonSchemaSchema,
+  nodes: z.array(nodeSchema),
 });
 
 const executionLimitsSchema = z.object({
@@ -124,7 +123,6 @@ export const mcpGraphConfigSchema = z.object({
   mcpServers: z.record(serverConfigSchema).optional(),
   executionLimits: executionLimitsSchema.optional(),
   tools: z.array(toolDefinitionSchema),
-  nodes: z.array(nodeSchema),
 });
 
 export type McpGraphConfigSchema = z.infer<typeof mcpGraphConfigSchema>;
