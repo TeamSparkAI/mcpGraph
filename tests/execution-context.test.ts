@@ -20,7 +20,7 @@ describe("Execution context and history", () => {
       const api = new McpGraphApi(configPath);
 
       const { promise } = api.executeTool("count_files", {
-        directory: join(projectRoot, "tests", "files"),
+        directory: join(projectRoot, "tests", "counting"),
       });
       const result = await promise;
       await api.close();
@@ -67,7 +67,7 @@ describe("Execution context and history", () => {
       const { promise } = api.executeTool(
         "count_files",
         {
-          directory: join(projectRoot, "tests", "files"),
+          directory: join(projectRoot, "tests", "counting"),
         },
         { hooks }
       );
@@ -82,7 +82,7 @@ describe("Execution context and history", () => {
       assert(entryOutput !== undefined, "Entry output should exist");
       assert.equal(
         entryOutput.directory,
-        join(projectRoot, "tests", "files"),
+        join(projectRoot, "tests", "counting"),
         "Context should have correct entry node output"
       );
       // list_directory_node output should not be in context (it's execution #1, context is built from 0 to 0)
@@ -121,7 +121,7 @@ describe("Execution context and history", () => {
       const { promise } = api.executeTool(
         "count_files",
         {
-          directory: join(projectRoot, "tests", "files"),
+          directory: join(projectRoot, "tests", "counting"),
         },
         { hooks }
       );
@@ -334,7 +334,7 @@ describe("Execution context and history", () => {
       const api = new McpGraphApi(configPath);
 
       const { promise } = api.executeTool("count_files", {
-        directory: join(projectRoot, "tests", "files"),
+        directory: join(projectRoot, "tests", "counting"),
       });
       const result = await promise;
       await api.close();
@@ -355,7 +355,7 @@ describe("Execution context and history", () => {
       const api = new McpGraphApi(configPath);
 
       const { promise } = api.executeTool("count_files", {
-        directory: join(projectRoot, "tests", "files"),
+        directory: join(projectRoot, "tests", "counting"),
       });
       const result = await promise;
       await api.close();

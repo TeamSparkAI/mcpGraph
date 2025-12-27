@@ -28,7 +28,7 @@ async function example() {
 
   // Execute a tool
   const { promise } = api.executeTool('count_files', {
-    directory: './tests/files',
+    directory: './tests/counting',
   });
   const result = await promise;
 
@@ -45,7 +45,7 @@ async function introspectionExample() {
 
   // Execute with hooks and telemetry
   const { promise, controller } = api.executeTool('count_files', {
-    directory: './tests/files',
+    directory: './tests/counting',
   }, {
     hooks: {
       onNodeStart: async (nodeId, node) => {
@@ -95,7 +95,7 @@ async function timeTravelDebuggingExample() {
   let executionIndexToInspect: number | null = null;
   
   const { promise, controller } = api.executeTool('count_files', {
-    directory: './tests/files',
+    directory: './tests/counting',
   }, {
     hooks: {
       onNodeComplete: async (nodeId, node, input, output, duration) => {

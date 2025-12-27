@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "sharedServer": {
+      "command": "echo",
+      "args": ["from-mcp-file"]
+    },
+    "mcpOnlyServer": {
+      "command": "echo",
+      "args": ["mcp-only"]
+    }
+  }
+}
+

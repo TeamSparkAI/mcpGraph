@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "testServer": {
+      "command": "echo",
+      "args": ["test"]
+    },
+    "httpServer": {
+      "type": "streamableHttp",
+      "url": "https://api.example.com/mcp",
+      "headers": {
+        "Authorization": "Bearer token"
+      }
+    }
+  }
+}
+

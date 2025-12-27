@@ -9,7 +9,7 @@
 
 import { logger } from './logger.js';
 import { loadConfig } from './config/loader.js';
-import type { McpGraphConfig } from './types/config.js';
+import type { McpGraphConfig, ServerConfig } from './types/config.js';
 import { validateGraph, type ValidationError } from './graph/validator.js';
 import { GraphExecutor } from './execution/executor.js';
 import { McpClientManager } from './mcp/client-manager.js';
@@ -55,12 +55,13 @@ export class McpGraphApi {
   /**
    * Create a new McpGraphApi instance
    * @param configPath - Path to the YAML configuration file
+   * @param mcpServersFromFile - Optional mcpServers loaded from an MCP JSON file
    * @throws Error if config cannot be loaded or validated
    */
-  constructor(configPath: string) {
+  constructor(configPath: string, mcpServersFromFile?: Record<string, ServerConfig>) {
     logger.info(`Loading configuration from: ${configPath}`);
     
-    const config = loadConfig(configPath);
+    const config = loadConfig(configPath, mcpServersFromFile);
     
     const errors = validateGraph(config);
     if (errors.length > 0) {

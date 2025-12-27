@@ -15,7 +15,7 @@ mcpServers:
     args:
       - "-y"
       - "@modelcontextprotocol/server-filesystem"
-      - "/Users/bob/Documents/GitHub/mcpGraph/tests/files"
+      - "./tests/counting"
   
   # Example: Streamable HTTP server (preferred for HTTP/SSE)
   # httpServer:

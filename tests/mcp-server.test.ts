@@ -134,7 +134,7 @@ describe("MCP server integration", () => {
     });
 
     it("should count files in the test directory via MCP client", async () => {
-      const testDir = join(projectRoot, "tests", "files");
+      const testDir = join(projectRoot, "tests", "counting");
       
       const result = await client.callTool({
         name: "count_files",

@@ -46,7 +46,7 @@ const streamableHttpServerConfigSchema = z.object({
 });
 
 // Server config can be stdio (with or without type), sse, or streamableHttp
-const serverConfigSchema = z.union([
+export const serverConfigSchema = z.union([
   // Stdio config (type optional, defaults to stdio)
   stdioServerConfigSchema,
   // SSE config (type required)

@@ -9,6 +9,8 @@ import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { ListToolsRequestSchema, CallToolRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { parseArgs } from 'node:util';
+import { loadMcpServers } from './config/mcp-loader.js';
+import type { ServerConfig } from './types/config.js';
 
 const { values } = parseArgs({
   options: {
@@ -17,6 +19,10 @@ const { values } = parseArgs({
       short: 'g',
       default: 'config.yaml',
     },
+    mcp: {
+      type: 'string',
+      short: 'm',
+    },
   },
 });
 
@@ -24,8 +30,19 @@ async function main() {
   try {
     const configPath = values.graph || 'config.yaml';
     
-    // Create API instance (loads and validates config)
-    const api = new McpGraphApi(configPath);
+    // Load mcpServers from MCP JSON file if provided
+    let mcpServersFromFile: Record<string, ServerConfig> | undefined;
+    if (values.mcp) {
+      try {
+        mcpServersFromFile = loadMcpServers(values.mcp);
+      } catch (error) {
+        logger.error(`Failed to load MCP file: ${error instanceof Error ? error.message : String(error)}`);
+        throw error;
+      }
+    }
+    
+    // Create API instance (loads and validates config, merging mcpServers)
+    const api = new McpGraphApi(configPath, mcpServersFromFile);
     const serverInfo = api.getServerInfo();
 
     // Initialize MCP server

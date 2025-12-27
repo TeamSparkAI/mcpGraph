@@ -187,7 +187,7 @@ mcpServers:
     args:
       - "-y"
       - "@modelcontextprotocol/server-filesystem"
-      - "./tests/files"
+      - "./tests/counting"
 
 # Tool Definitions
 tools:

@@ -39,7 +39,7 @@ mcpServers:
     args:
       - "-y"
       - "@modelcontextprotocol/server-filesystem"
-      - "./tests/files"
+      - "./tests/counting"
 
 # Tool Definitions
 tools:
@@ -261,7 +261,7 @@ const tools = api.listTools();
 
 // Execute a tool
 const result = await api.executeTool('count_files', {
-  directory: './tests/files',
+  directory: './tests/counting',
 });
 
 // Clean up resources

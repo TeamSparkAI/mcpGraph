@@ -1,0 +1,31 @@
+version: "1.0"
+
+server:
+  name: "test"
+  version: "1.0.0"
+  title: "Test"
+
+mcpServers:
+  sharedServer:
+    command: "echo"
+    args:
+      - "from-graph"
+  graphOnlyServer:
+    command: "echo"
+    args:
+      - "graph-only"
+
+tools:
+  - name: "test_tool"
+    description: "Test"
+    inputSchema:
+      type: "object"
+    outputSchema:
+      type: "object"
+    nodes:
+      - id: "entry"
+        type: "entry"
+        next: "exit"
+      - id: "exit"
+        type: "exit"
+

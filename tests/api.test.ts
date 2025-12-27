@@ -77,7 +77,7 @@ describe("API integration", () => {
     });
 
     it("should count files in the test directory", async () => {
-      const testDir = join(projectRoot, "tests", "files");
+      const testDir = join(projectRoot, "tests", "counting");
       const { promise } = api.executeTool("count_files", {
         directory: testDir,
       });

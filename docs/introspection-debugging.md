@@ -24,7 +24,7 @@ const api = new McpGraphApi('config.yaml');
 
 // Execute with debugging enabled - controller is available immediately
 const { promise, controller } = api.executeTool('count_files', {
-  directory: './tests/files'
+    directory: './tests/counting'
 }, {
       hooks: {
         onNodeStart: async (executionIndex, nodeId, node) => {
