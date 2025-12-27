@@ -18,7 +18,7 @@ const projectRoot = join(__dirname, "..");
 function createClient(configPath: string): { client: Client; transport: StdioClientTransport } {
   const transport = new StdioClientTransport({
     command: "tsx",
-    args: [join(projectRoot, "src", "main.ts"), "-c", configPath],
+    args: [join(projectRoot, "src", "main.ts"), "-g", configPath],
   });
 
   const client = new Client(

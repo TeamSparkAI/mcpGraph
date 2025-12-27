@@ -218,7 +218,7 @@ Add `mcpgraph` to your Claude Desktop MCP configuration (typically located at `~
     "mcpgraph": {
       "command": "mcpgraph",
       "args": [
-        "-c",
+        "-g",
         "/path/to/your/config.yaml"
       ]
     }
@@ -236,7 +236,7 @@ Or if not installed (run from npm):
       "args": [
         "-y",
         "mcpgraph",
-        "-c",
+        "-g",
         "/path/to/your/config.yaml"
       ]
     }
@@ -244,7 +244,7 @@ Or if not installed (run from npm):
 }
 ```
 
-**Note:** Replace `/path/to/your/config.yaml` with the actual path to your YAML configuration file. The `-c` flag specifies the configuration file to use.
+**Note:** Replace `/path/to/your/config.yaml` with the actual path to your YAML configuration file. The `-g` (or `--graph`) flag specifies the graph configuration file to use.
 
 ### Programmatic API
 

@@ -12,9 +12,9 @@ import { parseArgs } from 'node:util';
 
 const { values } = parseArgs({
   options: {
-    config: {
+    graph: {
       type: 'string',
-      short: 'c',
+      short: 'g',
       default: 'config.yaml',
     },
   },
@@ -22,7 +22,7 @@ const { values } = parseArgs({
 
 async function main() {
   try {
-    const configPath = values.config || 'config.yaml';
+    const configPath = values.graph || 'config.yaml';
     
     // Create API instance (loads and validates config)
     const api = new McpGraphApi(configPath);

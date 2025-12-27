@@ -68,7 +68,7 @@ mcpGraphBuilder
 - d / --dir is directory where graphs live?
 
 mcpGraph
-- change -c to -g / --graph
+- -g / --graph specifies the graph configuration file to use
 - If -m / --mcp then parse mcpServers from referenced mcp.json file (jsonc support?), add to graph
 - If mcpServers provided in graph, add them (overiding any passed-in MCP server with the same name)
 
