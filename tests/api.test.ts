@@ -29,7 +29,7 @@ describe("API integration", () => {
     });
 
     it("should use provided title when title is specified", async () => {
-      const configPath = join(projectRoot, "examples", "count_files.yaml");
+      const configPath = join(projectRoot, "examples", "file_utils.yaml");
       const api = new McpGraphApi(configPath);
       
       const serverInfo = api.getServerInfo();
@@ -41,13 +41,13 @@ describe("API integration", () => {
     });
 
     it("should return instructions when provided in config", async () => {
-      const configPath = join(projectRoot, "examples", "count_files.yaml");
+      const configPath = join(projectRoot, "examples", "file_utils.yaml");
       const api = new McpGraphApi(configPath);
       const serverInfo = api.getServerInfo();
       
       assert.equal(serverInfo.name, "fileUtils", "Should have correct name");
       assert.equal(serverInfo.title, "File utilities", "Should have correct title");
-      assert.equal(serverInfo.instructions, "This server provides file utility tools for counting files in directories.", "Should return instructions when provided");
+      assert.equal(serverInfo.instructions, "This server provides file utility tools for counting files and calculating total file sizes in directories.", "Should return instructions when provided");
       
       await api.close();
     });
@@ -69,7 +69,7 @@ describe("API integration", () => {
     let api: McpGraphApi;
 
     before(async () => {
-      const configPath = join(projectRoot, "examples", "count_files.yaml");
+      const configPath = join(projectRoot, "examples", "file_utils.yaml");
       api = new McpGraphApi(configPath);
     });
 
@@ -101,6 +101,30 @@ describe("API integration", () => {
       assert(structuredContent.count === resultObj.count, "structuredContent count should match result count");
     });
 
+    it("should sum file sizes in the test directory", async () => {
+      const testDir = join(projectRoot, "tests", "counting");
+      const { promise } = api.executeTool("sum_file_sizes", {
+        directory: testDir,
+      });
+      const result = await promise;
+
+      assert(result !== undefined, "Result should be defined");
+      assert(result.result !== undefined, "Result should have result property");
+      assert(typeof result.result === "object", "Result should be an object");
+      
+      const resultObj = result.result as { totalSize?: number };
+      assert("totalSize" in resultObj, "Result should have totalSize property");
+      assert(typeof resultObj.totalSize === "number", "totalSize should be a number");
+      assert(resultObj.totalSize > 0, "totalSize should be greater than 0");
+      
+      // Verify structuredContent matches
+      assert(result.structuredContent !== undefined, "Should have structuredContent");
+      assert(typeof result.structuredContent === "object", "structuredContent should be an object");
+      const structuredContent = result.structuredContent as Record<string, unknown>;
+      assert("totalSize" in structuredContent, "structuredContent should have totalSize property");
+      assert(structuredContent.totalSize === resultObj.totalSize, "structuredContent totalSize should match result totalSize");
+    });
+
     it("should wrap connection errors and include stderr when running from wrong cwd", async () => {
       // Save original cwd
       const originalCwd = cwd();
@@ -111,7 +135,7 @@ describe("API integration", () => {
         chdir("/tmp");
         
         // Create a new API instance with absolute config path
-        const configPath = join(projectRoot, "examples", "count_files.yaml");
+        const configPath = join(projectRoot, "examples", "file_utils.yaml");
         const api = new McpGraphApi(configPath);
         
         const testDir = join(projectRoot, "tests", "counting");

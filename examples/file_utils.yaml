@@ -1,0 +1,130 @@
+version: "1.0"
+
+# MCP Server Metadata
+server:
+  name: "fileUtils"  # Required: unique identifier
+  version: "1.0.0"    # Required: server version
+  title: "File utilities"  # Optional: display name (defaults to name if not provided)
+  instructions: "This server provides file utility tools for counting files and calculating total file sizes in directories."  # Optional
+
+# MCP Servers used by the graph
+mcpServers:
+  # Stdio server (type is optional, defaults to stdio)
+  filesystem:
+    command: "npx"
+    args:
+      - "-y"
+      - "@modelcontextprotocol/server-filesystem"
+      - "./tests/counting"
+  
+  # Example: Streamable HTTP server (preferred for HTTP/SSE)
+  # httpServer:
+  #   type: "streamableHttp"
+  #   url: "https://api.example.com/mcp"
+  #   headers:
+  #     Authorization: "Bearer token"
+  #     X-Custom-Header: "value"
+
+# Tool Definitions
+tools:
+  - name: "count_files"
+    description: "Counts the number of files in a directory"
+    inputSchema:
+      type: "object"
+      properties:
+        directory:
+          type: "string"
+          description: "The directory path to count files in"
+      required:
+        - directory
+    outputSchema:
+      type: "object"
+      properties:
+        count:
+          type: "number"
+          description: "The number of files in the directory"
+    nodes:
+      # Entry node: Receives tool arguments
+      - id: "entry"
+        type: "entry"
+        next: "list_directory_node"
+      
+      # List directory contents
+      - id: "list_directory_node"
+        type: "mcp"
+        server: "filesystem"
+        tool: "list_directory"
+        args:
+          path: "$.entry.directory"
+        next: "count_files_node"
+      
+      # Transform and count files
+      - id: "count_files_node"
+        type: "transform"
+        transform:
+          expr: '{ "count": $count($split($.list_directory_node.content, "\n")) }'
+        next: "exit"
+      
+      # Exit node: Returns the count
+      - id: "exit"
+        type: "exit"
+
+  - name: "sum_file_sizes"
+    description: "Sums the size of all files in a directory"
+    inputSchema:
+      type: "object"
+      properties:
+        directory:
+          type: "string"
+          description: "The directory path to sum file sizes in"
+      required:
+        - directory
+    outputSchema:
+      type: "object"
+      properties:
+        totalSize:
+          type: "number"
+          description: "The total size of all files in bytes"
+    nodes:
+      # Entry node: Receives tool arguments
+      - id: "entry"
+        type: "entry"
+        next: "list_directory_with_sizes_node"
+      
+      # List directory contents with file sizes
+      - id: "list_directory_with_sizes_node"
+        type: "mcp"
+        server: "filesystem"
+        tool: "list_directory_with_sizes"
+        args:
+          path: "$.entry.directory"
+        next: "sum_sizes_node"
+      
+      # Transform and sum file sizes
+      - id: "sum_sizes_node"
+        type: "transform"
+        transform:
+          expr: |
+            (
+              $lines := $split($.list_directory_with_sizes_node.content, "\n");
+              $fileLines := $lines[$substring($, 0, 6) = "[FILE]"];
+              { 
+                "totalSize": $sum($fileLines. (
+                  $parts := $split($trim($), " ");
+                  $sizeStr := $parts[$count($parts) - 2] & " " & $parts[$count($parts) - 1];
+                  $number := $number($replace($sizeStr, /[^0-9.]/, ""));
+                  $unit := $replace($sizeStr, /[0-9.]/, "");
+                  $number * (
+                    $unit = "TB" ? 1099511627776 :
+                    $unit = "GB" ? 1073741824 :
+                    $unit = "MB" ? 1048576 :
+                    $unit = "KB" ? 1024 : 1
+                  )
+                ))
+              }
+            )
+        next: "exit"
+      
+      # Exit node: Returns the total size
+      - id: "exit"
+        type: "exit"

@@ -142,7 +142,7 @@ describe("Expression syntax validation", () => {
 
   it("should accept valid expressions", () => {
     // Use existing valid config
-    const configPath = join(projectRoot, "examples", "count_files.yaml");
+    const configPath = join(projectRoot, "examples", "file_utils.yaml");
     assert.doesNotThrow(() => {
       loadConfig(configPath);
     }, "Valid config should load without errors");

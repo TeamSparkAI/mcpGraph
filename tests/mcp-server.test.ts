@@ -37,7 +37,7 @@ function createClient(configPath: string): { client: Client; transport: StdioCli
 describe("MCP server integration", () => {
   describe("server metadata", () => {
     it("should return title in server info when provided", async () => {
-      const configPath = join(projectRoot, "examples", "count_files.yaml");
+      const configPath = join(projectRoot, "examples", "file_utils.yaml");
       const clientData = createClient(configPath);
       const { client, transport } = clientData;
       
@@ -70,7 +70,7 @@ describe("MCP server integration", () => {
     });
 
     it("should return instructions in initialization response when provided", async () => {
-      const configPath = join(projectRoot, "examples", "count_files.yaml");
+      const configPath = join(projectRoot, "examples", "file_utils.yaml");
       const clientData = createClient(configPath);
       const { client, transport } = clientData;
       
@@ -109,7 +109,7 @@ describe("MCP server integration", () => {
     let transport: StdioClientTransport;
 
     before(async () => {
-      const configPath = join(projectRoot, "examples", "count_files.yaml");
+      const configPath = join(projectRoot, "examples", "file_utils.yaml");
       const clientData = createClient(configPath);
       client = clientData.client;
       transport = clientData.transport;

@@ -173,7 +173,7 @@ server:
   name: "fileUtils"
   version: "1.0.0"
   title: "File utilities"
-  instructions: "This server provides file utility tools for counting files in directories."
+  instructions: "This server provides file utility tools for counting files and calculating total file sizes in directories."
 
 # Optional: Execution limits to prevent infinite loops
 executionLimits:

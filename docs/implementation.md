@@ -326,7 +326,7 @@ Integration tests implemented:
 
 ### 9.3 Sample Configurations
 
-**File: `examples/count_files.yaml`**
+**File: `examples/file_utils.yaml`**
 
 Sample configuration implemented demonstrating:
 - Tool definition

@@ -9,7 +9,7 @@ import { McpGraphApi } from '../src/api.js';
 
 async function example() {
   // Create an API instance (loads and validates config)
-  const api = new McpGraphApi('examples/count_files.yaml');
+  const api = new McpGraphApi('examples/file_utils.yaml');
 
   // Get server information
   const serverInfo = api.getServerInfo();
@@ -41,7 +41,7 @@ async function example() {
 
 // Example: Using introspection and debugging features
 async function introspectionExample() {
-  const api = new McpGraphApi('examples/count_files.yaml');
+  const api = new McpGraphApi('examples/file_utils.yaml');
 
   // Execute with hooks and telemetry
   const { promise, controller } = api.executeTool('count_files', {
@@ -90,7 +90,7 @@ async function introspectionExample() {
 
 // Example: Time-travel debugging with getContextForExecution
 async function timeTravelDebuggingExample() {
-  const api = new McpGraphApi('examples/count_files.yaml');
+  const api = new McpGraphApi('examples/file_utils.yaml');
 
   let executionIndexToInspect: number | null = null;
   
@@ -141,7 +141,7 @@ async function timeTravelDebuggingExample() {
 
 // Example: Validate config without creating an API instance
 function validateConfigExample() {
-  const errors = McpGraphApi.validateConfig('examples/count_files.yaml');
+  const errors = McpGraphApi.validateConfig('examples/file_utils.yaml');
   if (errors.length > 0) {
     console.error('Validation errors:');
     for (const error of errors) {
@@ -154,7 +154,7 @@ function validateConfigExample() {
 
 // Example: Load and validate config
 function loadAndValidateExample() {
-  const { config, errors } = McpGraphApi.loadAndValidateConfig('examples/count_files.yaml');
+  const { config, errors } = McpGraphApi.loadAndValidateConfig('examples/file_utils.yaml');
   if (errors.length > 0) {
     console.error('Validation errors:', errors);
   } else {

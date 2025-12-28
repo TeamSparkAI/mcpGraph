@@ -16,7 +16,7 @@ const projectRoot = join(__dirname, "..");
 describe("Execution context and history", () => {
   describe("executionIndex", () => {
     it("should assign unique executionIndex to each execution", async () => {
-      const configPath = join(projectRoot, "examples", "count_files.yaml");
+      const configPath = join(projectRoot, "examples", "file_utils.yaml");
       const api = new McpGraphApi(configPath);
 
       const { promise } = api.executeTool("count_files", {
@@ -49,7 +49,7 @@ describe("Execution context and history", () => {
 
   describe("getContextForExecution", () => {
     it("should return context available to a specific execution", async () => {
-      const configPath = join(projectRoot, "examples", "count_files.yaml");
+      const configPath = join(projectRoot, "examples", "file_utils.yaml");
       const api = new McpGraphApi(configPath);
 
       let contextAtListDir: Record<string, unknown> | null = null;
@@ -93,7 +93,7 @@ describe("Execution context and history", () => {
     });
 
     it("should return null when no execution in progress", async () => {
-      const configPath = join(projectRoot, "examples", "count_files.yaml");
+      const configPath = join(projectRoot, "examples", "file_utils.yaml");
       const api = new McpGraphApi(configPath);
 
       // No execution in progress
@@ -105,7 +105,7 @@ describe("Execution context and history", () => {
 
   describe("getExecutionByIndex", () => {
     it("should return execution record by index", async () => {
-      const configPath = join(projectRoot, "examples", "count_files.yaml");
+      const configPath = join(projectRoot, "examples", "file_utils.yaml");
       const api = new McpGraphApi(configPath);
 
       let entryRecord: any = null;
@@ -135,7 +135,7 @@ describe("Execution context and history", () => {
     });
 
     it("should return null when no execution in progress", async () => {
-      const configPath = join(projectRoot, "examples", "count_files.yaml");
+      const configPath = join(projectRoot, "examples", "file_utils.yaml");
       const api = new McpGraphApi(configPath);
 
       // No execution in progress
@@ -330,7 +330,7 @@ describe("Execution context and history", () => {
       // This test verifies that if a node executes multiple times (in a loop),
       // each execution gets a unique executionIndex
       // For a full loop test, we'd need a graph with a loop, but the basic structure is verified
-      const configPath = join(projectRoot, "examples", "count_files.yaml");
+      const configPath = join(projectRoot, "examples", "file_utils.yaml");
       const api = new McpGraphApi(configPath);
 
       const { promise } = api.executeTool("count_files", {
@@ -351,7 +351,7 @@ describe("Execution context and history", () => {
 
   describe("context building from history", () => {
     it("should build context correctly from history", async () => {
-      const configPath = join(projectRoot, "examples", "count_files.yaml");
+      const configPath = join(projectRoot, "examples", "file_utils.yaml");
       const api = new McpGraphApi(configPath);
 
       const { promise } = api.executeTool("count_files", {

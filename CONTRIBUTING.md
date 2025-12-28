@@ -40,7 +40,7 @@ npm test
 
 The tests use the filesystem MCP server for integration testing. The filesystem MCP server is installable via npm and can be run with `npx`.
 
-The test directory is located at `tests/files/` and contains various test files used by the `count_files` example.
+The test directory is located at `tests/files/` and contains various test files used by the `file_utils` example.
 
 The filesystem MCP server configuration used in tests is hardcoded in the test files to use:
 - Command: `npx`
