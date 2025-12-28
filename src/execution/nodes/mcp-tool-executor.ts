@@ -39,13 +39,18 @@ export async function executeMcpToolNode(
   logger.debug(`MCP tool args: ${JSON.stringify(transformedArgs, null, 2)}`);
   logger.debug(`Expression context: ${JSON.stringify(exprContext, null, 2)}`);
 
+  // Clear previous stderr for this server at the start of execution
+  // This ensures we capture fresh stderr for this node execution
+  clientManager.clearStderr(node.server);
+
   // Get or create MCP client using server configuration
   let client;
   try {
     client = await clientManager.getClient(node.server, serverConfig);
   } catch (error) {
     // Handle errors during client initialization/connection
-    const stderr = client ? clientManager.getStderr(client) : [];
+    // Retrieve stderr by server name (available even if client creation failed)
+    const stderr = clientManager.getStderr(node.server);
     
     // If it's already an McpError, extend it with stderr
     if (error instanceof McpError) {
@@ -58,9 +63,6 @@ export async function executeMcpToolNode(
     throw new ToolCallMcpError(mcpError, stderr);
   }
 
-  // Clear previous stderr for this client before making the call
-  clientManager.clearStderr(client);
-
   // Call the tool
   let result;
   try {
@@ -69,7 +71,7 @@ export async function executeMcpToolNode(
       arguments: transformedArgs as Record<string, unknown>,
     });
   } catch (error) {
-    const stderr = clientManager.getStderr(client);
+    const stderr = clientManager.getStderr(node.server);
     
     // If it's already an McpError, extend it with stderr
     if (error instanceof McpError) {

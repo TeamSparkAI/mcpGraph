@@ -5,10 +5,11 @@
 
 import { describe, it, before, after } from "node:test";
 import { strict as assert } from "node:assert";
-import { McpGraphApi } from "../src/api.js";
+import { McpGraphApi, ToolCallMcpError } from "../src/api.js";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { dirname } from "node:path";
+import { chdir, cwd } from "node:process";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -98,6 +99,51 @@ describe("API integration", () => {
       const structuredContent = result.structuredContent as Record<string, unknown>;
       assert("count" in structuredContent, "structuredContent should have count property");
       assert(structuredContent.count === resultObj.count, "structuredContent count should match result count");
+    });
+
+    it("should wrap connection errors and include stderr when running from wrong cwd", async () => {
+      // Save original cwd
+      const originalCwd = cwd();
+      
+      try {
+        // Change to a different directory (this will cause the filesystem MCP server
+        // to fail because it can't find the relative path ./tests/counting)
+        chdir("/tmp");
+        
+        // Create a new API instance with absolute config path
+        const configPath = join(projectRoot, "examples", "count_files.yaml");
+        const api = new McpGraphApi(configPath);
+        
+        const testDir = join(projectRoot, "tests", "counting");
+        const { promise } = api.executeTool("count_files", {
+          directory: testDir,
+        });
+        
+        // This should fail with ToolCallMcpError
+        try {
+          await promise;
+          assert.fail("Expected ToolCallMcpError to be thrown");
+        } catch (error) {
+          // Verify it's a ToolCallMcpError
+          assert(error instanceof ToolCallMcpError, "Error should be ToolCallMcpError");
+          
+          const mcpError = error as ToolCallMcpError;
+          
+          // Verify stderr property exists and contains content
+          assert("stderr" in mcpError, "ToolCallMcpError should have stderr property");
+          assert(Array.isArray(mcpError.stderr), "stderr should be an array");
+          assert(mcpError.stderr.length > 0, "stderr should contain error output from the MCP server");
+          
+          // Verify error code and message
+          assert.equal(mcpError.code, -32000, "Error code should be -32000");
+          assert(mcpError.message.includes("Connection closed"), "Error message should mention connection closed");
+        }
+        
+        await api.close();
+      } finally {
+        // Always restore original cwd
+        chdir(originalCwd);
+      }
     });
   });
 

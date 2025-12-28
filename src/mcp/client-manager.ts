@@ -19,11 +19,11 @@ import type {
 
 export class McpClientManager {
   private clients: Map<string, Client>;
-  private stderrBuffers: WeakMap<Client, string[]>;
+  private stderrBuffers: Map<string, string[]>;
 
   constructor() {
     this.clients = new Map();
-    this.stderrBuffers = new WeakMap();
+    this.stderrBuffers = new Map();
   }
 
   async getClient(serverName: string, serverConfig: ServerConfig): Promise<Client> {
@@ -35,6 +35,9 @@ export class McpClientManager {
 
     // Create transport and set up stderr capture
     const { transport, stderrBuffer } = await this.createTransport(serverConfig);
+
+    // Store stderr buffer by server name (available even if connection fails)
+    this.stderrBuffers.set(serverName, stderrBuffer);
 
     const client = new Client(
       {
@@ -48,9 +51,6 @@ export class McpClientManager {
 
     await client.connect(transport);
 
-    // Associate stderr buffer with this client instance
-    this.stderrBuffers.set(client, stderrBuffer);
-
     this.clients.set(serverName, client);
 
     return client;
@@ -62,24 +62,32 @@ export class McpClientManager {
       await client.close();
     }
     this.clients.clear();
-    // WeakMap doesn't need explicit clearing - it auto-cleans when clients are GC'd
+    this.stderrBuffers.clear();
   }
 
   /**
-   * Get captured stderr output for a client
-   * @param client - The MCP client instance
+   * Get captured stderr output for a server
+   * @param serverName - The server name
    * @returns Array of stderr lines, or empty array if none
    */
-  getStderr(client: Client): string[] {
-    return this.stderrBuffers.get(client) || [];
+  getStderr(serverName: string): string[] {
+    return this.stderrBuffers.get(serverName) || [];
   }
 
   /**
-   * Clear stderr buffer for a client (typically before a call to prepare for fresh output)
-   * @param client - The MCP client instance
+   * Clear stderr buffer for a server (typically before a call to prepare for fresh output)
+   * 
+   * Note: We mutate the existing array (buffer.length = 0) rather than replacing it
+   * because the transport's stderr event handler has a closure reference to the original
+   * array. If we replace the array in the Map, writes would continue going to the old array.
+   * 
+   * @param serverName - The server name
    */
-  clearStderr(client: Client): void {
-    this.stderrBuffers.set(client, []);
+  clearStderr(serverName: string): void {
+    const buffer = this.stderrBuffers.get(serverName);
+    if (buffer) {
+      buffer.length = 0;
+    }
   }
 
   private async createTransport(serverConfig: ServerConfig): Promise<{
@@ -110,7 +118,7 @@ export class McpClientManager {
 
       const transport = new StdioClientTransport(transportOptions);
       
-      // Create stderr buffer that will be associated with the client after creation
+      // Create stderr buffer for this transport
       const stderrBuffer: string[] = [];
       
       // Capture stderr output
