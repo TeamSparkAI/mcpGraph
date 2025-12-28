@@ -40,7 +40,23 @@ export async function executeMcpToolNode(
   logger.debug(`Expression context: ${JSON.stringify(exprContext, null, 2)}`);
 
   // Get or create MCP client using server configuration
-  const client = await clientManager.getClient(node.server, serverConfig);
+  let client;
+  try {
+    client = await clientManager.getClient(node.server, serverConfig);
+  } catch (error) {
+    // Handle errors during client initialization/connection
+    const stderr = client ? clientManager.getStderr(client) : [];
+    
+    // If it's already an McpError, extend it with stderr
+    if (error instanceof McpError) {
+      throw new ToolCallMcpError(error, stderr);
+    }
+    
+    // For non-McpError exceptions (transport errors, etc.), create a generic McpError
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const mcpError = new McpError(-32000, `MCP client initialization failed: ${errorMessage}`, error);
+    throw new ToolCallMcpError(mcpError, stderr);
+  }
 
   // Clear previous stderr for this client before making the call
   clientManager.clearStderr(client);
