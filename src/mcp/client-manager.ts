@@ -19,9 +19,11 @@ import type {
 
 export class McpClientManager {
   private clients: Map<string, Client>;
+  private stderrBuffers: WeakMap<Client, string[]>;
 
   constructor() {
     this.clients = new Map();
+    this.stderrBuffers = new WeakMap();
   }
 
   async getClient(serverName: string, serverConfig: ServerConfig): Promise<Client> {
@@ -31,7 +33,8 @@ export class McpClientManager {
 
     logger.info(`Creating MCP client for server: ${serverName} (type: ${getServerType(serverConfig)})`);
 
-    const transport = await this.createTransport(serverConfig);
+    // Create transport and set up stderr capture
+    const { transport, stderrBuffer } = await this.createTransport(serverConfig);
 
     const client = new Client(
       {
@@ -45,6 +48,9 @@ export class McpClientManager {
 
     await client.connect(transport);
 
+    // Associate stderr buffer with this client instance
+    this.stderrBuffers.set(client, stderrBuffer);
+
     this.clients.set(serverName, client);
 
     return client;
@@ -56,11 +62,30 @@ export class McpClientManager {
       await client.close();
     }
     this.clients.clear();
+    // WeakMap doesn't need explicit clearing - it auto-cleans when clients are GC'd
   }
 
-  private async createTransport(serverConfig: ServerConfig): Promise<
-    StdioClientTransport | SSEClientTransport | StreamableHTTPClientTransport
-  > {
+  /**
+   * Get captured stderr output for a client
+   * @param client - The MCP client instance
+   * @returns Array of stderr lines, or empty array if none
+   */
+  getStderr(client: Client): string[] {
+    return this.stderrBuffers.get(client) || [];
+  }
+
+  /**
+   * Clear stderr buffer for a client (typically before a call to prepare for fresh output)
+   * @param client - The MCP client instance
+   */
+  clearStderr(client: Client): void {
+    this.stderrBuffers.set(client, []);
+  }
+
+  private async createTransport(serverConfig: ServerConfig): Promise<{
+    transport: StdioClientTransport | SSEClientTransport | StreamableHTTPClientTransport;
+    stderrBuffer: string[];
+  }> {
     // Default to stdio if type is not specified
     const configType = getServerType(serverConfig);
 
@@ -71,17 +96,34 @@ export class McpClientManager {
         args: string[];
         env?: Record<string, string>;
         cwd?: string;
+        stderr?: 'pipe';
       } = {
         command: stdioConfig.command,
         args: stdioConfig.args,
         env: process.env as Record<string, string>,
+        stderr: 'pipe',
       };
 
       if (stdioConfig.cwd) {
         transportOptions.cwd = stdioConfig.cwd;
       }
 
-      return new StdioClientTransport(transportOptions);
+      const transport = new StdioClientTransport(transportOptions);
+      
+      // Create stderr buffer that will be associated with the client after creation
+      const stderrBuffer: string[] = [];
+      
+      // Capture stderr output
+      if (transport.stderr) {
+        transport.stderr.on('data', (data: Buffer) => {
+          const logEntry = data.toString().trim();
+          if (logEntry) {
+            stderrBuffer.push(logEntry);
+          }
+        });
+      }
+      
+      return { transport, stderrBuffer };
     } else if (configType === "sse") {
       const sseConfig = serverConfig as SseServerConfig;
       const options: SSEClientTransportOptions = {};
@@ -110,7 +152,7 @@ export class McpClientManager {
         options.eventSourceInit = sseConfig.eventSourceInit as SSEClientTransportOptions["eventSourceInit"];
       }
 
-      return new SSEClientTransport(new URL(sseConfig.url), options);
+      return { transport: new SSEClientTransport(new URL(sseConfig.url), options), stderrBuffer: [] };
     } else if (configType === "streamableHttp") {
       const httpConfig = serverConfig as StreamableHttpServerConfig;
       const options: StreamableHTTPClientTransportOptions = {};
@@ -135,7 +177,7 @@ export class McpClientManager {
         } as RequestInit;
       }
 
-      return new StreamableHTTPClientTransport(new URL(httpConfig.url), options);
+      return { transport: new StreamableHTTPClientTransport(new URL(httpConfig.url), options), stderrBuffer: [] };
     } else {
       throw new Error(`Unsupported server transport type: ${configType}`);
     }

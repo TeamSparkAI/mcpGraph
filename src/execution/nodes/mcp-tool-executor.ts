@@ -7,6 +7,8 @@ import type { ExecutionContext } from "../context.js";
 import { evaluateJsonata } from "../../expressions/jsonata.js";
 import type { McpClientManager } from "../../mcp/client-manager.js";
 import { logger } from "../../logger.js";
+import { ToolCallMcpError, ToolCallError } from "../../errors/mcp-tool-error.js";
+import { McpError } from "@modelcontextprotocol/sdk/types.js";
 
 export async function executeMcpToolNode(
   node: McpNode,
@@ -40,34 +42,67 @@ export async function executeMcpToolNode(
   // Get or create MCP client using server configuration
   const client = await clientManager.getClient(node.server, serverConfig);
 
+  // Clear previous stderr for this client before making the call
+  clientManager.clearStderr(client);
+
   // Call the tool
-  const result = await client.callTool({
-    name: node.tool,
-    arguments: transformedArgs as Record<string, unknown>,
-  });
+  let result;
+  try {
+    result = await client.callTool({
+      name: node.tool,
+      arguments: transformedArgs as Record<string, unknown>,
+    });
+  } catch (error) {
+    const stderr = clientManager.getStderr(client);
+    
+    // If it's already an McpError, extend it with stderr
+    if (error instanceof McpError) {
+      throw new ToolCallMcpError(error, stderr);
+    }
+    
+    // For non-McpError exceptions (transport errors, etc.), create a generic McpError
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const mcpError = new McpError(-32000, `MCP tool call failed: ${errorMessage}`, error);
+    throw new ToolCallMcpError(mcpError, stderr);
+  }
 
   if (result.isError) {
-    const content = result.content as Array<{ text?: string }>;
-    throw new Error(`MCP tool error: ${content[0]?.text || "Unknown error"}`);
+    // MCP protocol succeeded, but tool returned an error response
+    // Throw ToolCallError with the full result for inspection
+    throw new ToolCallError({
+      ...result,
+      content: Array.isArray(result.content) ? result.content : [],
+    });
   }
 
   // Extract result content
-  const content = result.content as Array<{ text?: string } | unknown>;
+  // Check for structuredContent first (if present, use it as output)
   let toolOutput: unknown;
   
-  if (content[0] && typeof content[0] === "object" && "text" in content[0]) {
-    const textContent = (content[0] as { text?: string }).text;
-    if (textContent) {
-      try {
-        toolOutput = JSON.parse(textContent);
-      } catch {
-        toolOutput = textContent;
+  if ('structuredContent' in result && result.structuredContent !== undefined) {
+    // Use structuredContent if available (regardless of content presence)
+    toolOutput = result.structuredContent;
+  } else if ('content' in result) {
+    // Fall back to processing text content
+    const content = (result.content ?? []) as Array<{ text?: string } | unknown>;
+    
+    if (content[0] && typeof content[0] === "object" && "text" in content[0]) {
+      const textContent = (content[0] as { text?: string }).text;
+      if (textContent) {
+        try {
+          toolOutput = JSON.parse(textContent);
+        } catch {
+          toolOutput = textContent;
+        }
+      } else {
+        toolOutput = content[0];
       }
     } else {
       toolOutput = content[0];
     }
   } else {
-    toolOutput = content[0];
+    // toolResult variant - not expected in normal flow, but handle it
+    throw new Error('Expected content-based result, got toolResult variant');
   }
 
   logger.debug(`MCP tool output: ${JSON.stringify(toolOutput, null, 2)}`);

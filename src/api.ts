@@ -33,6 +33,9 @@ export type {
   ExecutionTelemetry,
 } from './types/execution.js';
 
+// Re-export error types
+export { ToolCallMcpError, ToolCallError } from './errors/mcp-tool-error.js';
+
 export interface ToolInfo {
   name: string;
   description: string;

@@ -78,7 +78,7 @@ tools:
       - id: "count_files_node"
         type: "transform"
         transform:
-          expr: '{ "count": $count($split($.list_directory_node, "\n")) }'
+          expr: '{ "count": $count($split($.list_directory_node.content, "\n")) }'
         next: "exit"
       
       # Exit node: Returns the count
@@ -138,7 +138,7 @@ The `expr` field in transform nodes is a string containing a JSONata expression.
 - **Single-quoted strings** (`'...'`) for simple, single-line expressions:
   ```yaml
   transform:
-    expr: '{ "count": $count($split($.list_directory_node, "\n")) }'
+    expr: '{ "count": $count($split($.list_directory_node.content, "\n")) }'
   ```
   This keeps the expression on one line and is ideal for simple transformations.
 

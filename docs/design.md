@@ -226,7 +226,7 @@ tools:
       - id: "count_files_node"
         type: "transform"
         transform:
-          expr: '{ "count": $count($split($.list_directory_node, "\n")) }'
+          expr: '{ "count": $count($split($.list_directory_node.content, "\n")) }'
         next: "exit"
       
       # Exit node: Returns the count
