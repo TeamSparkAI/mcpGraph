@@ -27,11 +27,6 @@ export class ToolCallMcpError extends McpError {
     super(mcpError.code, mcpError.message, mcpError.data);
     this.name = 'ToolCallMcpError';
     this.stderr = stderr;
-    
-    // Enhance message with stderr for logging/debugging, but keep structured access
-    if (stderr.length > 0) {
-      this.message += `\n\nServer stderr output:\n${stderr.join('\n')}`;
-    }
   }
 }
 
