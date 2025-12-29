@@ -17,9 +17,9 @@ Understanding of graph structure, flow, nodes, and node types/details
 We can provide file / data structure defintion and context in a skill
 
 Probably the main skill will have all of the overview and format stuff
-- It can reference detailed documentation of JSONata and JSON Logic in separate files in the skill
+- It can reference detailed documentation of JSONata and JSON Logic in separate files in the skill that we reference from the main skill
 
-If we provide tooling (mcpGraphBuilder), we can describe that in the skill as well (what it is and how to use it)
+Later: If we provide tooling (mcpGraphBuilder), we can describe that in the skill as well (what it is and how to use it)
 - This information will also be in the mcpGraphBuidler tooling server instructions and tool descriptions
 
 ## Tooling
