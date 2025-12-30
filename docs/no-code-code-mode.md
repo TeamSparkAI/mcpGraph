@@ -222,6 +222,8 @@ npm install -g mcpgraph-ux
 npm run server 3001 ../path/to/mcpgraph.yaml
 ```
 
+![mcpGraph UX](./images/screenshot.png)
+
 ## **Agent Support**
 
 In order for this to work as advertised, agents need to be able to compose and use mcpGraphs.  This is a point that the other papers have pretty much glossed over (they explain how the agents built the tools and the structure of the resulting tools, but not so much on how the agents were prompted and how the tools then found their way into the agent environment).  I'll give Docker a pass, since they're making the composed tools available via an MCP gateway.
