@@ -2,7 +2,7 @@
  * Configuration loader for mcpGraph
  */
 
-import { parseYamlConfig } from "./parser.js";
+import { parseYamlConfig } from "./serializer.js";
 import type { McpGraphConfig, ServerConfig } from "../types/config.js";
 
 /**

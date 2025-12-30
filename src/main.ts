@@ -66,6 +66,7 @@ async function main() {
         name: tool.name,
         description: tool.description,
         inputSchema: tool.inputSchema,
+        outputSchema: tool.outputSchema,
       })),
     }));
 

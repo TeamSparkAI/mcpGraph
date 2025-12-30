@@ -68,6 +68,12 @@ export class GraphExecutor {
     const breakpoints = options?.breakpoints || [];
     const enableTelemetry = options?.enableTelemetry ?? false;
     const startPaused = options?.startPaused ?? false;
+    const enableLogging = options?.enableLogging ?? false;
+
+    // Start log collection if requested
+    if (enableLogging) {
+      logger.startCollection();
+    }
 
     // Initialize controller if hooks, breakpoints, or startPaused are provided
     if (hooks || breakpoints.length > 0 || startPaused) {
@@ -280,10 +286,12 @@ export class GraphExecutor {
               const telemetry = enableTelemetry
                 ? this.buildTelemetry(context, startTime, endTime)
                 : undefined;
+              const logs = enableLogging ? logger.stopCollection() : undefined;
               return {
                 result: result.output,
                 executionHistory: context.getHistory(),
                 telemetry,
+                logs,
               };
             case "transform":
               result = await executeTransformNode(node, context, nodeStartTime);
@@ -392,6 +400,10 @@ export class GraphExecutor {
       // Should not reach here - exit node should have been processed and returned
       throw new Error(`Exit node was not reached`);
     } catch (error) {
+      // Stop log collection if it was enabled (logs will be included in error handling if needed)
+      if (enableLogging) {
+        logger.stopCollection();
+      }
       if (this.controller) {
         // Don't override "stopped" status with "error" if execution was stopped
         const state = this.controller.getState();

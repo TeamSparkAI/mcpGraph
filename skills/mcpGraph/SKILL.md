@@ -302,7 +302,10 @@ Exit point that returns the final result to the MCP tool caller.
 
 ## JSONata Expressions
 
-JSONata is used in transform nodes and within JSON Logic `var` operations for data transformation and access.
+JSONata is used in three places in mcpGraph for data transformation and access:
+1. **Transform node expressions** - Transform data between nodes
+2. **JSON Logic `var` operations** - Access context data in switch node conditions
+3. **MCP tool node arguments** - Dynamically compute argument values (any argument value starting with `$` is evaluated as a JSONata expression)
 
 ### Basic Syntax
 
@@ -310,6 +313,30 @@ JSONata is used in transform nodes and within JSON Logic `var` operations for da
 - **Property access**: `$.node_id.property`
 - **Functions**: `$count(array)`, `$split(string, delimiter)`, etc.
 - **Conditional**: `condition ? trueValue : falseValue`
+
+### Where JSONata is Used
+
+**1. Transform Nodes:**
+Transform nodes use JSONata expressions in the `transform.expr` field to transform data:
+```yaml
+transform:
+  expr: '{ "count": $count($split($.list_directory_node.content, "\n")) }'
+```
+
+**2. MCP Tool Node Arguments:**
+Any argument value in an MCP tool node that starts with `$` is evaluated as a JSONata expression:
+```yaml
+args:
+  path: "$.entry.directory"  # JSONata expression accessing entry node output
+  count: "$count($.previous_node.items)"  # JSONata expression with function
+```
+
+**3. JSON Logic `var` Operations:**
+In switch node conditions, `var` operations are evaluated using JSONata:
+```yaml
+rule:
+  ">": [{ var: "$.increment_node.counter" }, 10]
+```
 
 ### Accessing Node Outputs
 

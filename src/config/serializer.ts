@@ -1,14 +1,20 @@
 /**
- * YAML parser for mcpGraph configuration
+ * YAML serializer for mcpGraph configuration
+ * Handles both deserialization (load/parse) and serialization (save/dump)
  */
 
-import { load } from "js-yaml";
-import { readFileSync } from "node:fs";
+import { load, dump } from "js-yaml";
+import { readFileSync, writeFileSync } from "node:fs";
 import { mcpGraphConfigSchema } from "./schema.js";
 import type { McpGraphConfig } from "../types/config.js";
 import { logger } from "../logger.js";
 import { validateConfigExpressions } from "./expression-validator.js";
 
+/**
+ * Parse YAML configuration file into McpGraphConfig object
+ * @param filePath - Path to the YAML configuration file
+ * @returns McpGraphConfig object
+ */
 export function parseYamlConfig(filePath: string): McpGraphConfig {
   try {
     const fileContents = readFileSync(filePath, "utf-8");
@@ -37,6 +43,32 @@ export function parseYamlConfig(filePath: string): McpGraphConfig {
       throw error;
     }
     throw new Error("Unknown error parsing YAML config");
+  }
+}
+
+/**
+ * Write McpGraphConfig object to YAML file
+ * @param filePath - Path to the YAML configuration file
+ * @param config - McpGraphConfig object to write
+ */
+export function writeYamlConfig(filePath: string, config: McpGraphConfig): void {
+  try {
+    // Use js-yaml dump with readable formatting
+    const yamlString = dump(config, {
+      indent: 2,
+      lineWidth: -1, // No line wrapping
+      noRefs: true, // Don't use YAML references
+      sortKeys: false, // Preserve key order
+    });
+
+    writeFileSync(filePath, yamlString, "utf-8");
+    logger.info(`Saved configuration to: ${filePath}`);
+  } catch (error) {
+    if (error instanceof Error) {
+      logger.error(`Failed to write YAML config: ${error.message}`);
+      throw error;
+    }
+    throw new Error("Unknown error writing YAML config");
   }
 }
 

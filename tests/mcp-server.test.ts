@@ -41,16 +41,18 @@ describe("MCP server integration", () => {
       const clientData = createClient(configPath);
       const { client, transport } = clientData;
       
-      await client.connect(transport);
-      
-      // Client.getServerVersion() returns the server Implementation which includes title
-      const serverVersion = client.getServerVersion();
-      assert(serverVersion !== undefined, "Server version should be present");
-      assert.equal(serverVersion.name, "fileUtils", "Should have correct name");
-      assert.equal(serverVersion.version, "1.0.0", "Should have correct version");
-      assert.equal(serverVersion.title, "File utilities", "Should have correct title");
-      
-      await client.close();
+      try {
+        await client.connect(transport);
+        
+        // Client.getServerVersion() returns the server Implementation which includes title
+        const serverVersion = client.getServerVersion();
+        assert(serverVersion !== undefined, "Server version should be present");
+        assert.equal(serverVersion.name, "fileUtils", "Should have correct name");
+        assert.equal(serverVersion.version, "1.0.0", "Should have correct version");
+        assert.equal(serverVersion.title, "File utilities", "Should have correct title");
+      } finally {
+        await client.close();
+      }
     });
 
     it("should default title to name when title not provided", async () => {
@@ -58,15 +60,17 @@ describe("MCP server integration", () => {
       const clientData = createClient(configPath);
       const { client, transport } = clientData;
       
-      await client.connect(transport);
-      
-      const serverVersion = client.getServerVersion();
-      assert(serverVersion !== undefined, "Server version should be present");
-      assert.equal(serverVersion.name, "testMinimal", "Should have correct name");
-      assert.equal(serverVersion.version, "1.0.0", "Should have correct version");
-      assert.equal(serverVersion.title, "testMinimal", "Title should default to name when not provided");
-      
-      await client.close();
+      try {
+        await client.connect(transport);
+        
+        const serverVersion = client.getServerVersion();
+        assert(serverVersion !== undefined, "Server version should be present");
+        assert.equal(serverVersion.name, "testMinimal", "Should have correct name");
+        assert.equal(serverVersion.version, "1.0.0", "Should have correct version");
+        assert.equal(serverVersion.title, "testMinimal", "Title should default to name when not provided");
+      } finally {
+        await client.close();
+      }
     });
 
     it("should return instructions in initialization response when provided", async () => {
@@ -74,19 +78,21 @@ describe("MCP server integration", () => {
       const clientData = createClient(configPath);
       const { client, transport } = clientData;
       
-      await client.connect(transport);
-      
-      // Client.getInstructions() returns the instructions sent by the server during initialization
-      const instructions = client.getInstructions();
-      
-      assert(instructions !== undefined, "Instructions should be present");
-      assert.equal(
-        instructions,
-        "This server provides file utility tools for counting files in directories.",
-        "Instructions should match the configured value"
-      );
-      
-      await client.close();
+      try {
+        await client.connect(transport);
+        
+        // Client.getInstructions() returns the instructions sent by the server during initialization
+        const instructions = client.getInstructions();
+        
+        assert(instructions !== undefined, "Instructions should be present");
+        assert.equal(
+          instructions,
+          "This server provides file utility tools for counting files and calculating total file sizes in directories.",
+          "Instructions should match the configured value"
+        );
+      } finally {
+        await client.close();
+      }
     });
 
     it("should return undefined for instructions when not provided", async () => {
@@ -94,13 +100,15 @@ describe("MCP server integration", () => {
       const clientData = createClient(configPath);
       const { client, transport } = clientData;
       
-      await client.connect(transport);
-      
-      // Client.getInstructions() should return undefined when server doesn't provide instructions
-      const instructions = client.getInstructions();
-      assert(instructions === undefined, "Instructions should be undefined when not provided");
-      
-      await client.close();
+      try {
+        await client.connect(transport);
+        
+        // Client.getInstructions() should return undefined when server doesn't provide instructions
+        const instructions = client.getInstructions();
+        assert(instructions === undefined, "Instructions should be undefined when not provided");
+      } finally {
+        await client.close();
+      }
     });
   });
 

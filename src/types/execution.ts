@@ -5,6 +5,7 @@
 import type { NodeDefinition } from "./config.js";
 import type { ExecutionContext as ExecutionContextClass } from "../execution/context.js";
 import type { ExecutionContext as DataContext } from "../expressions/context.js";
+import type { LogEntry } from "../logger.js";
 
 export type ExecutionStatus = "not_started" | "running" | "paused" | "finished" | "error" | "stopped";
 
@@ -146,6 +147,11 @@ export interface ExecutionOptions {
    * When true, execution will pause at the entry node, allowing step-through debugging from the start.
    */
   startPaused?: boolean;
+  /**
+   * Enable log collection during execution.
+   * When true, all log entries during execution will be collected and included in ExecutionResult.
+   */
+  enableLogging?: boolean;
 }
 
 export interface ExecutionTelemetry {
@@ -159,5 +165,6 @@ export interface ExecutionResult {
   result: unknown;
   executionHistory: NodeExecutionRecord[];
   telemetry?: ExecutionTelemetry;
+  logs?: LogEntry[];
 }
 

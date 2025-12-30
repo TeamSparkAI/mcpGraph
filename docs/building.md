@@ -34,6 +34,48 @@ Graph runner - exposes mcpGraph server as MCP server where each tool runs a grap
 - -m / --mcp if provided, parse mcpServers from referenced mcp.json file (jsonc support?), add to graph
   - If mcpServers provided in graph, add them (overiding any passed-in MCP server with the same name)
 
+### mcpGraphToolkit
+
+mcpGraphToolkit is a set of tools for building, testing, and running mcpGraph tools specified in a single mcpGraph server (file)
+
+Will have it's own corresponding skill (separate from mcpGraph)
+
+Same params as mcpGraph (-m/--mcp, -g/-graph)
+- Future: If graph file doesn't exist, create it from template?
+
+Setup:
+- Create (or reference existing) mcp.json
+- Create mcpgraph.yaml file (can use generic template, doesn't need any mcpServers or tools, just "server" block)
+- Install mcpGraphToolkit as MCP server in agent pointing to mcp and graph files
+
+Use case:
+- Agent can discover existing tools and call them
+- Agent can create new tools (with support for testing)
+- Agent can manage tools in the mcpGraph (add/update/delete)
+
+Tools:
+- getGraphServer - return full details of mcpGraph server
+- listMcpServers - return list of available mcpServer servers (name, title, instructions, version)
+- listMcpServerTools - return list of tools (name/description only), optionally filtered by MCP server name
+- getMcpServerTool - return full MCP server tool details (including input and output)
+- listGraphTools - return a list of exported tools from the mcpGraph (name, description)
+- getGraphTool - return full detail of an exported tool from the mcpGraph
+- addGraphTool, updateGraphTool, deleteGraphTool - crud for exported mcpGraph tools
+- runGraphTool - run an exported tool from the mcpGraph
+  - can specify existing tool name, or run a tool definition supplied in payload
+  - input includes tool input (arbitrary JSON)
+  - output inclides tool result payload (or error)
+  - can specify logging, in which case logging will also be returned with payload
+  - Future: optionally return detailed results (execution history, node-level)
+  - Future: runtime debugging - step through graph, etc?
+- testJSONata - test a JSONata expression
+  - provide context object, JSONata string, returns result object or error)
+  - Future: validate-only mode?
+- testJSONLogic - test a JSON Logic expression
+  - provide context object, JSON Logic object, return result or error)
+  - Future: validate-only mode?
+
+
 ### mcpGraphManager
 
 Manage a collection of graphs / graph tools
@@ -50,31 +92,6 @@ Manage a set of graphs and their tools
 - add/edit/delete graph server tool?
 - run graph server tool (basic running, no debugging, just results as when running as MCP server)
 - tool names will be graph server.name + "__" + tool.name (so we can dereference on run tool)
-
-### mcpGraphBuilder
-
-Tools to construct an mcpGraph
-
-- m / --mcp is path to mcp.json with all tools
-- d / --dir is directory where graphs live?
-
-Provide access to MCP servers and their tools
-- list MCP servers, list tools, list tools for server (summary)
-- find server/tool (summary)
-- get server, get tool (full details)
-- call tool (for testing)
-
-Validation
-- Run mcpGraph tool (implies loading from file)
-  - Provide detailed error reporting (loading/runtime), logging, and final result
-    - Would structured logging be enough to validate/debug (show each node, with context, output)
-  - We have a full runtime harness with debugging, etc, that we could expose if needed
-    - Step through nodes might be useful?
-- Test JSONata - the ability to quickly test a JSONata expression with high quality feedback (specific errors, suggestions?)
-  - Maybe a validate and a test mode?
-  - This seems to be where agents struggle in creating graphs, though good SKILL.md might help significantly there
-- Test JSON Logic (provide input context, JSON Logic) with high quality feedback (and results)
-  - Validate and test mode (same as JSONata)?
 
 ## Issues
 

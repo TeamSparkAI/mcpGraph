@@ -9,7 +9,8 @@
 
 import { logger } from './logger.js';
 import { loadConfig } from './config/loader.js';
-import type { McpGraphConfig, ServerConfig } from './types/config.js';
+import { writeYamlConfig } from './config/serializer.js';
+import type { McpGraphConfig, ServerConfig, ToolDefinition } from './types/config.js';
 import { validateGraph, type ValidationError } from './graph/validator.js';
 import { GraphExecutor } from './execution/executor.js';
 import { McpClientManager } from './mcp/client-manager.js';
@@ -48,12 +49,14 @@ export interface ExecutionResult {
   structuredContent?: Record<string, unknown>;
   executionHistory?: CoreExecutionResult['executionHistory'];
   telemetry?: CoreExecutionResult['telemetry'];
+  logs?: CoreExecutionResult['logs'];
 }
 
 export class McpGraphApi {
   private config: McpGraphConfig;
   private executor: GraphExecutor;
   private clientManager: McpClientManager;
+  private configPath: string;
 
   /**
    * Create a new McpGraphApi instance
@@ -72,6 +75,7 @@ export class McpGraphApi {
       throw new Error(`Graph validation failed: ${errorMessages}`);
     }
 
+    this.configPath = configPath;
     this.config = config;
     this.clientManager = new McpClientManager();
     this.executor = new GraphExecutor(config, this.clientManager);
@@ -145,6 +149,7 @@ export class McpGraphApi {
       structuredContent: executionResult.result as Record<string, unknown>,
       executionHistory: executionResult.executionHistory,
       telemetry: executionResult.telemetry,
+      logs: executionResult.logs,
     }));
     
     return {
@@ -248,6 +253,103 @@ export class McpGraphApi {
     const config = loadConfig(configPath);
     const errors = validateGraph(config);
     return { config, errors };
+  }
+
+  /**
+   * Add a tool to the graph
+   * @param tool - Tool definition to add
+   * @throws Error if tool with same name already exists
+   */
+  addTool(tool: ToolDefinition): void {
+    // Check if tool with same name already exists
+    if (this.config.tools.some(t => t.name === tool.name)) {
+      throw new Error(`Tool with name "${tool.name}" already exists`);
+    }
+    this.config.tools.push(tool);
+    // Update executor with new config
+    this.executor = new GraphExecutor(this.config, this.clientManager);
+  }
+
+  /**
+   * Update an existing tool in the graph
+   * @param toolName - Name of the tool to update
+   * @param tool - Updated tool definition
+   * @throws Error if tool not found
+   */
+  updateTool(toolName: string, tool: ToolDefinition): void {
+    const index = this.config.tools.findIndex(t => t.name === toolName);
+    if (index === -1) {
+      throw new Error(`Tool "${toolName}" not found`);
+    }
+    this.config.tools[index] = tool;
+    // Update executor with new config
+    this.executor = new GraphExecutor(this.config, this.clientManager);
+  }
+
+  /**
+   * Delete a tool from the graph
+   * @param toolName - Name of the tool to delete
+   * @throws Error if tool not found
+   */
+  deleteTool(toolName: string): void {
+    const index = this.config.tools.findIndex(t => t.name === toolName);
+    if (index === -1) {
+      throw new Error(`Tool "${toolName}" not found`);
+    }
+    this.config.tools.splice(index, 1);
+    // Update executor with new config
+    this.executor = new GraphExecutor(this.config, this.clientManager);
+  }
+
+  /**
+   * Save the graph configuration to a file
+   * @param filePath - Optional file path (defaults to original config path)
+   */
+  save(filePath?: string): void {
+    const targetPath = filePath || this.configPath;
+    writeYamlConfig(targetPath, this.config);
+  }
+
+  /**
+   * Execute an inline tool definition without adding it to the graph
+   * The tool runs in the graph context with access to graph's MCP servers and execution limits
+   * @param toolDefinition - Tool definition to execute
+   * @param toolArguments - Tool input arguments
+   * @param options - Optional execution options
+   * @returns Promise with execution result
+   */
+  async executeToolDefinition(
+    toolDefinition: ToolDefinition,
+    toolArguments: Record<string, unknown> = {},
+    options?: ExecutionOptions
+  ): Promise<ExecutionResult> {
+    // Create temporary config with the tool added
+    const tempConfig: McpGraphConfig = {
+      ...this.config,
+      tools: [...this.config.tools, toolDefinition],
+    };
+
+    // Validate the temporary config
+    const errors = validateGraph(tempConfig);
+    if (errors.length > 0) {
+      const errorMessages = errors.map((e) => e.message).join(', ');
+      throw new Error(`Tool validation failed: ${errorMessages}`);
+    }
+
+    // Create temporary executor with temp config but same clientManager (shares MCP servers)
+    const tempExecutor = new GraphExecutor(tempConfig, this.clientManager);
+
+    // Execute the tool
+    const executionResult = await tempExecutor.executeTool(toolDefinition.name, toolArguments, options);
+
+    // Return wrapped result
+    return {
+      result: executionResult.result,
+      structuredContent: executionResult.result as Record<string, unknown>,
+      executionHistory: executionResult.executionHistory,
+      telemetry: executionResult.telemetry,
+      logs: executionResult.logs,
+    };
   }
 
   /**
