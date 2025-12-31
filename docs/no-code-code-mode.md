@@ -1,4 +1,4 @@
-# **MCP Graph: A No-Code Alternative to "Code Mode"**
+# **mcpGraph: A No-Code Alternative to "Code Mode"**
 
 ## **The Rise of "Code Mode"**
 
@@ -89,9 +89,9 @@ There are many commercial solutions to tool and API orchestration through workfl
 
 But that's not what we're talking about. We're talking about a solution where we turn an agent loose to build its own workflows and then run them (with little to no supervision), and these platforms lack the security controls to make that tenable. At very best, they would be no better than Code Mode.
 
-## **Introducing MCP Graph**
+## **Introducing mcpGraph**
 
-**MCP Graph** is a Domain Specific Language (DSL) for MCP tool orchestration. It uses a declarative configuration—a YAML file—to define an MCP server and a set of tools, where those tools are implemented as directed graphs that can orchestrate other MCP tools (with data transformation and conditional logic support). It's Code Mode without the code.
+**mcpGraph** is a Domain Specific Language (DSL) for MCP tool orchestration. It uses a declarative configuration—a YAML file—to define an MCP server and a set of tools, where those tools are implemented as directed graphs that can orchestrate other MCP tools (with data transformation and conditional logic support). It's Code Mode without the code.
 
 ### **Core Features:**
 
@@ -103,7 +103,7 @@ But that's not what we're talking about. We're talking about a solution where we
 
 ### **The Execution Graph**
 
-An MCP Graph definition consists of five node types:
+An mcpGraph definition consists of five node types:
 
 1. **Entry Node:** Maps input parameters to the graph.  
 2. **MCP Node:** Calls an external MCP tool.  
@@ -113,7 +113,7 @@ An MCP Graph definition consists of five node types:
 
 ## **Example: The `count_files` Tool**
 
-Imagine a tool that counts files in a directory. Traditionally, the agent would call a filesystem MCP server tool to list a directory, then it would parse the output and attempt to count the files it found. In MCP Graph, the flow looks like this:
+Imagine a tool that counts files in a directory. Traditionally, the agent would call a filesystem MCP server tool to list a directory, then it would parse the output and attempt to count the files it found. In mcpGraph, the flow looks like this:
 
 1. **Entry:** Takes the `directory` path.  
 2. **MCP Call:** Calls the `list_directory` tool from a File System MCP server.  
@@ -220,9 +220,9 @@ Then add the mcpGraph MCP server to your agent config (mcp.json or equivalent):
 
 Once configured, your agent will now see an MCP server called `fileUtils` and a tool called `count_files` that it can run just like any other tool.
 
-## **Developer Experience (MCP Graph UX)**
+## **Developer Experience (mcpGraph UX)**
 
-To make this observable and testable, we’ve built **MCP Graph UX**, a separate project that allows you to:
+To make this observable and testable, we’ve built **mcpGraph UX**, a separate project that allows you to:
 
 * Visualize the graph structure.  
 * Animate through active nodes during execution.  
@@ -240,13 +240,13 @@ npm run server 3001 ../path/to/mcpgraph.yaml
 
 ## **Agent Support**
 
-In order for this to work as advertised, agents need to be able to compose and use mcpGraphs.  This is a point that the other papers have pretty much glossed over (they explain how the agents built the tools and the structure of the resulting tools, but not so much on how the agents were prompted and how the tools then found their way into the agent environment).  I'll give Docker a pass, since they're making the composed tools available via an MCP gateway.
+In order for this to work as advertised, agents need to understand the set of MCP tools at their disposal and be able to compose and use mcpGraphs.  This is a point that the other papers have pretty much glossed over (they explain how the agents built the tools and the structure of the resulting tools, but not so much on how the agents were prompted and how the tools then found their way into the agent environment).  I'll give Docker a pass, since they're making the composed tools available via an MCP gateway.
 
 Assuming your agent can build and install an MCP server into it's own environment, we have provided a [SKILL.md](../skills/mcpGraph/SKILL.md) file to support agents in understanding how to build and install an mcpGraph as an MCP server.
 
 ### **mcpGraphToolkit**
 
-We also wanted a viable end-to-end solution where any agent could create and deploy mcpGraph tools. This means that we not only need to instruct the agent on tool creation, but we need to provide the agent with tooling to test and deploy tools into its own environment. To that end, we created mcpGraphToolkit, an MCP server that provides a full set of development, test, and deployment tools to an agent. We have a separate [SKILL.md](../skills/mcpGraphToolkit/SKILL.md) file to support agents in using the mcpGraphToolkit.
+We also wanted a viable end-to-end solution where any agent could create and deploy mcpGraph tools. This means that we not only need to instruct the agent on tool creation, but we need to provide the agent with tooling to understand available MCP servers and to test and deploy mcpGraph tools into its own environment. To that end, we created mcpGraphToolkit, an MCP server that provides a full set of development, test, and deployment tools to an agent. We have a separate [SKILL.md](../skills/mcpGraphToolkit/SKILL.md) file to support agents in using the mcpGraphToolkit.
 
 The **mpcGraphToolkit** is installed as part of the mcpGraph package, so if you've installed mcpGraph from npm, you already have mcpGraphToolkit available.
 
@@ -283,7 +283,7 @@ When using **mcpGraphToolkit** you pass an path to your mcpGraph file, as before
 - **`deleteGraphTool`**: Delete a tool from the mcpGraph
 
 ### Tool Execution Tools
-- **`runGraphTool`**: Run an exported tool from the mcpGraph. Can specify existing tool name or run a tool definition supplied in payload. Supports optional logging collection.
+- **`runGraphTool`**: Run an exported tool from the mcpGraph. Can specify existing tool name or run a tool definition supplied in payload. Supports detailed error reporting and optional logging collection.
 
 ### Expression Testing Tools
 - **`testJSONata`**: Test a JSONata expression with context
@@ -293,7 +293,7 @@ With these tools, and guided by the [SKILL.md](../skills/mcpGraphToolkit/SKILL.m
 
 ## **Conclusion**
 
-MCP Graph provides the context efficiency and accuracy of Code Mode while maintaining the security and observability of a no-code solution. It is currently available on GitHub and via NPM under the MIT license.
+mcpGraph provides the context efficiency and accuracy of Code Mode while maintaining the security and observability of a no-code solution. It is currently available on GitHub and via NPM under the MIT license.
 
 https://github.com/TeamSparkAI/mcpGraph
 

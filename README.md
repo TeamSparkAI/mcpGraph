@@ -2,6 +2,10 @@
 
 MCP server that executes directed graphs of MCP server calls.
 
+> **📖 Learn More:** Read [**mcpGraph: A No-Code Alternative to "Code Mode"**](docs/no-code-code-mode.md) to understand how mcpGraph provides the context efficiency and accuracy of Code Mode while maintaining the security and observability of a no-code solution.
+
+> **🎥 Watch the Demo:** Check out the [**mcpGraph Overview and mcpGraphUX Demo**](https://youtu.be/eyC7OzuB6c4) video to see mcpGraph in action and explore the visual debugging capabilities of mcpGraphUX.
+
 ## Overview
 
 mcpGraph is an MCP (Model Context Protocol) server that exposes tools defined by declarative YAML configurations. Each tool executes a directed graph of nodes that can call other MCP tools, transform data, and make routing decisions, all without embedding a full programming language.
