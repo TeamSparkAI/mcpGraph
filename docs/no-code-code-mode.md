@@ -108,6 +108,8 @@ Imagine a tool that counts files in a directory. Traditionally, the agent would 
 
 This entire process happens outside the LLM's context window. The agent provides only the target directory and only sees the final count.
 
+![count_files Execution Flow](./images/count-files-flow.svg)
+
 Here is what that looks like in YAML.
 
 First, we describe this MCP server...
