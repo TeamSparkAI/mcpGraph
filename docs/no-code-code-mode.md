@@ -15,9 +15,11 @@ A little over a year later, during a ten day period starting in late September, 
 In addition to the quality and accuracy improvements that drove **CodeAct**, there were other factors that made **Code Mode** attractive. The core idea is that traditional tool calling is problematic in two specific ways:
 
 1. **Context Window Overload:** Even with just a few MCP servers installed, an agent can be overwhelmed by hundreds of kilobytes of tool descriptions. These descriptions are sent with every request, consuming large amounts of tokens, even when most tools aren't relevant to most tasks.  
-2. **The Intermediate Data Tax:** When performing a sequence of tool calls (for example, reading a transcript from a Google Doc to add it to a Salesforce prospect) the intermediate data (the transcript) must be sent back to the LLM before being passed to the next tool. This consumes massive amounts of tokens, sometimes across subsequent turns in the conversation history (as long as the intermediate data stays in context).
+2. **The Intermediate Data Tax:** When performing a sequence of tool calls (for example, reading a transcript from a Google Doc to add it to a Salesforce prospect) the intermediate data (the transcript) must be sent back to the LLM before being passed to the next tool. This can also consume large amounts of tokens, sometimes across subsequent turns in the conversation history (as long as the intermediate data stays in context).
 
-This token use isn't just a cost (and time) problem. The large context windows created by all of these tokens essentially distracts the model and dilutes the impact of other more relevant context, producing lower accuracy (often manifesting as poor reasoning).
+This token use isn't just a cost (and time) problem. The large context windows created by all of these tokens essentially distracts the model and dilutes the impact of other more relevant context, producing lower accuracy (often manifesting as poor memory or reasoning).  
+
+Note that the papers each make addition arguments for Code Mode beyond the context and quality issues.
 
 ### **The Code Mode Solution**
 
@@ -73,8 +75,6 @@ There are many commercial solutions to tool and API orchestration through workfl
 
 But that's not what we're talking about. We're talking about a solution where we turn an agent loose to build its own workflows and then run them (with little to no supervision), and these platforms lack the security controls to make that tenable. At very best, they would be no better than Code Mode.
 
----
-
 ## **Introducing MCP Graph**
 
 **MCP Graph** is a Domain Specific Language (DSL) for MCP tool orchestration. It uses a declarative configuration—a YAML file—to define an MCP server and a set of tools, where those tools are implemented as directed graphs that can orchestrate other MCP tools (with data transformation and conditional logic support). It's Code Mode without the code.
@@ -97,8 +97,6 @@ An MCP Graph definition consists of five node types:
 4. **Switch Node:** Implements conditional logic using JSON Logic.  
 5. **Exit Node:** Returns the final result to the agent.
 
----
-
 ## **Example: The `count_files` Tool**
 
 Imagine a tool that counts files in a directory. Traditionally, the agent would call a filesystem MCP server tool to list a directory, then it would parse the output and attempt to count the files it found. In MCP Graph, the flow looks like this:
@@ -108,7 +106,7 @@ Imagine a tool that counts files in a directory. Traditionally, the agent would 
 3. **Transform:** Uses a JSONata expression to split the output into lines and count them.  
 4. **Exit:** Returns a simple JSON object: `{ "count": 7 }`.
 
-This entire process happens outside the LLM's context window. The model provides only the target directory and only sees the final count.
+This entire process happens outside the LLM's context window. The agent provides only the target directory and only sees the final count.
 
 Here is what that looks like in YAML.
 
@@ -228,11 +226,11 @@ npm run server 3001 ../path/to/mcpgraph.yaml
 
 In order for this to work as advertised, agents need to be able to compose and use mcpGraphs.  This is a point that the other papers have pretty much glossed over (they explain how the agents built the tools and the structure of the resulting tools, but not so much on how the agents were prompted and how the tools then found their way into the agent environment).  I'll give Docker a pass, since they're making the composed tools available via an MCP gateway.
 
-Assuming your agent can build and install an MCP server into it's own environment, we have provided a SKILL.md file to support agents in understanding how to build and install an mcpGraph as an MCP server.
+Assuming your agent can build and install an MCP server into it's own environment, we have provided a [SKILL.md](../skills/mcpGraph/SKILL.md) file to support agents in understanding how to build and install an mcpGraph as an MCP server.
 
-**mcpGraphToolkit**
+### **mcpGraphToolkit**
 
-We also wanted a viable end-to-end solution where any agent could create and deploy mcpGraph tools. This means that we not only need to instruct the agent on tool creation, but we need to provide the agent with tooling to test and deploy tools into its own environment. To that end, we created mcpGraphToolkit, an MCP server that provides a full set of development, test, and deployment tools to an agent. We have a separate SKILL.md file to support agents in using the mcpGraphToolkit.
+We also wanted a viable end-to-end solution where any agent could create and deploy mcpGraph tools. This means that we not only need to instruct the agent on tool creation, but we need to provide the agent with tooling to test and deploy tools into its own environment. To that end, we created mcpGraphToolkit, an MCP server that provides a full set of development, test, and deployment tools to an agent. We have a separate [SKILL.md](../skills/mcpGraphToolkit/SKILL.md) file to support agents in using the mcpGraphToolkit.
 
 The **mpcGraphToolkit** is installed as part of the mcpGraph package, so if you've installed mcpGraph from npm, you already have mcpGraphToolkit available.
 
@@ -275,11 +273,11 @@ When using **mcpGraphToolkit** you pass an path to your mcpGraph file, as before
 - **`testJSONata`**: Test a JSONata expression with context
 - **`testJSONLogic`**: Test a JSON Logic expression with context
 
-With these tools, and guided by the SKILL.md, any agent should be able to compose, test, deploy, any call mcpGraph tools.
+With these tools, and guided by the [SKILL.md](../skills/mcpGraphToolkit/SKILL.md), any agent should be able to compose, test, deploy, any call mcpGraph tools.
 
 ## **Conclusion**
 
-MCP Graph provides the context efficiency and accuracy of Code Mode while maintaining the security and observability of a no-code solution. It is currently available via NPM under the MIT license.
+MCP Graph provides the context efficiency and accuracy of Code Mode while maintaining the security and observability of a no-code solution. It is currently available on GitHub and via NPM under the MIT license.
 
 https://github.com/TeamSparkAI/mcpGraph
 
