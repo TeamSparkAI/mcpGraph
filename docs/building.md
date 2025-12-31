@@ -166,7 +166,19 @@ Install mcpGraphToolkit in agent
 - install
 Prompt to create new tool
 
-Prompt:
+Prompt (two steps):
 
-Download the text contents of a url to a local file, return the filename and size
+Create an mcpGraph tool to download a URL to a local file in the downloads directory of this project and return the filename and size
 
+Use that tool to download https://world.hey.com/dhh/pay-yourself-first-e86f8147
+
+Prompt (one-shot, create and use tool):
+
+Download the text contents of the web page https://world.hey.com/dhh/pay-yourself-first-e86f8147 to a local file, return the filename and size
+
+NOTES:
+
+First pass had a "graph/node" structure, no input node, malformed output node - basically crazytown, second pass was correct
+- Agent detected error and rebuilt it correctly, so that's good
+
+Check relative path support in .mcp.json mcpgraphtoolkit config

@@ -122,7 +122,7 @@ export const mcpGraphConfigSchema = z.object({
   server: serverMetadataSchema,
   mcpServers: z.record(serverConfigSchema).optional(),
   executionLimits: executionLimitsSchema.optional(),
-  tools: z.array(toolDefinitionSchema),
+  tools: z.array(toolDefinitionSchema).default([]),
 });
 
 export type McpGraphConfigSchema = z.infer<typeof mcpGraphConfigSchema>;

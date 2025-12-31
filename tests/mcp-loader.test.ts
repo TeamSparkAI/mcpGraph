@@ -7,8 +7,12 @@ import { strict as assert } from "node:assert";
 import { loadMcpServers } from "../src/config/mcp-loader.js";
 import { loadConfig } from "../src/config/loader.js";
 import { McpGraphApi } from "../src/api.js";
+import { writeYamlConfig } from "../src/config/serializer.js";
+import { readFileSync, mkdtempSync, rmSync } from "node:fs";
+import { load } from "js-yaml";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { tmpdir } from "node:os";
 import type { StdioServerConfig } from "../src/types/config.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -123,6 +127,59 @@ describe("MCP file loading", () => {
       const config = api.getConfig();
       assert(config.mcpServers !== undefined, "Should have mcpServers");
       assert("testServer" in config.mcpServers, "Should include server from MCP file");
+    });
+  });
+
+  describe("Serialization with external MCP servers", () => {
+    it("should not serialize external MCP servers when saving", () => {
+      const mcpPath = join(projectRoot, "tests", "files", "test-mcp-merge.json");
+      const graphPath = join(projectRoot, "tests", "files", "test-graph-merge.yaml");
+
+      // Load config with merged servers (graph + external)
+      const mcpServers = loadMcpServers(mcpPath);
+      const config = loadConfig(graphPath, mcpServers);
+
+      // Verify merged config has all servers
+      assert(config.mcpServers !== undefined, "Should have mcpServers");
+      assert.equal(Object.keys(config.mcpServers).length, 3, "Should have 3 servers");
+      assert("mcpOnlyServer" in config.mcpServers, "Should have external server in memory");
+      assert("graphOnlyServer" in config.mcpServers, "Should have graph server in memory");
+      assert("sharedServer" in config.mcpServers, "Should have shared server in memory");
+
+      // Create temporary file for serialization
+      const tempDir = mkdtempSync(join(tmpdir(), "mcpgraph-test-"));
+      const tempConfigPath = join(tempDir, "test-serialization.yaml");
+
+      try {
+        // Serialize config
+        writeYamlConfig(tempConfigPath, config);
+
+        // Read back the serialized file
+        const serializedContent = readFileSync(tempConfigPath, "utf-8");
+        const serializedConfig = load(serializedContent) as any;
+
+        // Verify only graph servers are serialized
+        assert(serializedConfig.mcpServers !== undefined, "Should have mcpServers in serialized file");
+        
+        // Should have graphOnlyServer (from graph file)
+        assert("graphOnlyServer" in serializedConfig.mcpServers, "Should include graph-only server");
+        const graphOnlyServer = serializedConfig.mcpServers.graphOnlyServer as StdioServerConfig;
+        assert.equal(graphOnlyServer.args[0], "graph-only", "Graph server should be serialized");
+
+        // Should have sharedServer (from graph file, overrides external)
+        assert("sharedServer" in serializedConfig.mcpServers, "Should include shared server (from graph)");
+        const sharedServer = serializedConfig.mcpServers.sharedServer as StdioServerConfig;
+        assert.equal(sharedServer.args[0], "from-graph", "Graph server should override external");
+
+        // Should NOT have mcpOnlyServer (external server)
+        assert(!("mcpOnlyServer" in serializedConfig.mcpServers), "Should NOT include external-only server");
+
+        // Should have exactly 2 servers (graphOnlyServer and sharedServer)
+        assert.equal(Object.keys(serializedConfig.mcpServers).length, 2, "Should serialize only 2 graph servers");
+      } finally {
+        // Clean up
+        rmSync(tempDir, { recursive: true, force: true });
+      }
     });
   });
 });

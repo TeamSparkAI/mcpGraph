@@ -10,7 +10,7 @@ export interface ExecutionLimits {
 export interface McpGraphConfig {
   version: string;
   server: ServerMetadata;
-  mcpServers?: Record<string, ServerConfig>;
+  mcpServers?: Record<string, ServerConfigWithSource>;
   executionLimits?: ExecutionLimits;
   tools: ToolDefinition[];
 }
@@ -26,6 +26,14 @@ export type ServerConfig =
   | StdioServerConfig
   | SseServerConfig
   | StreamableHttpServerConfig;
+
+/**
+ * ServerConfig with optional source tracking metadata
+ * Used internally to track whether a server came from the graph file or external MCP file
+ */
+export type ServerConfigWithSource = ServerConfig & {
+  _source?: 'graph' | 'external';
+};
 
 export interface StdioServerConfig {
   type?: "stdio"; // Optional, defaults to stdio

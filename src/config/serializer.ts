@@ -50,11 +50,32 @@ export function parseYamlConfig(filePath: string): McpGraphConfig {
  * Write McpGraphConfig object to YAML file
  * @param filePath - Path to the YAML configuration file
  * @param config - McpGraphConfig object to write
+ * Only servers with _source: 'graph' are serialized (external servers are excluded)
  */
 export function writeYamlConfig(filePath: string, config: McpGraphConfig): void {
   try {
+    // Create a copy for serialization, filtering out external servers
+    const configToWrite: McpGraphConfig = {
+      ...config,
+      mcpServers: undefined,
+    };
+    
+    if (config.mcpServers) {
+      for (const [name, serverConfig] of Object.entries(config.mcpServers)) {
+        // Only include servers from graph file (or undefined source, for backwards compatibility)
+        if (serverConfig._source !== 'external') {
+          // Create clean copy without _source metadata
+          const { _source, ...cleanConfig } = serverConfig;
+          if (!configToWrite.mcpServers) {
+            configToWrite.mcpServers = {};
+          }
+          configToWrite.mcpServers[name] = cleanConfig;
+        }
+      }
+    }
+
     // Use js-yaml dump with readable formatting
-    const yamlString = dump(config, {
+    const yamlString = dump(configToWrite, {
       indent: 2,
       lineWidth: -1, // No line wrapping
       noRefs: true, // Don't use YAML references
