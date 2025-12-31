@@ -12,6 +12,28 @@ import { ListToolsRequestSchema, CallToolRequestSchema, McpError } from '@modelc
 import { parseArgs } from 'node:util';
 import { loadMcpServers } from './config/mcp-loader.js';
 import type { ServerConfig } from './types/config.js';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+
+// Get version from package.json
+let version = 'unknown';
+try {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = dirname(__filename);
+  const packageJsonPath = join(__dirname, '..', 'package.json');
+  const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
+  version = packageJson.version;
+} catch (error) {
+  // Fallback: try reading from project root
+  try {
+    const packageJsonPath = join(process.cwd(), 'package.json');
+    const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
+    version = packageJson.version;
+  } catch {
+    // If both fail, version remains 'unknown'
+  }
+}
 
 const { values } = parseArgs({
   options: {
@@ -24,8 +46,42 @@ const { values } = parseArgs({
       type: 'string',
       short: 'm',
     },
+    help: {
+      type: 'boolean',
+      short: 'h',
+    },
+    version: {
+      type: 'boolean',
+      short: 'v',
+    },
   },
 });
+
+// Handle help and version flags
+if (values.version) {
+  console.log(version);
+  process.exit(0);
+}
+
+if (values.help) {
+  console.log(`mcpGraphToolkit v${version}
+  
+MCP server for building, testing, and running mcpGraph tools.
+
+Usage: mcpgraphtoolkit [options]
+
+Options:
+  -g, --graph <path>    Path to graph configuration file (default: config.yaml)
+  -m, --mcp <path>      Path to MCP servers configuration file (required for MCP discovery tools)
+  -h, --help            Show this help message
+  -v, --version         Show version number
+
+Examples:
+  mcpgraphtoolkit -g ./my-graph.yaml
+  mcpgraphtoolkit -g ./my-graph.yaml -m ./mcp.json
+`);
+  process.exit(0);
+}
 
 let toolkitApi: ToolkitApi | null = null;
 

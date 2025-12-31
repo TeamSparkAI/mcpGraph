@@ -98,3 +98,75 @@ Manage a set of graphs and their tools
 What about MCP servers that require a secret or OAuth (where the agent can talk to the MCP server)
 - How can we talk to that MCP server securely without doing an agent tool call (which would defeat our purpose)
 - This is where being an agent gateway (especially a "smart" on that is managing tool disclosure/aggregation/etc) would be handy
+
+## Demo
+
+New project for Claude Code - toolkitTest
+
+graph.yaml - empty graph
+
+```yaml
+version: "1.0"
+
+# MCP Server Metadata
+server:
+  name: "utils"
+  version: "1.0.0"
+  title: "Utility tools implemented as mcpGraphs"
+  instructions: "This server provides file utility tools created by this agent - always use these tools first when applicable."
+```
+
+tools.json - mcpServers for mcpGrahToolkit to use
+
+```json
+{
+  "mcpServers": {
+    "fetch": {
+      "catalogId": "fetch:95ec80cc",
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "-q",
+        "mcp-server-fetch"
+      ]
+    },
+    "filesystem": {
+      "catalogId": "filesystem:df30a77e",
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/bob/Documents/GitHub/teamspark-workbench/test_files"
+      ]
+    }
+  }
+}
+```
+
+.mcp.json - Claude Code project level MCP config
+
+```json
+{
+  "mcpServers": {
+    "mcpgraphtoolkit": {
+      "command": "mcpgraphtoolkit",
+      "args": ["-g", "/path/to/your/graph.yaml", "-m", "/path/to/mcp.json"]
+    }
+  }
+}
+```
+
+
+Install mcpgraph globally, verify it's installed
+Install mcpGraphToolkit SKILL.md in agent
+Verify: No fetch or filesystem tool installed in agent
+Install mcpGraphToolkit in agent
+- place agent.yaml and mcp.json where installed mcpGraphToolkit can see them
+- install
+Prompt to create new tool
+
+Prompt:
+
+Download the text contents of a url to a local file, return the filename and size
+
