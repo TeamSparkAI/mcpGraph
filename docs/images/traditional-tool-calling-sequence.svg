@@ -1,0 +1,79 @@
+<svg width="450" height="600" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="agentGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#9B59B6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7D3C98;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="mcpGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3498DB;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2980B9;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Participants -->
+  <rect x="30" y="50" width="120" height="50" fill="url(#agentGrad)" stroke="#5B2C6F" stroke-width="2" rx="5"/>
+  <text x="90" y="75" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="white">Agent</text>
+  
+  <rect x="180" y="50" width="90" height="50" fill="url(#mcpGrad)" stroke="#1F618D" stroke-width="2" rx="5"/>
+  <text x="225" y="75" font-family="Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="white">MCP 1</text>
+  
+  <rect x="300" y="50" width="90" height="50" fill="url(#mcpGrad)" stroke="#1F618D" stroke-width="2" rx="5"/>
+  <text x="345" y="75" font-family="Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="white">MCP 2</text>
+  
+  <!-- Sequence lines -->
+  <line x1="90" y1="110" x2="90" y2="550" stroke="#999" stroke-width="1" stroke-dasharray="3,3"/>
+  <line x1="225" y1="110" x2="225" y2="550" stroke="#999" stroke-width="1" stroke-dasharray="3,3"/>
+  <line x1="345" y1="110" x2="345" y2="550" stroke="#999" stroke-width="1" stroke-dasharray="3,3"/>
+  
+  <!-- Tool Discovery Phase -->
+  <text x="225" y="130" font-family="Arial, sans-serif" font-size="10" font-weight="bold" text-anchor="middle" fill="#666" font-style="italic">Tool Discovery</text>
+  
+  <path d="M 90 140 L 225 140" stroke="#666" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <text x="157" y="135" font-family="Arial, sans-serif" font-size="9" fill="#333">listTools()</text>
+  
+  <path d="M 225 160 L 90 160" stroke="#666" stroke-width="2" fill="none" stroke-dasharray="5,5" marker-end="url(#arrowhead)"/>
+  <rect x="107.5" y="170" width="110" height="20" fill="#FFE0B2" stroke="#FF9800" stroke-width="1" rx="2"/>
+  <text x="157.5" y="183" font-family="Arial, sans-serif" font-size="8" text-anchor="middle" fill="#E65100">Tool descriptions ~350KB</text>
+  
+  <path d="M 90 200 L 345 200" stroke="#666" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <text x="217" y="195" font-family="Arial, sans-serif" font-size="9" fill="#333">listTools()</text>
+  
+  <path d="M 345 220 L 90 220" stroke="#666" stroke-width="2" fill="none" stroke-dasharray="5,5" marker-end="url(#arrowhead)"/>
+  <rect x="197.5" y="230" width="100" height="20" fill="#FFE0B2" stroke="#FF9800" stroke-width="1" rx="2"/>
+  <text x="247.5" y="243" font-family="Arial, sans-serif" font-size="8" text-anchor="middle" fill="#E65100">Tool descriptions ~50KB</text>
+  
+  <!-- Tool Execution Phase -->
+  <text x="225" y="280" font-family="Arial, sans-serif" font-size="10" font-weight="bold" text-anchor="middle" fill="#666" font-style="italic">Tool Execution</text>
+  
+  <path d="M 90 300 L 225 300" stroke="#666" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <text x="157" y="295" font-family="Arial, sans-serif" font-size="9" fill="#333">callTool(...)</text>
+  
+  <path d="M 225 320 L 90 320" stroke="#666" stroke-width="2" fill="none" stroke-dasharray="5,5" marker-end="url(#arrowhead)"/>
+  <rect x="107.5" y="330" width="110" height="20" fill="#FFE0B2" stroke="#FF9800" stroke-width="1" rx="2"/>
+  <text x="157.5" y="343" font-family="Arial, sans-serif" font-size="8" text-anchor="middle" fill="#E65100">Intermediate data ~350KB</text>
+  
+  <path d="M 90 360 L 345 360" stroke="#666" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <text x="217" y="355" font-family="Arial, sans-serif" font-size="9" fill="#333">callTool(...)</text>
+  
+  <path d="M 345 380 L 90 380" stroke="#666" stroke-width="2" fill="none" stroke-dasharray="5,5" marker-end="url(#arrowhead)"/>
+  <rect x="197.5" y="390" width="100" height="20" fill="#FFE0B2" stroke="#FF9800" stroke-width="1" rx="2"/>
+  <text x="247.5" y="403" font-family="Arial, sans-serif" font-size="8" text-anchor="middle" fill="#E65100">Intermediate data ~50KB</text>
+  
+  <!-- Context note -->
+  <rect x="30" y="430" width="390" height="80" fill="#FFEBEE" stroke="#E74C3C" stroke-width="1" rx="3"/>
+  <text x="225" y="450" font-family="Arial, sans-serif" font-size="10" font-weight="bold" text-anchor="middle" fill="#C0392B">All data flows through Agent context</text>
+  <text x="40" y="470" font-family="Arial, sans-serif" font-size="9" fill="#333">• Tool descriptions: ~100KB (all tools from all servers)</text>
+  <text x="40" y="485" font-family="Arial, sans-serif" font-size="9" fill="#333">• Intermediate results: ~400KB (full payloads)</text>
+  <text x="40" y="500" font-family="Arial, sans-serif" font-size="9" fill="#333">• Multiple round trips required</text>
+  
+  <!-- Token count -->
+  <text x="225" y="540" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#C0392B">~500K tokens</text>
+  
+  <!-- Arrow markers -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#666"/>
+    </marker>
+  </defs>
+</svg>
+

@@ -25,6 +25,20 @@ Note that the papers each make addition arguments for Code Mode beyond the conte
 
 **Code Mode** suggests that instead of the LLM orchestrating these steps manually, it should write a small TypeScript or JavaScript "wrapper" MCP server. This wrapper handles the logic and data routing externally, returning only a concise result to the LLM. Anthropic reported that this approach reduced context usage by up to **98.7%**, significantly increasing speed, accuracy, and cost-efficiency.
 
+The following sequence diagrams illustrate the difference between traditional tool calling and Code Mode:
+
+**Traditional Tool Calling**
+
+![Traditional Tool Calling](./images/traditional-tool-calling-sequence.svg)
+
+*Traditional tool calling requires the agent to discover tools from multiple MCP servers and orchestrate tool calls manually, with all intermediate data flowing through the agent's context window (~500K tokens).*
+
+**Code Mode**
+
+![Code Mode](./images/code-mode-sequence.svg)
+
+*Code Mode allows the agent to interact with a single wrapper tool that orchestrates multiple MCP servers internally, with only the final result returned to the agent (~6.5K tokens, a 98.7% reduction).*
+
 ## **The Problem with Code Mode**
 
 While the solution works, it introduces a major challenge: **it’s still code.**
