@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(mcpgraph-toolkit)",
+      "mcp__mcpgraphtoolkit__listMcpServers",
+      "mcp__mcpgraphtoolkit__getGraphServer",
+      "mcp__mcpgraphtoolkit__listMcpServerTools",
+      "mcp__mcpgraphtoolkit__getMcpServerTool",
+      "mcp__mcpgraphtoolkit__listGraphTools",
+      "mcp__mcpgraphtoolkit__addGraphTool",
+      "mcp__mcpgraphtoolkit__runGraphTool",
+      "mcp__mcpgraphtoolkit__getGraphTool",
+      "mcp__mcpgraphtoolkit__deleteGraphTool",
+      "mcp__mcpgraphtoolkit__updateGraphTool"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "mcpgraphtoolkit"
+  ]
+}

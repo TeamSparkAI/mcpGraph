@@ -21,7 +21,7 @@ When creating a new graph tool, you should always check to see if there is an ex
 **How it works:**
 - mcpGraphToolkit manages configuration files internally
 - All file operations (reading, writing, updating) are handled by the toolkit tools
-- You interact with the toolkit only through calling its tools
+- You interact with the toolkit one through calling its tools
 - The toolkit tools automatically handle all file operations behind the scenes
 
 **What you should do:**

@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "mcpgraphtoolkit": {
+      "command": "mcpgraphtoolkit",
+      "args": ["-g", "graph.yaml", "-m", "tools.json"]
+    }
+  }
+}

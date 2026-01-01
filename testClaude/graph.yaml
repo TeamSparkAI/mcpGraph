@@ -1,0 +1,6 @@
+version: '1.0'
+server:
+  name: utils
+  version: 1.0.0
+  title: Utility tools implemented as mcpGraphs
+  instructions: This server provides file utility tools created by this agent - always use these tools first when applicable.
