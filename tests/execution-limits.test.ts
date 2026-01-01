@@ -43,12 +43,12 @@ describe("Execution limits", () => {
               {
                 id: "check",
                 type: "switch",
+                next: "loop", // Default: always routes back to loop
                 conditions: [
                   {
                     rule: { ">": [{ var: "$.loop.count" }, 999999] }, // Never true, but makes exit reachable
-                    target: "exit",
+                    next: "exit",
                   },
-                  { target: "loop" }, // Always routes back to loop
                 ],
               },
               { id: "exit", type: "exit" },
@@ -113,12 +113,12 @@ describe("Execution limits", () => {
               {
                 id: "check",
                 type: "switch",
+                next: "loop", // Default: always routes back to loop
                 conditions: [
                   {
                     rule: { ">": [{ var: "$.loop.count" }, 999999] }, // Never true, but makes exit reachable
-                    target: "exit",
+                    next: "exit",
                   },
-                  { target: "loop" }, // Always routes back to loop
                 ],
               },
               { id: "exit", type: "exit" },
@@ -233,12 +233,12 @@ describe("Execution limits", () => {
               {
                 id: "check",
                 type: "switch",
+                next: "loop", // Default: always routes back to loop
                 conditions: [
                   {
                     rule: { ">": [{ var: "$.loop.count" }, 999999] }, // Never true, but makes exit reachable
-                    target: "exit",
+                    next: "exit",
                   },
-                  { target: "loop" }, // Always routes back to loop
                 ],
               },
               { id: "exit", type: "exit" },
@@ -318,12 +318,12 @@ describe("Execution limits", () => {
               {
                 id: "check",
                 type: "switch",
+                next: "loop", // Default: always routes back to loop
                 conditions: [
                   {
                     rule: { ">": [{ var: "$.loop.count" }, 999999] }, // Never true, but makes exit reachable
-                    target: "exit",
+                    next: "exit",
                   },
-                  { target: "loop" }, // Always routes back to loop
                 ],
               },
               { id: "exit", type: "exit" },
@@ -437,12 +437,12 @@ describe("Execution limits", () => {
               {
                 id: "check",
                 type: "switch",
+                next: "loop", // Default: always routes back to loop
                 conditions: [
                   {
                     rule: { ">": [{ var: "$.loop.count" }, 999999] }, // Never true, but makes exit reachable
-                    target: "exit",
+                    next: "exit",
                   },
-                  { target: "loop" }, // Always routes back to loop
                 ],
               },
               { id: "exit", type: "exit" },
@@ -511,12 +511,12 @@ describe("Execution limits", () => {
               {
                 id: "check",
                 type: "switch",
+                next: "loop", // Default: always routes back to loop
                 conditions: [
                   {
                     rule: { ">": [{ var: "$.loop.count" }, 999999] }, // Never true, but makes exit reachable
-                    target: "exit",
+                    next: "exit",
                   },
-                  { target: "loop" }, // Always routes back to loop
                 ],
               },
               { id: "exit", type: "exit" },

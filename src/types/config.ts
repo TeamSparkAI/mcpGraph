@@ -119,11 +119,12 @@ export interface TransformNode extends BaseNode {
 export interface SwitchNode extends BaseNode {
   type: "switch";
   conditions: SwitchCondition[];
+  next: string; // Default next node if no conditions match
 }
 
 export interface SwitchCondition {
-  rule?: JsonLogicRule;
-  target: string;
+  rule: JsonLogicRule; // Required - all conditions must have rules
+  next: string;
 }
 
 export type JsonLogicRule = unknown; // JSON Logic rules are flexible JSON structures

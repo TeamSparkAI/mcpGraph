@@ -69,14 +69,23 @@ function validateToolGraph(tool: { name: string; nodes: NodeDefinition[] }, conf
     }
 
     if (node.type === "switch") {
+      // Validate all condition next nodes
       for (const condition of node.conditions) {
-        if (!graph.hasNode(condition.target)) {
+        if (!graph.hasNode(condition.next)) {
           errors.push({
-            message: `Switch node "${node.id}" in tool "${tool.name}" references non-existent target "${condition.target}"`,
+            message: `Switch node "${node.id}" in tool "${tool.name}" references non-existent next node "${condition.next}"`,
             nodeId: node.id,
             toolName: tool.name,
           });
         }
+      }
+      // Validate default next node
+      if (!graph.hasNode(node.next)) {
+        errors.push({
+          message: `Switch node "${node.id}" in tool "${tool.name}" references non-existent default next node "${node.next}"`,
+          nodeId: node.id,
+          toolName: tool.name,
+        });
       }
     }
   }

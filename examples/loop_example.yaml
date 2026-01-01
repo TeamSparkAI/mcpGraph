@@ -58,8 +58,8 @@ tools:
         conditions:
           - rule:
               "<": [{"var": "$.increment_node.counter"}, {"var": "$.increment_node.target"}]
-            target: "increment_node"
-          - target: "exit_sum"
+            next: "increment_node"
+        next: "exit_sum"  # Default: exit when counter >= target
       
       # Exit node: Extracts the sum from increment_node
       # Uses $previousNode() to verify it returns the switch node's output (target node ID)

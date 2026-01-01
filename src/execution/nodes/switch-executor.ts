@@ -22,36 +22,28 @@ export async function executeSwitchNode(
   // Evaluate conditions in order
   for (let i = 0; i < node.conditions.length; i++) {
     const condition = node.conditions[i];
-    // If no rule is specified, this is a default/fallback case
-    if (condition.rule === undefined || condition.rule === null) {
-      logger.debug(`Switch node ${node.id}: Using default/fallback target: ${condition.target}`);
-      const output = condition.target; // Output the target node ID
-      context.addHistory(node.id, "switch", output, startTime, endTime);
-      return {
-        output,
-        nextNode: condition.target,
-      };
-    }
-
+    
     // Evaluate the JSON Logic rule (now uses JSONata for var operations)
     const ruleResult = await evaluateJsonLogic(condition.rule, exprContext, history, currentIndex);
 
     if (ruleResult) {
-      logger.debug(`Switch node ${node.id}: Condition matched, routing to: ${condition.target}`);
-      const output = condition.target; // Output the target node ID
+      logger.debug(`Switch node ${node.id}: Condition matched, routing to: ${condition.next}`);
+      const output = condition.next; // Output the next node ID
       context.addHistory(node.id, "switch", output, startTime, endTime);
       return {
         output,
-        nextNode: condition.target,
+        nextNode: condition.next,
       };
     }
   }
 
-  // No conditions matched and no default case
-  const error = new Error(
-    `Switch node ${node.id}: No conditions matched and no default case provided`
-  );
-  context.addHistory(node.id, "switch", null, startTime, endTime, error);
-  throw error;
+  // No conditions matched - use default next node
+  logger.debug(`Switch node ${node.id}: No conditions matched, using default next: ${node.next}`);
+  const output = node.next; // Output the default next node ID
+  context.addHistory(node.id, "switch", output, startTime, endTime);
+  return {
+    output,
+    nextNode: node.next,
+  };
 }
 

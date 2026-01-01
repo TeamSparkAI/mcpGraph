@@ -87,13 +87,14 @@ const transformNodeSchema = baseNodeSchema.extend({
 });
 
 const switchConditionSchema = z.object({
-  rule: z.unknown().optional(),
-  target: z.string(),
+  rule: z.unknown(), // Required - all conditions must have rules
+  next: z.string(),
 });
 
 const switchNodeSchema = baseNodeSchema.extend({
   type: z.literal("switch"),
   conditions: z.array(switchConditionSchema),
+  next: z.string(), // Required - default next node if no conditions match
 });
 
 const nodeSchema = z.discriminatedUnion("type", [

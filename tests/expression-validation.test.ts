@@ -111,7 +111,8 @@ describe("Expression syntax validation", () => {
             {
               id: "switch",
               type: "switch",
-              conditions: [{ rule: { ">": [{ var: "$.entry.value +" }, 0] }, target: "exit" }],
+              next: "exit",
+              conditions: [{ rule: { ">": [{ var: "$.entry.value +" }, 0] }, next: "exit" }],
             },
             { id: "exit", type: "exit" },
           ],

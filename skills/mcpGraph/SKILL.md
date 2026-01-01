@@ -139,14 +139,14 @@ Nodes are connected using the `next` field, which specifies the ID of the next n
   next: "node2"  # Executes node2 after node1
 ```
 
-**Switch nodes** use `conditions` with `target` fields instead of `next`:
+**Switch nodes** use `conditions` with `next` fields (each condition specifies its own `next` node), plus a top-level `next` field as the default:
 ```yaml
 - id: "switch_node"
   type: "switch"
   conditions:
     - rule: { ">": [{ var: "entry.value" }, 10] }
-      target: "high_path"
-    - target: "default_path"  # Default case (no rule)
+      next: "high_path"
+  next: "default_path"  # Default case if no conditions match
 ```
 
 ### Execution Context
@@ -247,11 +247,11 @@ Uses JSON Logic to conditionally route to different nodes based on data.
 - `id`: Node identifier
 - `type`: `"switch"`
 - `conditions`: Array of condition rules
-  - `rule`: JSON Logic expression (optional - if omitted, acts as default case)
-  - `target`: ID of the node to route to if this condition matches
-- **Note:** No `next` field - routing is determined by conditions
+  - `rule`: JSON Logic expression (required - all conditions must have rules)
+  - `next`: ID of the node to route to if this condition matches
+- `next`: ID of the default next node (used if no conditions match)
 
-**Output:** The node ID of the target node that was routed to (string)
+**Output:** The node ID of the next node that was routed to (string)
 
 **Important:** `var` operations in JSON Logic rules are evaluated using JSONata, allowing full JSONata expression support (including history functions).
 
@@ -262,11 +262,11 @@ Uses JSON Logic to conditionally route to different nodes based on data.
   conditions:
     - rule:
         ">": [{ var: "entry.value" }, 10]
-      target: "high_path"
+      next: "high_path"
     - rule:
         ">": [{ var: "entry.value" }, 0]
-      target: "low_path"
-    - target: "zero_path"  # Default case (no rule)
+      next: "low_path"
+  next: "zero_path"  # Default case if no conditions match
 ```
 
 **Advanced Example with JSONata:**
@@ -279,8 +279,8 @@ Uses JSON Logic to conditionally route to different nodes based on data.
           { var: "$.increment_node.counter" },
           { var: "$.increment_node.target" }
         ]
-      target: "increment_node"  # Loop back
-    - target: "exit_sum"  # Exit loop
+      next: "increment_node"  # Loop back
+  next: "exit_sum"  # Default: exit loop when counter >= target
 ```
 
 ### Exit Node

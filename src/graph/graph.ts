@@ -22,10 +22,10 @@ export class Graph {
         this.edges.set(node.id, current);
       }
 
-      // Handle switch nodes with multiple targets
+      // Handle switch nodes with multiple next nodes (conditions + default)
       if (node.type === "switch") {
-        const targets = node.conditions.map((c) => c.target);
-        this.edges.set(node.id, targets);
+        const nextNodes = [...node.conditions.map((c) => c.next), node.next];
+        this.edges.set(node.id, nextNodes);
       }
     }
   }
