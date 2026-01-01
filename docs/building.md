@@ -186,19 +186,3 @@ Test Claude-generated graph in UX (debug, validate)
 
 Move entire test Claude project into mcpGraph repo?
 - Might only make sense of relative paths worked
-
-
-
-
-### 2. Valid Node Types & Keys
-| Type | Required Keys | Linking Mechanism |
-| :--- | :--- | :--- |
-| **`entry`** | `id`, `type`, `next` | Uses `next` |
-| **`mcp`** | `id`, `type`, `server`, `tool`, `args`, `next` | Uses `next` |
-| **`transform`** | `id`, `type`, `transform: { expr }`, `next` | Uses `next` |
-| **`switch`** | `id`, `type`, `conditions: [{ rule, target }]` | Uses `target` |
-| **`exit`** | `id`, `type` | (Terminator) |
-
-### 3. Execution Context Variable Syntax
-- Use **`$.node_id`** to access data from the context.
-- **DO NOT** use `$lookup(node_id, 'result')`. The context is a flat object; standard JSONata dot-notation (`$.node_id.key`) is the preferred method.

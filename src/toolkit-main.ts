@@ -115,7 +115,7 @@ async function main() {
         capabilities: {
           tools: {},
         },
-        instructions: 'Tools for building, testing, and running mcpGraph tools',
+        instructions: 'Tools for building, testing, and running mcpGraph tools. IMPORTANT: Before creating graph tools, read the mcpgraphtoolkit SKILL.md (if available) for required structure and examples.',
       }
     );
 

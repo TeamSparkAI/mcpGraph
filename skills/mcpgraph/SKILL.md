@@ -1,5 +1,5 @@
 ---
-name: mcpGraph
+name: mcpgraph
 description: Build no-code MCP servers with tools that compose and orchestrate other MCP tools, with data transformation and conditional logic.
 version: 1.0.0
 ---
