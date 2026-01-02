@@ -4,12 +4,12 @@
 
 import type { McpNode, ServerConfig } from "../../types/config.js";
 import type { ExecutionContext } from "../context.js";
-import { evaluateJsonata } from "../../expressions/jsonata.js";
 import type { McpClientManager } from "../../mcp/client-manager.js";
 import { logger } from "../../logger.js";
 import { ToolCallMcpError, ToolCallError } from "../../errors/mcp-tool-error.js";
 import { McpError } from "@modelcontextprotocol/sdk/types.js";
 import { extractMcpToolOutput } from "../../mcp/tool-output-extractor.js";
+import { evaluateArgValue } from "../arg-evaluator.js";
 
 export async function executeMcpToolNode(
   node: McpNode,
@@ -24,18 +24,13 @@ export async function executeMcpToolNode(
   const history = context.getHistory();
   const currentIndex = history.length; // This will be the index after we add this execution
 
-  // Pre-transform: Apply JSONata to format tool arguments
-  const transformedArgs: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(node.args)) {
-    if (typeof value === "string" && value.startsWith("$")) {
-      // JSONata expression
-      const evaluated = await evaluateJsonata(value, exprContext, history, currentIndex);
-      transformedArgs[key] = evaluated;
-      logger.debug(`JSONata "${value}" evaluated to: ${JSON.stringify(evaluated)}`);
-    } else {
-      transformedArgs[key] = value;
-    }
-  }
+  // Pre-transform: Recursively apply JSONata to format tool arguments
+  const transformedArgs = await evaluateArgValue(
+    node.args,
+    exprContext,
+    history,
+    currentIndex
+  ) as Record<string, unknown>;
 
   logger.debug(`MCP tool args: ${JSON.stringify(transformedArgs, null, 2)}`);
   logger.debug(`Expression context: ${JSON.stringify(exprContext, null, 2)}`);

@@ -17,6 +17,9 @@ mcpGraph is an MCP (Model Context Protocol) server that exposes tools defined by
 - **Observable**: Every transformation and decision is traceable
 - **No Embedded Code**: All logic expressed using standard expression languages ([JSONata](https://jsonata.org/), [JSON Logic](https://jsonlogic.com/))
 
+**Related Tools:**
+- **mcpGraphToolkit**: An MCP server that provides tools for building, testing, and managing mcpGraph tools. Use it to discover available MCP servers, test expressions, and create graph tools interactively. See [mcpGraphToolkit Overview](docs/toolkit.md) for details.
+
 ## Example
 
 Here's a simple example that counts files in a directory:

@@ -708,7 +708,7 @@ describe("mcpGraphToolkit MCP server integration", () => {
           server: "filesystem",
           tool: "list_directory",
           args: {
-            path: "$.entry.directory",
+            path: { expr: "$.entry.directory" },
           },
           context: {
             entry: {
@@ -773,7 +773,7 @@ describe("mcpGraphToolkit MCP server integration", () => {
           server: "filesystem",
           tool: "list_directory",
           args: {
-            path: "$.entry.directory +",
+            path: { expr: "$.entry.directory +" },
           },
           context: {
             entry: {

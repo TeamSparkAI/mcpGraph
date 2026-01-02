@@ -198,7 +198,8 @@ Calls an MCP tool on an internal or external MCP server.
   server: "filesystem"
   tool: "list_directory"
   args:
-    path: "$.entry.directory"  # JSONata expression accessing entry node output
+    path:
+      expr: "$.entry.directory"  # JSONata expression accessing entry node output
   next: "count_files_node"
 ```
 
@@ -305,7 +306,7 @@ Exit point that returns the final result to the MCP tool caller.
 JSONata is used in three places in mcpGraph for data transformation and access:
 1. **Transform node expressions** - Transform data between nodes
 2. **JSON Logic `var` operations** - Access context data in switch node conditions
-3. **MCP tool node arguments** - Dynamically compute argument values (any argument value starting with `$` is evaluated as a JSONata expression)
+3. **MCP tool node arguments** - Objects with `{ "expr": "..." }` are evaluated as JSONata expressions (recursively)
 
 ### Basic Syntax
 
@@ -324,12 +325,32 @@ transform:
 ```
 
 **2. MCP Tool Node Arguments:**
-Any argument value in an MCP tool node that starts with `$` is evaluated as a JSONata expression:
+To use a JSONata expression in an MCP node argument, wrap it in an object with an `expr` property:
 ```yaml
 args:
-  path: "$.entry.directory"  # JSONata expression accessing entry node output
-  count: "$count($.previous_node.items)"  # JSONata expression with function
+  path:
+    expr: "$.entry.directory"  # JSONata expression accessing entry node output
+  static: "literal/path"  # Literal value (not evaluated)
+  count:
+    expr: "$count($.previous_node.items)"  # JSONata expression with function
 ```
+
+**Complex nested args:**
+```yaml
+args:
+  path:
+    expr: "'downloads/' & $.entry.filename"  # String concatenation
+  options:
+    recursive: true  # Literal value
+    filter:
+      expr: "$.entry.filterPattern"  # Nested expression
+```
+
+**Important:**
+- Objects with only an `expr` property are evaluated as JSONata
+- Objects with `expr` and other properties are invalid (error)
+- All other values (strings, numbers, arrays, objects without `expr`) are passed as literals
+- Arrays and objects are recursively evaluated
 
 **3. JSON Logic `var` Operations:**
 In switch node conditions, `var` operations are evaluated using JSONata:
@@ -471,7 +492,8 @@ tools:
         server: "filesystem"
         tool: "list_directory"
         args:
-          path: "$.entry.directory"
+          path:
+            expr: "$.entry.directory"
         next: "count_files_node"
       
       # Transform and count files

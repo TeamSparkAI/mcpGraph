@@ -6,15 +6,13 @@
 
 import { evaluateJsonata, validateJsonataSyntax } from '../expressions/jsonata.js';
 import { evaluateJsonLogic } from '../expressions/json-logic.js';
-import { logger } from '../logger.js';
 import type { McpGraphApi } from '../api.js';
 import type { NodeExecutionRecord } from '../types/execution.js';
 import type { ServerConfig } from '../types/config.js';
 import { McpClientManager } from '../mcp/client-manager.js';
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { ToolCallMcpError, ToolCallError } from '../errors/mcp-tool-error.js';
-import { McpError } from '@modelcontextprotocol/sdk/types.js';
+import { ToolCallError } from '../errors/mcp-tool-error.js';
 import { extractMcpToolOutput } from '../mcp/tool-output-extractor.js';
+import { evaluateArgValue } from '../execution/arg-evaluator.js';
 
 export interface ExpressionTestResult {
   result: unknown;
@@ -104,24 +102,22 @@ export async function testMcpTool(
     const serverConfig = config.mcpServers[serverName] as ServerConfig;
     
     // Evaluate JSONata expressions in args if context is provided
-    const evaluatedArgs: Record<string, unknown> = {};
     const exprContext = context || {};
     const history: NodeExecutionRecord[] = [];
     const currentIndex = 0;
     
-    for (const [key, value] of Object.entries(args)) {
-      if (typeof value === "string" && value.startsWith("$")) {
-        // JSONata expression - evaluate it
-        try {
-          const evaluated = await evaluateJsonata(value, exprContext, history, currentIndex);
-          evaluatedArgs[key] = evaluated;
-          logger.debug(`JSONata "${value}" evaluated to: ${JSON.stringify(evaluated)}`);
-        } catch (error) {
-          throw new Error(`Failed to evaluate JSONata expression "${value}" in arg "${key}": ${error instanceof Error ? error.message : String(error)}`);
-        }
-      } else {
-        evaluatedArgs[key] = value;
-      }
+    let evaluatedArgs: Record<string, unknown>;
+    try {
+      evaluatedArgs = await evaluateArgValue(
+        args,
+        exprContext,
+        history,
+        currentIndex
+      ) as Record<string, unknown>;
+    } catch (error) {
+      throw new Error(
+        `Failed to evaluate JSONata expressions in args: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
     
     // Get client manager from API (we need to access it, but it's private)
@@ -161,7 +157,27 @@ export async function testMcpTool(
       };
       
       // Include evaluated args if any JSONata expressions were used
-      if (context && Object.keys(evaluatedArgs).some(key => typeof args[key] === "string" && (args[key] as string).startsWith("$"))) {
+      // Check if any args contain expression objects
+      function hasExpressionObjects(value: unknown): boolean {
+        if (
+          typeof value === "object" &&
+          value !== null &&
+          !Array.isArray(value) &&
+          "expr" in value &&
+          Object.keys(value).length === 1
+        ) {
+          return true;
+        }
+        if (Array.isArray(value)) {
+          return value.some(item => hasExpressionObjects(item));
+        }
+        if (typeof value === "object" && value !== null) {
+          return Object.values(value).some(val => hasExpressionObjects(val));
+        }
+        return false;
+      }
+      
+      if (context && hasExpressionObjects(args)) {
         response.evaluatedArgs = evaluatedArgs;
       }
       

@@ -130,7 +130,7 @@ Calls an MCP tool on a server available to the graph. **Type is exactly `"mcp"` 
   "server": "filesystem",
   "tool": "list_directory",
   "args": {
-    "path": "$.entry.directory"
+    "path": { "expr": "$.entry.directory" }
   },
   "next": "count_files_node"
 }
@@ -248,7 +248,7 @@ Exit point that returns the final result. **Required in every graph tool.**
       "server": "filesystem",
       "tool": "list_directory",
       "args": {
-        "path": "$.entry.directory"
+        "path": { "expr": "$.entry.directory" }
       },
       "next": "count_files_node"
     },
@@ -387,7 +387,7 @@ MCP node args:
 ```json
 {
   "args": {
-    "path": "$.entry.directory"
+    "path": { "expr": "$.entry.directory" }
   }
 }
 ```
@@ -516,8 +516,8 @@ The `testMcpTool` tool allows you to test MCP tool calls directly without creati
     "server": "filesystem",
     "tool": "write_file",
     "args": {
-      "path": "$.entry.filename",
-      "content": "$.fetch_result"
+      "path": { "expr": "$.entry.filename" },
+      "content": { "expr": "$.fetch_result" }
     },
     "context": {
       "entry": {"filename": "test.txt"},
@@ -759,7 +759,7 @@ Test your tool definition using `runGraphTool` with `toolDefinition`:
           "server": "filesystem",
           "tool": "list_directory",
           "args": {
-            "path": "$.entry.directory"
+            "path": { "expr": "$.entry.directory" }
           },
           "next": "count_files_node"
         },
@@ -826,7 +826,7 @@ Once validated, use `addGraphTool` with the **exact same tool definition** from 
           "server": "filesystem",
           "tool": "list_directory",
           "args": {
-            "path": "$.entry.directory"
+            "path": { "expr": "$.entry.directory" }
           },
           "next": "count_files_node"
         },

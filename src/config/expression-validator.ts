@@ -33,6 +33,65 @@ export function validateConfigExpressions(config: McpGraphConfig): ValidationErr
 }
 
 /**
+ * Recursively validate argument expressions
+ */
+function validateArgExpressions(
+  args: unknown,
+  path: string = "args"
+): void {
+  // Expression object: { "expr": "..." }
+  if (
+    typeof args === "object" &&
+    args !== null &&
+    !Array.isArray(args) &&
+    Object.keys(args).length === 1 &&
+    "expr" in args &&
+    typeof (args as { expr: unknown }).expr === "string"
+  ) {
+    const expr = (args as { expr: string }).expr;
+    try {
+      validateJsonataSyntax(expr);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Invalid JSONata syntax in ${path}.expr: ${errorMessage}`);
+    }
+    return;
+  }
+
+  // Expression object with other keys: error
+  if (
+    typeof args === "object" &&
+    args !== null &&
+    !Array.isArray(args) &&
+    "expr" in args &&
+    Object.keys(args).length > 1
+  ) {
+    throw new Error(
+      `Invalid expression object at ${path}: object with "expr" property must have only that property. ` +
+      `Found keys: ${Object.keys(args).join(", ")}`
+    );
+  }
+
+  // Array: recurse into elements
+  if (Array.isArray(args)) {
+    args.forEach((item, index) => {
+      validateArgExpressions(item, `${path}[${index}]`);
+    });
+    return;
+  }
+
+  // Object: recurse into properties
+  if (typeof args === "object" && args !== null) {
+    for (const [key, value] of Object.entries(args)) {
+      validateArgExpressions(value, `${path}.${key}`);
+    }
+    return;
+  }
+
+  // Primitive: no validation needed
+}
+
+/**
  * Validate expressions in a single node
  */
 function validateNodeExpressions(node: NodeDefinition, config: McpGraphConfig): void {
@@ -48,16 +107,12 @@ function validateNodeExpressions(node: NodeDefinition, config: McpGraphConfig): 
       break;
 
     case "mcp":
-      // Validate any JSONata expressions in args
-      for (const [key, value] of Object.entries(node.args)) {
-        if (typeof value === "string" && value.startsWith("$")) {
-          try {
-            validateJsonataSyntax(value);
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            throw new Error(`Invalid JSONata syntax in args.${key}: ${errorMessage}`);
-          }
-        }
+      // Validate any JSONata expressions in args (recursively)
+      try {
+        validateArgExpressions(node.args);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        throw new Error(`Invalid JSONata syntax in args: ${errorMessage}`);
       }
       break;
 

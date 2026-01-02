@@ -130,7 +130,7 @@ Calls an MCP tool on a server available to the graph. **Type is exactly `"mcp"` 
   "server": "filesystem",
   "tool": "list_directory",
   "args": {
-    "path": "$.entry.directory"
+    "path": { "expr": "$.entry.directory" }
   },
   "next": "count_files_node"
 }
@@ -248,7 +248,7 @@ Exit point that returns the final result. **Required in every graph tool.**
       "server": "filesystem",
       "tool": "list_directory",
       "args": {
-        "path": "$.entry.directory"
+        "path": { "expr": "$.entry.directory" }
       },
       "next": "count_files_node"
     },
@@ -387,7 +387,7 @@ MCP node args:
 ```json
 {
   "args": {
-    "path": "$.entry.directory"
+    "path": { "expr": "$.entry.directory" }
   }
 }
 ```
@@ -516,8 +516,8 @@ The `testMcpTool` tool allows you to test MCP tool calls directly without creati
     "server": "filesystem",
     "tool": "write_file",
     "args": {
-      "path": "$.entry.filename",
-      "content": "$.fetch_result"
+      "path": { "expr": "$.entry.filename" },
+      "content": { "expr": "$.fetch_result" }
     },
     "context": {
       "entry": {"filename": "test.txt"},
@@ -581,17 +581,24 @@ Understanding the exact output structure is critical when building transform nod
    - Define entry and exit nodes
    - Specify input and output schemas
 
-4. **Test Tool Before Adding**
-   - Use `runGraphTool` with `toolDefinition` to test the tool inline
+4. **Test Tool Definition Before Adding**
+   - Use `runGraphTool` with `toolDefinition` to test the tool inline (testing from source)
    - Optionally enable `logging: true` to see execution details
    - Verify the tool works correctly
+   - **IMPORTANT**: Use the exact same tool definition in Step 5
 
 5. **Add Tool to Graph**
    - **MUST USE** `addGraphTool` to add the tested tool to the graph
+   - **CRITICAL**: Use the exact same tool definition from Step 4
    - **DO NOT** create or edit configuration files directly
    - The tool is saved automatically by the toolkit (all file operations are handled internally)
 
-6. **Update or Delete Tools**
+6. **Verify Tool in Graph (Recommended)**
+   - Use `runGraphTool` with `toolName` (the tool's name) to test it from the graph
+   - This verifies the tool was saved correctly and works when called from the graph
+   - Compare results with Step 4 to ensure consistency
+
+7. **Update or Delete Tools**
    - **MUST USE** `updateGraphTool` to modify existing tools (do NOT edit configuration files directly)
    - **MUST USE** `deleteGraphTool` to remove tools (do NOT edit configuration files directly)
    - Changes are saved automatically by the toolkit (all file operations are handled internally)
@@ -720,7 +727,10 @@ Now you know the output structure and can use it in expressions.
 }
 ```
 
-**Step 4: Test Complete Tool Definition**
+**Step 4: Test Complete Tool Definition (from source)**
+
+Test your tool definition using `runGraphTool` with `toolDefinition`:
+
 ```json
 {
   "tool": "runGraphTool",
@@ -749,7 +759,7 @@ Now you know the output structure and can use it in expressions.
           "server": "filesystem",
           "tool": "list_directory",
           "args": {
-            "path": "$.entry.directory"
+            "path": { "expr": "$.entry.directory" }
           },
           "next": "count_files_node"
         },
@@ -776,11 +786,15 @@ Now you know the output structure and can use it in expressions.
 ```
 
 **Step 5: Add Tool to Graph**
+
+Once validated, use `addGraphTool` with the **exact same tool definition** from Step 4:
+
 ```json
 {
   "tool": "addGraphTool",
   "arguments": {
     "tool": {
+      /* SAME tool definition from Step 4 */
       "name": "count_files",
       "description": "Counts files in a directory",
       "inputSchema": {
@@ -812,7 +826,7 @@ Now you know the output structure and can use it in expressions.
           "server": "filesystem",
           "tool": "list_directory",
           "args": {
-            "path": "$.entry.directory"
+            "path": { "expr": "$.entry.directory" }
           },
           "next": "count_files_node"
         },
@@ -833,6 +847,28 @@ Now you know the output structure and can use it in expressions.
   }
 }
 ```
+
+**Step 6: Verify Tool in Graph (Recommended)**
+
+Test the tool again, but now using the tool name (running from the graph, not from source):
+
+```json
+{
+  "tool": "runGraphTool",
+  "arguments": {
+    "toolName": "count_files",
+    "arguments": {
+      "directory": "/path/to/directory"
+    },
+    "logging": true
+  }
+}
+```
+
+This verifies:
+- The tool was saved correctly to the graph
+- The tool works when called from the graph (not just from source)
+- Results match Step 4, confirming consistency
 
 ## Resources
 

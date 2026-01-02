@@ -48,7 +48,9 @@ mcpGraphToolkit is an MCP server that provides tools for building, testing, and 
 
 ## Tools
 
-mcpGraphToolkit provides 11 tools organized into the following categories:
+mcpGraphToolkit provides 12 tools organized into the following categories:
+
+> **📖 For Agents:** If you're an AI agent using mcpGraphToolkit to build graph tools, see [mcpGraphToolkit SKILL.md](../skills/mcpgraphtoolkit/SKILL.md) for comprehensive guidance on using these tools effectively.
 
 ### Graph Discovery Tools
 
@@ -155,6 +157,24 @@ Tests a JSON Logic expression with context.
 - **Output**:
   - `result` (any) - evaluation result (boolean for conditions)
   - `error` (object, optional) - error details if failed
+
+#### `testMcpTool`
+Tests an MCP tool call directly to understand its output structure and behavior.
+- **Input**:
+  - `server` (string) - name of the MCP server
+  - `tool` (string) - name of the tool to call
+  - `args` (object) - tool arguments (objects with `{ "expr": "..." }` are evaluated as JSONata recursively; if context is provided, expressions in args are evaluated)
+  - `context` (object, optional) - context object for JSONata expression evaluation in args
+- **Output**:
+  - `output` (any) - tool execution output (matches what would be available in a graph node's execution context)
+  - `evaluatedArgs` (object, optional) - evaluated arguments (present if JSONata expressions were used)
+  - `executionTime` (number) - execution time in milliseconds
+  - `error` (object, optional) - error details if call failed
+- **Behavior**: 
+  - Calls the MCP tool directly without creating a graph
+  - Evaluates JSONata expressions in args if context is provided (using recursive `{ "expr": "..." }` syntax)
+  - Returns the same output structure that would be available in a graph node's execution context
+  - Useful for understanding tool behavior and output structure before building graph tools
 
 ## File Structure
 
@@ -265,7 +285,7 @@ The toolkit includes comprehensive test coverage:
 
 ### MCP Client Integration Tests
 - **File**: `tests/toolkit-mcp-server.test.ts`
-- Tests all 11 toolkit tools via MCP protocol
+- Tests all 12 toolkit tools via MCP protocol
 - Uses MCP SDK Client to connect to toolkit server via stdio
 - Tests error handling and edge cases
 - Tests logging collection functionality

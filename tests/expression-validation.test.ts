@@ -68,7 +68,7 @@ describe("Expression syntax validation", () => {
           outputSchema: { type: "object" },
           nodes: [
             { id: "entry", type: "entry", next: "mcp" },
-            { id: "mcp", type: "mcp", server: "testServer", tool: "test", args: { path: "$.entry.value +" }, next: "exit" },
+            { id: "mcp", type: "mcp", server: "testServer", tool: "test", args: { path: { expr: "$.entry.value +" } }, next: "exit" },
             { id: "exit", type: "exit" },
           ],
         },

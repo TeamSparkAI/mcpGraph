@@ -175,6 +175,10 @@ Prompt (one-shot, create and use tool):
 
 Download the text contents of the web page https://world.hey.com/dhh/pay-yourself-first-e86f8147 to a local file, return the filename and size
 
+DevRel prompt:
+
+What did you struggle with in building that tool and how could the skill.md documentation or the mcpgraphtoolkit tooling be improved to help 
+
 NOTES:
 
 First pass had a "graph/node" structure, no input node, malformed graph/output node, dependsOn elements - basically crazytown, second pass was correct

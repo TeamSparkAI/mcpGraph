@@ -12,7 +12,8 @@
       "mcp__mcpgraphtoolkit__getGraphTool",
       "mcp__mcpgraphtoolkit__deleteGraphTool",
       "mcp__mcpgraphtoolkit__updateGraphTool",
-      "mcp__mcpgraphtoolkit__testJSONata"
+      "mcp__mcpgraphtoolkit__testJSONata",
+      "mcp__mcpgraphtoolkit__testMcpTool"
     ]
   },
   "enableAllProjectMcpServers": true,
