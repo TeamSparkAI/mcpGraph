@@ -283,9 +283,10 @@ When using **mcpGraphToolkit** you pass an path to your mcpGraph file, as before
 - **`deleteGraphTool`**: Delete a tool from the mcpGraph
 
 ### Tool Execution Tools
-- **`runGraphTool`**: Run an exported tool from the mcpGraph. Can specify existing tool name or run a tool definition supplied in payload. Supports detailed error reporting and optional logging collection.
+- **`runGraphTool`**: Run an exported tool from the mcpGraph. Can specify existing tool name or run a tool definition supplied in payload. Supports detailed error reporting and optional logging collection. Used both to test and run graph tools.
 
 ### Expression Testing Tools
+- **`testMcpTool`**: Test an MCP tool (especially to confirm output)
 - **`testJSONata`**: Test a JSONata expression with context
 - **`testJSONLogic`**: Test a JSON Logic expression with context
 
