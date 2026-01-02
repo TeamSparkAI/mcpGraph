@@ -163,6 +163,7 @@ Verify: No fetch or filesystem tool installed in agent
 Install mcpGraphToolkit in agent
 - place agent.yaml and mcp.json where installed mcpGraphToolkit can see them
 - install
+
 Prompt to create new tool
 
 Prompt (two steps):
@@ -178,15 +179,3 @@ Download the text contents of the web page https://world.hey.com/dhh/pay-yoursel
 DevRel prompt:
 
 What did you struggle with in building that tool and how could the skill.md documentation or the mcpgraphtoolkit tooling be improved to help 
-
-NOTES:
-
-First pass had a "graph/node" structure, no input node, malformed graph/output node, dependsOn elements - basically crazytown, second pass was correct
-- Agent detected error and rebuilt it correctly, so that's good
-
-Check relative path support in .mcp.json mcpgraphtoolkit config
-
-Test Claude-generated graph in UX (debug, validate)
-
-Move entire test Claude project into mcpGraph repo?
-- Might only make sense of relative paths worked

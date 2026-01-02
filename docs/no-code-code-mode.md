@@ -93,6 +93,8 @@ But that's not what we're talking about. We're talking about a solution where we
 
 **mcpGraph** is a Domain Specific Language (DSL) for MCP tool orchestration. It uses a declarative configuration—a YAML file—to define an MCP server and a set of tools, where those tools are implemented as directed graphs that can orchestrate other MCP tools (with data transformation and conditional logic support). It's Code Mode without the code.
 
+> **🎥 Watch the Demo:** Check out the [**mcpGraph Overview and mcpGraphUX Demo**](https://youtu.be/eyC7OzuB6c4) video to see mcpGraph in action and explore the visual debugging capabilities of mcpGraphUX.
+
 ### **Core Features:**
 
 * **Declarative Config:** Define tools and execution graphs in YAML.  
@@ -247,6 +249,8 @@ Assuming your agent can build and install an MCP server into it's own environmen
 ### **mcpGraphToolkit**
 
 We also wanted a viable end-to-end solution where any agent could create and deploy mcpGraph tools. This means that we not only need to instruct the agent on tool creation, but we need to provide the agent with tooling to understand available MCP servers and to test and deploy mcpGraph tools into its own environment. To that end, we created mcpGraphToolkit, an MCP server that provides a full set of development, test, and deployment tools to an agent. We have a separate [SKILL.md](../skills/mcpGraphToolkit/SKILL.md) file to support agents in using the mcpGraphToolkit.
+
+> **🎥 Watch the Demo:** Check out the [**mcpGraphToolkit Deep Dive**](https://youtu.be/gR7s0MD8Gro) video to see an agent autonomously build, test, and deploy orchestration tools—"Code Mode" without the code.
 
 The **mpcGraphToolkit** is installed as part of the mcpGraph package, so if you've installed mcpGraph from npm, you already have mcpGraphToolkit available.
 

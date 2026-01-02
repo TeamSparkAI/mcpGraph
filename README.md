@@ -6,6 +6,8 @@ MCP server that executes directed graphs of MCP server calls.
 
 > **🎥 Watch the Demo:** Check out the [**mcpGraph Overview and mcpGraphUX Demo**](https://youtu.be/eyC7OzuB6c4) video to see mcpGraph in action and explore the visual debugging capabilities of mcpGraphUX.
 
+> **🎥 Watch the Demo:** Check out the [**mcpGraphToolkit Deep Dive**](https://youtu.be/gR7s0MD8Gro) video to see an agent autonomously build, test, and deploy orchestration tools—"Code Mode" without the code.
+
 ## Overview
 
 mcpGraph is an MCP (Model Context Protocol) server that exposes tools defined by declarative YAML configurations. Each tool executes a directed graph of nodes that can call other MCP tools, transform data, and make routing decisions, all without embedding a full programming language.
@@ -18,6 +20,7 @@ mcpGraph is an MCP (Model Context Protocol) server that exposes tools defined by
 - **No Embedded Code**: All logic expressed using standard expression languages ([JSONata](https://jsonata.org/), [JSON Logic](https://jsonlogic.com/))
 
 **Related Tools:**
+- **mcpGraphUX**: A visual debugging and development environment for mcpGraph. Visualize graph structures, animate through active nodes during execution, set breakpoints, and inspect node inputs and outputs. See the [mcpGraphUX repository](https://github.com/TeamSparkAI/mcpGraph-ux) for details.
 - **mcpGraphToolkit**: An MCP server that provides tools for building, testing, and managing mcpGraph tools. Use it to discover available MCP servers, test expressions, and create graph tools interactively. See [mcpGraphToolkit Overview](docs/toolkit.md) for details.
 
 ## Example
