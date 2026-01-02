@@ -9,7 +9,7 @@ import { McpGraphApi } from '../api.js';
 import type { ToolDefinition } from '../types/config.js';
 import type { ExecutionOptions } from '../types/execution.js';
 import { McpDiscovery } from './mcp-discovery.js';
-import { testJSONata, testJSONLogic } from './expression-testers.js';
+import { testJSONata, testJSONLogic, testMcpTool } from './expression-testers.js';
 
 export interface ToolkitTool {
   name: string;
@@ -389,6 +389,62 @@ export class ToolkitApi {
           },
         },
       },
+      {
+        name: 'testMcpTool',
+        description: 'Test an MCP tool call directly. Evaluates JSONata expressions in args if context is provided.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            server: {
+              type: 'string',
+              description: 'Name of the MCP server',
+            },
+            tool: {
+              type: 'string',
+              description: 'Name of the tool to call',
+            },
+            args: {
+              type: 'object',
+              description: 'Tool arguments (values starting with $ are evaluated as JSONata if context is provided)',
+            },
+            context: {
+              type: 'object',
+              description: 'Optional context object for JSONata expression evaluation in args',
+            },
+          },
+          required: ['server', 'tool', 'args'],
+        },
+        outputSchema: {
+          type: 'object',
+          properties: {
+            output: { 
+              type: 'object',
+              description: 'Tool execution output - matches what would be available in a graph node\'s execution context. The structure depends on the tool\'s response format (structuredContent if present, otherwise parsed/raw content). The output may be an object, string, or other type depending on how the underlying tool returns data. Use getMcpServerTool to understand the underlying tool\'s outputSchema and expected output structure.',
+            },
+            evaluatedArgs: {
+              type: 'object',
+              description: 'Evaluated arguments (present if JSONata expressions were used)',
+            },
+            executionTime: {
+              type: 'number',
+              description: 'Execution time in milliseconds',
+            },
+            error: {
+              type: 'object',
+              description: 'Error details (present if call failed)',
+              properties: {
+                message: { type: 'string', description: 'Error message' },
+                details: { 
+                  type: 'object',
+                  description: 'Additional error details',
+                },
+              },
+              required: ['message'],
+            },
+          },
+          required: ['output', 'executionTime'],
+        },
+      },
     ];
   }
 
@@ -574,6 +630,37 @@ export class ToolkitApi {
         
         return {
           result: testResult.result,
+        };
+      }
+
+      case 'testMcpTool': {
+        const server = arguments_.server as string;
+        const tool = arguments_.tool as string;
+        const args = (arguments_.args || {}) as Record<string, unknown>;
+        const context = arguments_.context as Record<string, unknown> | undefined;
+        
+        if (!server) {
+          throw new Error('server is required');
+        }
+        if (!tool) {
+          throw new Error('tool is required');
+        }
+        
+        const testResult = await testMcpTool(this.api, server, tool, args, context);
+        
+        if (testResult.error) {
+          return {
+            output: null,
+            evaluatedArgs: testResult.evaluatedArgs,
+            executionTime: testResult.executionTime,
+            error: testResult.error,
+          };
+        }
+        
+        return {
+          output: testResult.output,
+          evaluatedArgs: testResult.evaluatedArgs,
+          executionTime: testResult.executionTime,
         };
       }
 

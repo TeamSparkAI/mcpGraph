@@ -152,6 +152,7 @@ async function main() {
               text: JSON.stringify(result),
             },
           ],
+          structuredContent: result as Record<string, unknown>,
         };
       } catch (error) {
         // Convert errors to MCP error responses

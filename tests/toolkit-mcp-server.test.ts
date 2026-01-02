@@ -11,6 +11,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { writeFileSync, unlinkSync, readFileSync } from "node:fs";
 import { dump } from "js-yaml";
+import { parseToolkitResponse } from "./helpers.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -63,7 +64,7 @@ describe("mcpGraphToolkit MCP server integration", () => {
         assert(instructions !== undefined, "Instructions should be present");
         assert.equal(
           instructions,
-          "Tools for building, testing, and running mcpGraph tools",
+          "Tools for building, testing, and running mcpGraph tools. IMPORTANT: Before creating graph tools, read the mcpgraphtoolkit SKILL.md (if available) for required structure and examples.",
           "Instructions should match"
         );
       } finally {
@@ -110,6 +111,7 @@ describe("mcpGraphToolkit MCP server integration", () => {
       assert(toolNames.includes("runGraphTool"), "Should include runGraphTool");
       assert(toolNames.includes("testJSONata"), "Should include testJSONata");
       assert(toolNames.includes("testJSONLogic"), "Should include testJSONLogic");
+      assert(toolNames.includes("testMcpTool"), "Should include testMcpTool");
       } catch (error: unknown) {
         console.error("Error in listTools:", error);
         if (error && typeof error === 'object' && 'issues' in error) {
@@ -142,14 +144,7 @@ describe("mcpGraphToolkit MCP server integration", () => {
         arguments: {},
       });
 
-      assert(result !== undefined, "Result should be defined");
-      assert(!result.isError, "Result should not be an error");
-      assert(result.content !== undefined, "Result should have content");
-      assert(Array.isArray(result.content), "Content should be an array");
-
-      const textContent = result.content.find((c) => c.type === "text");
-      assert(textContent !== undefined, "Should have text content");
-      const parsed = JSON.parse((textContent as { text: string }).text);
+      const { parsed } = parseToolkitResponse(result, "getGraphServer");
       
       assert.equal(parsed.name, "fileUtils", "Should have correct name");
       assert.equal(parsed.version, "1.0.0", "Should have correct version");
@@ -162,14 +157,7 @@ describe("mcpGraphToolkit MCP server integration", () => {
         arguments: {},
       });
 
-      assert(result !== undefined, "Result should be defined");
-      assert(!result.isError, "Result should not be an error");
-      assert(result.content !== undefined, "Result should have content");
-      assert(Array.isArray(result.content), "Content should be an array");
-
-      const textContent = result.content.find((c) => c.type === "text");
-      assert(textContent !== undefined, "Should have text content");
-      const parsed = JSON.parse((textContent as { text: string }).text);
+      const { parsed } = parseToolkitResponse(result, "listGraphTools");
       
       assert(typeof parsed === "object", "Should return object");
       assert(Array.isArray(parsed.items), "Should have items array");
@@ -188,14 +176,7 @@ describe("mcpGraphToolkit MCP server integration", () => {
         },
       });
 
-      assert(result !== undefined, "Result should be defined");
-      assert(!result.isError, "Result should not be an error");
-      assert(result.content !== undefined, "Result should have content");
-      assert(Array.isArray(result.content), "Content should be an array");
-
-      const textContent = result.content.find((c) => c.type === "text");
-      assert(textContent !== undefined, "Should have text content");
-      const parsed = JSON.parse((textContent as { text: string }).text);
+      const { parsed } = parseToolkitResponse(result, "getGraphTool");
       
       assert.equal(parsed.name, "count_files", "Should have correct name");
       assert(parsed.nodes !== undefined, "Should have nodes");
@@ -267,14 +248,7 @@ describe("mcpGraphToolkit MCP server integration", () => {
         arguments: {},
       });
 
-      assert(result !== undefined, "Result should be defined");
-      assert(!result.isError, "Result should not be an error");
-      assert(result.content !== undefined, "Result should have content");
-      assert(Array.isArray(result.content), "Content should be an array");
-
-      const textContent = result.content.find((c) => c.type === "text");
-      assert(textContent !== undefined, "Should have text content");
-      const parsed = JSON.parse((textContent as { text: string }).text);
+      const { parsed } = parseToolkitResponse(result, "listMcpServers");
       
       assert(typeof parsed === "object", "Should return object");
       assert(Array.isArray(parsed.items), "Should have items array");
@@ -377,14 +351,7 @@ describe("mcpGraphToolkit MCP server integration", () => {
         },
       });
 
-      assert(result !== undefined, "Result should be defined");
-      assert(!result.isError, "Result should not be an error");
-      assert(result.content !== undefined, "Result should have content");
-      assert(Array.isArray(result.content), "Content should be an array");
-
-      const textContent = result.content.find((c) => c.type === "text");
-      assert(textContent !== undefined, "Should have text content");
-      const parsed = JSON.parse((textContent as { text: string }).text);
+      const { parsed } = parseToolkitResponse(result, "addGraphTool");
       
       assert.equal(parsed.success, true, "Should indicate success");
       
@@ -425,11 +392,7 @@ describe("mcpGraphToolkit MCP server integration", () => {
       });
 
       assert(!getResult.isError, "Should be able to get tool");
-      assert(getResult.content !== undefined, "Result should have content");
-      assert(Array.isArray(getResult.content), "Content should be an array");
-      const textContent = getResult.content.find((c) => c.type === "text");
-      assert(textContent !== undefined, "Should have text content");
-      const parsed = JSON.parse((textContent as { text: string }).text);
+      const { parsed } = parseToolkitResponse(getResult, "getGraphTool");
       assert.equal(parsed.description, "Updated description", "Tool should be updated");
     });
 
@@ -528,18 +491,12 @@ describe("mcpGraphToolkit MCP server integration", () => {
         },
       });
 
-      assert(result !== undefined, "Result should be defined");
-      assert(!result.isError, "Result should not be an error");
-      assert(result.content !== undefined, "Result should have content");
-      assert(Array.isArray(result.content), "Content should be an array");
-
-      const textContent = result.content.find((c) => c.type === "text");
-      assert(textContent !== undefined, "Should have text content");
-      const parsed = JSON.parse((textContent as { text: string }).text);
+      const { parsed } = parseToolkitResponse(result, "runGraphTool");
       
       assert(parsed.result !== undefined, "Should have result");
-      assert(parsed.result.count !== undefined, "Should have count property");
-      assert(typeof parsed.result.count === "number", "Count should be a number");
+      const resultObj = parsed.result as { count?: number };
+      assert(resultObj.count !== undefined, "Should have count property");
+      assert(typeof resultObj.count === "number", "Count should be a number");
     });
 
     it("should run a tool definition inline", async () => {
@@ -584,17 +541,11 @@ describe("mcpGraphToolkit MCP server integration", () => {
         },
       });
 
-      assert(result !== undefined, "Result should be defined");
-      assert(!result.isError, "Result should not be an error");
-      assert(result.content !== undefined, "Result should have content");
-      assert(Array.isArray(result.content), "Content should be an array");
-
-      const textContent = result.content.find((c) => c.type === "text");
-      assert(textContent !== undefined, "Should have text content");
-      const parsed = JSON.parse((textContent as { text: string }).text);
+      const { parsed } = parseToolkitResponse(result, "runGraphTool");
       
       assert(parsed.result !== undefined, "Should have result");
-      assert.equal(parsed.result.result, "test_value", "Should execute correctly");
+      const resultObj = parsed.result as { result?: string };
+      assert.equal(resultObj.result, "test_value", "Should execute correctly");
     });
 
     it("should collect logs when logging is enabled", async () => {
@@ -618,14 +569,7 @@ describe("mcpGraphToolkit MCP server integration", () => {
         },
       });
 
-      assert(result !== undefined, "Result should be defined");
-      assert(!result.isError, "Result should not be an error");
-      assert(result.content !== undefined, "Result should have content");
-      assert(Array.isArray(result.content), "Content should be an array");
-
-      const textContent = result.content.find((c) => c.type === "text");
-      assert(textContent !== undefined, "Should have text content");
-      const parsed = JSON.parse((textContent as { text: string }).text);
+      const { parsed } = parseToolkitResponse(result, "runGraphTool");
       
       assert(parsed.logging !== undefined, "Should have logging");
       assert(Array.isArray(parsed.logging), "Logging should be an array");
@@ -658,18 +602,12 @@ describe("mcpGraphToolkit MCP server integration", () => {
         },
       });
 
-      assert(result !== undefined, "Result should be defined");
-      assert(!result.isError, "Result should not be an error");
-      assert(result.content !== undefined, "Result should have content");
-      assert(Array.isArray(result.content), "Content should be an array");
-
-      const textContent = result.content.find((c) => c.type === "text");
-      assert(textContent !== undefined, "Should have text content");
-      const parsed = JSON.parse((textContent as { text: string }).text);
+      const { parsed } = parseToolkitResponse(result, "testJSONata");
       
       assert(parsed.error === undefined, "Should not have error");
       assert(parsed.result !== undefined, "Should have result");
-      assert.equal(parsed.result.result, 10, "Should evaluate correctly");
+      const resultObj = parsed.result as { result?: number };
+      assert.equal(resultObj.result, 10, "Should evaluate correctly");
     });
 
     it("should return error for invalid JSONata expression", async () => {
@@ -681,14 +619,7 @@ describe("mcpGraphToolkit MCP server integration", () => {
         },
       });
 
-      assert(result !== undefined, "Result should be defined");
-      assert(!result.isError, "Result should not be an error");
-      assert(result.content !== undefined, "Result should have content");
-      assert(Array.isArray(result.content), "Content should be an array");
-
-      const textContent = result.content.find((c) => c.type === "text");
-      assert(textContent !== undefined, "Should have text content");
-      const parsed = JSON.parse((textContent as { text: string }).text);
+      const { parsed } = parseToolkitResponse(result, "testJSONata");
       
       assert(parsed.error !== undefined, "Should have error");
       assert(parsed.result === null, "Result should be null on error");
@@ -703,14 +634,7 @@ describe("mcpGraphToolkit MCP server integration", () => {
         },
       });
 
-      assert(result !== undefined, "Result should be defined");
-      assert(!result.isError, "Result should not be an error");
-      assert(result.content !== undefined, "Result should have content");
-      assert(Array.isArray(result.content), "Content should be an array");
-
-      const textContent = result.content.find((c) => c.type === "text");
-      assert(textContent !== undefined, "Should have text content");
-      const parsed = JSON.parse((textContent as { text: string }).text);
+      const { parsed } = parseToolkitResponse(result, "testJSONLogic");
       
       assert(parsed.error === undefined, "Should not have error");
       assert.equal(parsed.result, true, "Should evaluate to true");
@@ -725,17 +649,147 @@ describe("mcpGraphToolkit MCP server integration", () => {
         },
       });
 
-      assert(result !== undefined, "Result should be defined");
-      assert(!result.isError, "Result should not be an error");
-      assert(result.content !== undefined, "Result should have content");
-      assert(Array.isArray(result.content), "Content should be an array");
-
-      const textContent = result.content.find((c) => c.type === "text");
-      assert(textContent !== undefined, "Should have text content");
-      const parsed = JSON.parse((textContent as { text: string }).text);
+      const { parsed } = parseToolkitResponse(result, "testJSONLogic");
       
       assert(parsed.error === undefined, "Should not have error");
       assert.equal(parsed.result, false, "Should evaluate to false");
+    });
+
+    it("should test MCP tool call directly", async () => {
+      const testDir = join(projectRoot, "tests", "counting");
+      const result = await client.callTool({
+        name: "testMcpTool",
+        arguments: {
+          server: "filesystem",
+          tool: "list_directory",
+          args: {
+            path: testDir,
+          },
+        },
+      });
+
+      const { parsed } = parseToolkitResponse(result, "testMcpTool");
+      
+      assert(parsed.error === undefined, "Should not have error");
+      assert(parsed.output !== undefined, "Should have output");
+      assert(parsed.executionTime !== undefined, "Should have executionTime");
+      assert(typeof parsed.executionTime === "number", "executionTime should be a number");
+      assert(parsed.executionTime >= 0, "executionTime should be non-negative");
+      
+      // Validate list_directory output: filesystem MCP server returns an object with "content" property
+      // Format: {"content": "[FILE] filename.ext\n[FILE] filename2.ext\n"}
+      assert(typeof parsed.output === "object" && parsed.output !== null, "Output should be an object");
+      const outputObj = parsed.output as { content?: string };
+      assert(typeof outputObj.content === "string", "Output should have content property that is a string");
+      const output = outputObj.content;
+      assert(output.length > 0, "Output content should not be empty");
+      
+      // Split by newlines to get file entries
+      const lines = output.split("\n").filter(line => line.trim().length > 0);
+      assert(lines.length > 0, "Should have at least one file entry");
+      
+      // Each line should be in format "[FILE] filename.ext"
+      lines.forEach((line, index) => {
+        assert(line.startsWith("[FILE]"), `Line ${index} should start with "[FILE]": ${line}`);
+        assert(line.length > 7, `Line ${index} should contain filename after "[FILE] "`);
+      });
+      
+      // Verify we can find expected files in the test directory
+      assert(output.includes("test1.txt") || output.includes("test2.md") || output.includes("test3.json") || 
+             output.includes("test4.py") || output.includes("README.md") || output.includes("data.csv"),
+             `Output should contain at least one known test file. Output: ${output.substring(0, 300)}`);
+    });
+
+    it("should test MCP tool call with JSONata expressions in args", async () => {
+      const testDir = join(projectRoot, "tests", "counting");
+      const result = await client.callTool({
+        name: "testMcpTool",
+        arguments: {
+          server: "filesystem",
+          tool: "list_directory",
+          args: {
+            path: "$.entry.directory",
+          },
+          context: {
+            entry: {
+              directory: testDir,
+            },
+          },
+        },
+      });
+
+      const { parsed } = parseToolkitResponse(result, "testMcpTool");
+      
+      assert(parsed.error === undefined, "Should not have error");
+      assert(parsed.output !== undefined, "Should have output");
+      assert(parsed.executionTime !== undefined, "Should have executionTime");
+      assert(parsed.evaluatedArgs !== undefined, "Should have evaluatedArgs when JSONata is used");
+      const evaluatedArgs = parsed.evaluatedArgs as { path?: string };
+      assert.equal(evaluatedArgs.path, testDir, "Evaluated args should have correct path");
+      
+      // Validate list_directory output format (same as above)
+      assert(typeof parsed.output === "object" && parsed.output !== null, "Output should be an object");
+      const outputObj = parsed.output as { content?: string };
+      assert(typeof outputObj.content === "string", "Output should have content property that is a string");
+      const output = outputObj.content;
+      assert(output.length > 0, "Output content should not be empty");
+      
+      const lines = output.split("\n").filter(line => line.trim().length > 0);
+      assert(lines.length > 0, "Should have at least one file entry");
+      
+      lines.forEach((line, index) => {
+        assert(line.startsWith("[FILE]"), `Line ${index} should start with "[FILE]": ${line}`);
+      });
+      
+      assert(output.includes("test1.txt") || output.includes("test2.md") || output.includes("test3.json") || 
+             output.includes("test4.py"), `Output should contain at least one known test file. Output: ${output.substring(0, 300)}`);
+    });
+
+    it("should return error for server not found", async () => {
+      const result = await client.callTool({
+        name: "testMcpTool",
+        arguments: {
+          server: "nonexistent_server",
+          tool: "list_directory",
+          args: {
+            path: "/tmp",
+          },
+        },
+      });
+
+      const { parsed } = parseToolkitResponse(result, "testMcpTool");
+      
+      assert(parsed.error !== undefined, "Should have error");
+      const error = parsed.error as { message?: string };
+      assert(error.message !== undefined, "Error should have message");
+      assert(error.message.includes("not found"), "Error message should mention not found");
+      assert(parsed.output === null, "Output should be null on error");
+    });
+
+    it("should return error for invalid JSONata expression in args", async () => {
+      const result = await client.callTool({
+        name: "testMcpTool",
+        arguments: {
+          server: "filesystem",
+          tool: "list_directory",
+          args: {
+            path: "$.entry.directory +",
+          },
+          context: {
+            entry: {
+              directory: "/tmp",
+            },
+          },
+        },
+      });
+
+      const { parsed } = parseToolkitResponse(result, "testMcpTool");
+      
+      assert(parsed.error !== undefined, "Should have error");
+      const error = parsed.error as { message?: string };
+      assert(error.message !== undefined, "Error should have message");
+      assert(error.message.includes("JSONata"), "Error message should mention JSONata");
+      assert(parsed.output === null, "Output should be null on error");
     });
   });
 

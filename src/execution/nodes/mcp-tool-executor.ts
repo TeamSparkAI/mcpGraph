@@ -9,6 +9,7 @@ import type { McpClientManager } from "../../mcp/client-manager.js";
 import { logger } from "../../logger.js";
 import { ToolCallMcpError, ToolCallError } from "../../errors/mcp-tool-error.js";
 import { McpError } from "@modelcontextprotocol/sdk/types.js";
+import { extractMcpToolOutput } from "../../mcp/tool-output-extractor.js";
 
 export async function executeMcpToolNode(
   node: McpNode,
@@ -93,39 +94,11 @@ export async function executeMcpToolNode(
     });
   }
 
-  // Extract result content
-  // Check for structuredContent first (if present, use it as output)
-  let toolOutput: unknown;
-  
-  if ('structuredContent' in result && result.structuredContent !== undefined) {
-    // Use structuredContent if available (regardless of content presence)
-    toolOutput = result.structuredContent;
-  } else if ('content' in result) {
-    // Fall back to processing text content
-    const content = (result.content ?? []) as Array<{ text?: string } | unknown>;
-    
-    if (content[0] && typeof content[0] === "object" && "text" in content[0]) {
-      const textContent = (content[0] as { text?: string }).text;
-      if (textContent) {
-        try {
-          toolOutput = JSON.parse(textContent);
-        } catch {
-          toolOutput = textContent;
-        }
-      } else {
-        toolOutput = content[0];
-      }
-    } else {
-      toolOutput = content[0];
-    }
-  } else {
-    // toolResult variant - not expected in normal flow, but handle it
-    throw new Error('Expected content-based result, got toolResult variant');
-  }
+  // Extract result content using shared utility function
+  // This ensures consistency with testMcpTool
+  const output = extractMcpToolOutput(result);
 
-  logger.debug(`MCP tool output: ${JSON.stringify(toolOutput, null, 2)}`);
-
-  const output = toolOutput;
+  logger.debug(`MCP tool output: ${JSON.stringify(output, null, 2)}`);
   const endTime = Date.now();
 
   context.addHistory(node.id, "mcp", output, startTime, endTime);

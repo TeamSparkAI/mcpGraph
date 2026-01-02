@@ -270,7 +270,7 @@ Exit point that returns the final result. **Required in every graph tool.**
 
 ## mcpGraphToolkit Tools
 
-mcpGraphToolkit provides 11 tools organized into categories:
+mcpGraphToolkit provides 12 tools organized into categories:
 
 ### Graph Discovery Tools
 - **`getGraphServer`**: Get full details of the mcpGraph server metadata (name, version, title, instructions)
@@ -299,6 +299,7 @@ mcpGraphToolkit provides 11 tools organized into categories:
 ### Expression Testing Tools
 - **`testJSONata`**: Test a JSONata expression with context
 - **`testJSONLogic`**: Test a JSON Logic expression with context
+- **`testMcpTool`**: Test an MCP tool call directly to understand its output structure and behavior
 
 ## Graph Structure and Flow
 
@@ -448,6 +449,106 @@ With JSONata:
 
 **Testing:** Use `testJSONLogic` tool to validate conditions before adding to switch nodes.
 
+## Understanding MCP Tool Outputs
+
+When an MCP tool executes in a graph node, its output is stored in the execution context using the node ID. However, **the structure of that output varies by tool**, which can cause confusion when building graph tools.
+
+### Output Structure Patterns
+
+Different MCP tools return data in different formats:
+
+1. **Direct/Plain Output** - Tool returns data directly (string, number, object, etc.)
+   ```json
+   // Tool output stored as:
+   { "fetch_url": "Content here..." }
+   
+   // Access in JSONata:
+   $.fetch_url
+   ```
+
+2. **Wrapped Output** - Tool returns an object with nested properties
+   ```json
+   // Tool output stored as:
+   { "get_info": {"content": "File info here..."} }
+   
+   // Access in JSONata:
+   $.get_info.content
+   ```
+
+### How to Determine Output Structure
+
+1. **Use `getMcpServerTool`** - Check the tool's `outputSchema` to understand the expected structure
+2. **Use `testMcpTool`** - Test the tool directly to see its actual output (recommended)
+3. **Use `runGraphTool` with logging** - Run a minimal graph with just entry → mcp → exit and check `executionHistory`
+
+### Testing MCP Tools with `testMcpTool`
+
+The `testMcpTool` tool allows you to test MCP tool calls directly without creating a full graph tool. This is the fastest way to understand how a tool behaves and what output structure it returns.
+
+**Basic Usage:**
+```json
+{
+  "tool": "testMcpTool",
+  "arguments": {
+    "server": "fetch",
+    "tool": "fetch",
+    "args": {
+      "url": "https://example.com",
+      "raw": true
+    }
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "output": "Content type text/plain cannot be simplified...",
+  "executionTime": 267
+}
+```
+
+**With JSONata Expression Evaluation:**
+```json
+{
+  "tool": "testMcpTool",
+  "arguments": {
+    "server": "filesystem",
+    "tool": "write_file",
+    "args": {
+      "path": "$.entry.filename",
+      "content": "$.fetch_result"
+    },
+    "context": {
+      "entry": {"filename": "test.txt"},
+      "fetch_result": "Some content here"
+    }
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "evaluatedArgs": {
+    "path": "test.txt",
+    "content": "Some content here"
+  },
+  "output": {"content": "Successfully wrote to test.txt"},
+  "executionTime": 8
+}
+```
+
+**Key Points:**
+- `output` matches what would be available in a graph node's execution context
+- The output structure depends on the tool's response format (may be an object, string, or other type)
+- Use `getMcpServerTool` to understand the tool's `outputSchema` and expected output structure
+- `evaluatedArgs` is included when JSONata expressions are used in `args` and `context` is provided
+- `executionTime` shows how long the tool call took in milliseconds
+
+**Why This Matters:**
+Understanding the exact output structure is critical when building transform nodes or switch conditions that reference MCP tool outputs. Using `testMcpTool` before building your graph tool saves significant debugging time.
+
 ## Building Tools with mcpGraphToolkit
 
 ### Workflow
@@ -463,13 +564,15 @@ With JSONata:
    - **MUST USE** `listMcpServers` to see MCP servers available to the graph (graph tools can only use these servers)
    - **MUST USE** `listMcpServerTools` to see MCP tools available on a server (graph tools can only call these tools)
    - **MUST USE** `getMcpServerTool` to get full tool details (input/output schemas)
+   - **RECOMMENDED**: Use `testMcpTool` to understand tool behavior and output structure before using it in a graph
    - **Remember**: Graph tools can only use MCP servers and tools that are available to the graph (as shown by these discovery tools)
    - **DO NOT** attempt to read configuration files to discover MCP servers - use the toolkit discovery tools instead
 
-2. **Test Expressions**
-   - Use `testJSONata` to test transform expressions
+2. **Test Components**
+   - Use `testMcpTool` to test MCP tool calls and understand their output structure
+   - Use `testJSONata` to test transform expressions (use actual MCP tool outputs from `testMcpTool` as context)
    - Use `testJSONLogic` to test switch conditions
-   - Iterate until expressions work correctly
+   - Iterate until all components work correctly
 
 3. **Build Tool Definition**
    - Construct nodes using MCP servers and tools that are available to the graph (from step 1)
@@ -478,20 +581,73 @@ With JSONata:
    - Define entry and exit nodes
    - Specify input and output schemas
 
-4. **Test Tool Before Adding**
-   - Use `runGraphTool` with `toolDefinition` to test the tool inline
+4. **Test Tool Definition Before Adding**
+   - Use `runGraphTool` with `toolDefinition` to test the tool inline (testing from source)
    - Optionally enable `logging: true` to see execution details
    - Verify the tool works correctly
+   - **IMPORTANT**: Use the exact same tool definition in Step 5
 
 5. **Add Tool to Graph**
    - **MUST USE** `addGraphTool` to add the tested tool to the graph
+   - **CRITICAL**: Use the exact same tool definition from Step 4
    - **DO NOT** create or edit configuration files directly
    - The tool is saved automatically by the toolkit (all file operations are handled internally)
 
-6. **Update or Delete Tools**
+6. **Verify Tool in Graph (Recommended)**
+   - Use `runGraphTool` with `toolName` (the tool's name) to test it from the graph
+   - This verifies the tool was saved correctly and works when called from the graph
+   - Compare results with Step 4 to ensure consistency
+
+7. **Update or Delete Tools**
    - **MUST USE** `updateGraphTool` to modify existing tools (do NOT edit configuration files directly)
    - **MUST USE** `deleteGraphTool` to remove tools (do NOT edit configuration files directly)
    - Changes are saved automatically by the toolkit (all file operations are handled internally)
+
+### Debugging Strategy
+
+When building or debugging graph tools, follow this systematic approach:
+
+1. **Test MCP Tools Individually**
+   - Use `testMcpTool` to call the MCP tool directly and see its output structure
+   - This helps you understand what data will be available in the execution context
+   - Don't guess at output structure - test it first
+
+2. **Test Expressions with Realistic Context**
+   - Use outputs from `testMcpTool` as context for `testJSONata` expressions
+   - Use actual data structures, not guessed structures
+   - This prevents errors like trying to access `$.fetch_url.content` when the tool returns a plain string
+
+3. **Build Incrementally**
+   - Start with entry → first_mcp → exit
+   - Add one transform or switch node at a time
+   - Test after each addition using `runGraphTool` with `logging: true`
+
+4. **Use Debugging Tools**
+   - `testMcpTool` - Verify MCP tool calls work and understand output structure
+   - `testJSONata` - Validate transform expressions before using them
+   - `testJSONLogic` - Validate switch conditions before using them
+   - `runGraphTool` with `logging: true` - See all execution steps and node outputs
+   - `executionHistory` - Inspect actual node outputs when debugging
+
+**Example: Debugging a Failed Transform**
+
+Error: `"content": "expected string, received undefined"`
+
+Steps:
+1. Use `testMcpTool` to see what the MCP tool actually returns
+2. Use `testJSONata` with the actual output structure as context:
+   ```json
+   {
+     "tool": "testJSONata",
+     "arguments": {
+       "expression": "$.fetch_url.content",
+       "context": {
+         "fetch_url": "actual output from testMcpTool"
+       }
+     }
+   }
+   ```
+3. Adjust the expression based on the actual structure (e.g., use `$.fetch_url` if it's a plain string)
 
 ### Example: Building a File Counter Tool
 
@@ -530,7 +686,33 @@ With JSONata:
 }
 ```
 
-**Step 2: Test Expressions**
+**Step 2: Test MCP Tool and Understand Output Structure**
+```json
+{
+  "tool": "testMcpTool",
+  "arguments": {
+    "server": "filesystem",
+    "tool": "list_directory",
+    "args": {
+      "path": "/path/to/test/directory"
+    }
+  }
+}
+```
+
+This returns the actual output structure. For example, if it returns:
+```json
+{
+  "output": {
+    "content": "[FILE] file1.txt\n[FILE] file2.txt\n[FILE] file3.txt\n"
+  },
+  "executionTime": 15
+}
+```
+
+Now you know the output structure and can use it in expressions.
+
+**Step 3: Test Expressions with Actual Output Structure**
 ```json
 {
   "tool": "testJSONata",
@@ -538,14 +720,17 @@ With JSONata:
     "expression": "{ \"count\": $count($split($.list_directory_node.content, \"\\n\")) }",
     "context": {
       "list_directory_node": {
-        "content": "file1.txt\nfile2.txt\nfile3.txt"
+        "content": "[FILE] file1.txt\n[FILE] file2.txt\n[FILE] file3.txt\n"
       }
     }
   }
 }
 ```
 
-**Step 3: Test Complete Tool Definition**
+**Step 4: Test Complete Tool Definition (from source)**
+
+Test your tool definition using `runGraphTool` with `toolDefinition`:
+
 ```json
 {
   "tool": "runGraphTool",
@@ -600,12 +785,16 @@ With JSONata:
 }
 ```
 
-**Step 4: Add Tool to Graph**
+**Step 5: Add Tool to Graph**
+
+Once validated, use `addGraphTool` with the **exact same tool definition** from Step 4:
+
 ```json
 {
   "tool": "addGraphTool",
   "arguments": {
     "tool": {
+      /* SAME tool definition from Step 4 */
       "name": "count_files",
       "description": "Counts files in a directory",
       "inputSchema": {
@@ -658,6 +847,28 @@ With JSONata:
   }
 }
 ```
+
+**Step 6: Verify Tool in Graph (Recommended)**
+
+Test the tool again, but now using the tool name (running from the graph, not from source):
+
+```json
+{
+  "tool": "runGraphTool",
+  "arguments": {
+    "toolName": "count_files",
+    "arguments": {
+      "directory": "/path/to/directory"
+    },
+    "logging": true
+  }
+}
+```
+
+This verifies:
+- The tool was saved correctly to the graph
+- The tool works when called from the graph (not just from source)
+- Results match Step 4, confirming consistency
 
 ## Resources
 
