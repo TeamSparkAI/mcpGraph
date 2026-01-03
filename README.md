@@ -81,7 +81,8 @@ tools:
         server: "filesystem"
         tool: "list_directory"
         args:
-          path: "$.entry.directory"
+          path:
+            expr: "$.entry.directory"
         next: "count_files_node"
       
       # Transform and count files
