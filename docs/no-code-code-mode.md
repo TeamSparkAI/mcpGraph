@@ -77,7 +77,7 @@ The requirements are:
 * **MCP tool calling:** We need to be able to call MCP tools (from a set we are provided).  
 * **Data transformation:** We need to be able to transform data coming into our solution, between tool calls, and exiting our solution. This includes summarization, filtering, extraction, formatting, etc.  
 * **Conditional logic:** We need to be able to apply conditional logic to our tool calling.  
-* **Composable by agents:** Agents need to be able to compose these solutions, meaning they must be simple, and based on pre-existing standards, formats, and tooling on which agents have already been trained.  
+* **Composable by agents:** Agents need to be able to compose these solutions, meaning they must be simple, and based on pre-existing standards, formats, and tooling on which models have already been trained.  
 * **Inspectable:** We need to be able to inspect the solution (by humans or with code) and easily understand exactly what it does.  
 * **No embedded programming language:** We don't want to provide direct access to a programming language, or even the ability to "jailbreak" into an underlying language environment.
 

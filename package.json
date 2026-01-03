@@ -52,15 +52,15 @@
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^20.10.0",
+    "sharp": "^0.34.5",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
-    "jsonata": "^2.0.3",
-    "json-logic-js": "^2.0.2",
     "js-yaml": "^4.1.0",
+    "json-logic-js": "^2.0.2",
+    "jsonata": "^2.0.3",
     "zod": "^3.22.4"
   }
 }
-

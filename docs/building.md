@@ -179,3 +179,5 @@ Download the text contents of the web page https://world.hey.com/dhh/pay-yoursel
 DevRel prompt:
 
 What did you struggle with in building that tool and how could the skill.md documentation or the mcpgraphtoolkit tooling be improved to help 
+
+https://medium.com/@scalablecto/mcpgraph-a-no-code-alternative-to-code-mode-13f2e48cb8f9?source=friends_link&sk=f9350071d295391afba09d7b1003075a

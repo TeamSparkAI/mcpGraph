@@ -33,7 +33,7 @@
   
   <path d="M 225 160 L 90 160" stroke="#666" stroke-width="2" fill="none" stroke-dasharray="5,5" marker-end="url(#arrowhead)"/>
   <rect x="107.5" y="170" width="110" height="20" fill="#FFE0B2" stroke="#FF9800" stroke-width="1" rx="2"/>
-  <text x="157.5" y="183" font-family="Arial, sans-serif" font-size="8" text-anchor="middle" fill="#E65100">Tool descriptions ~350KB</text>
+  <text x="157.5" y="183" font-family="Arial, sans-serif" font-size="8" text-anchor="middle" fill="#E65100">Tool descriptions ~50KB</text>
   
   <path d="M 90 200 L 345 200" stroke="#666" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
   <text x="217" y="195" font-family="Arial, sans-serif" font-size="9" fill="#333">listTools()</text>
