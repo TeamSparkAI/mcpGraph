@@ -223,9 +223,9 @@ Then add the mcpGraph MCP server to your agent config (mcp.json or equivalent):
 
 Once configured, your agent will now see an MCP server called `fileUtils` and a tool called `count_files` that it can run just like any other tool.
 
-## **Developer Experience (mcpGraph UX)**
+## **Human Developer Experience**
 
-To make this observable and testable, we’ve built **mcpGraph UX**, a separate project that allows you to:
+To make this observable and testable by humans, we've built **[mcpGraph UX](https://github.com/TeamSparkAI/mcpGraph-ux)**, a separate project that allows you to:
 
 * Visualize the graph structure.  
 * Animate through active nodes during execution.  
@@ -241,7 +241,7 @@ npm run server 3001 ../path/to/mcpgraph.yaml
 
 ![mcpGraph UX](./images/screenshot.png)
 
-## **Agent Support**
+## **Agent Developer Experience**
 
 In order for this to work as advertised, agents need to understand the set of MCP tools at their disposal and be able to compose and use mcpGraphs.  This is a point that the other papers have pretty much glossed over (they explain how the agents built the tools and the structure of the resulting tools, but not so much on how the agents were prompted and how the tools then found their way into the agent environment).  I'll give Docker a pass, since they're making the composed tools available via an MCP gateway.
 
@@ -251,7 +251,7 @@ Assuming your agent can build and install an MCP server into it's own environmen
 
 We also wanted a viable end-to-end solution where any agent could create and deploy mcpGraph tools. This means that we not only need to instruct the agent on tool creation, but we need to provide the agent with tooling to understand available MCP servers and to test and deploy mcpGraph tools into its own environment. To that end, we created mcpGraphToolkit, an MCP server that provides a full set of development, test, and deployment tools to an agent. We have a separate [SKILL.md](../skills/mcpgraphtoolkit/SKILL.md) file to support agents in using the mcpGraphToolkit.
 
-> **🎥 Watch the Demo:** Check out the [**mcpGraphToolkit Deep Dive**](https://youtu.be/gR7s0MD8Gro) video to see an agent autonomously build, test, and deploy orchestration tools—"Code Mode" without the code.
+> **🎥 Watch the Demo:** Check out the [**mcpGraphToolkit Deep Dive**](https://youtu.be/gR7s0MD8Gro) video to see a Claude Code agent autonomously build, test, and deploy mcpGraph tools — "Code Mode" without the code.
 
 The **mpcGraphToolkit** is installed as part of the mcpGraph package, so if you've installed mcpGraph from npm, you already have mcpGraphToolkit available.
 
